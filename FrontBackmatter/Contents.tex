@@ -1,0 +1,97 @@
+%*******************************************************
+% Table of Contents
+%*******************************************************
+\pagestyle{scrheadings}
+% \phantomsection
+\pdfbookmark[1]{\contentsname}{tableofcontents}
+
+% --------------------------------------------- %
+% CHANGE THIS LINES
+% --------------------------------------------- %
+\setcounter{tocdepth}{10} % <-- 2 includes up to subsections in the ToC
+\setcounter{secnumdepth}{10} % <-- 3 numbers up to subsubsections
+% \setcounter{tocdepth}{2} % <-- 2 includes up to subsections in the ToC
+% \setcounter{secnumdepth}{3} % <-- 3 numbers up to subsubsections
+% --------------------------------------------- %
+
+
+\manualmark
+\markboth{\spacedlowsmallcaps{\contentsname}}{\spacedlowsmallcaps{\contentsname}}
+\tableofcontents
+\automark[section]{chapter}
+\renewcommand{\chaptermark}[1]{\markboth{\spacedlowsmallcaps{#1}}{\spacedlowsmallcaps{#1}}}
+\renewcommand{\sectionmark}[1]{\markright{\textsc{\thesection}\enspace\spacedlowsmallcaps{#1}}}
+%*******************************************************
+% List of Figures and of the Tables
+%*******************************************************
+\clearpage
+% \pagestyle{empty} % Uncomment this line if your lists should not have any headlines with section name and page number
+\begingroup
+    \let\clearpage\relax
+    \let\cleardoublepage\relax
+    %*******************************************************
+    % List of Figures
+    %*******************************************************
+    % \phantomsection
+    % \addcontentsline{toc}{chapter}{\listfigurename}
+    \pdfbookmark[1]{\listfigurename}{lof}
+    \listoffigures
+
+    \vspace{8ex}
+
+    %*******************************************************
+    % List of Tables
+    %*******************************************************
+    % \phantomsection
+    % \addcontentsline{toc}{chapter}{\listtablename}
+    \pdfbookmark[1]{\listtablename}{lot}
+    \listoftables
+
+    \vspace{8ex}
+    % \newpage
+
+    %*******************************************************
+    % List of Listings
+    %*******************************************************
+    % \phantomsection
+    % \addcontentsline{toc}{chapter}{\lstlistlistingname}
+    \pdfbookmark[1]{\lstlistlistingname}{lol}
+    \lstlistoflistings
+
+    \vspace{8ex}
+
+    %*******************************************************
+    % Acronyms
+    %*******************************************************
+    % \phantomsection
+    \pdfbookmark[1]{Acronyms}{acronyms}
+    \markboth{\spacedlowsmallcaps{Acronyms}}{\spacedlowsmallcaps{Acronyms}}
+    % \chapter*{Acronyms}
+    \printacronyms[pages={display=all}]
+    % \begin{acronym}[C-XAI]
+    %     \acro{XAI}{eXplainable Artificial Intelligence}
+    %     \acro{C-XAI}{Concept-based \ac{XAI}}
+    %     \acro{C-CR}{Class-Concept Relation}
+    %     \acro{N-CA}{Node-Concept Association} \acroindefinite{N-CA}{an}{a}
+    %     \acro{C-Viz}{Concept Visualisation}
+    %     \acro{NLP}{Natural Language Processing} \acroindefinite{NLP}{an}{a}
+    %     \acro{FOL}{First-Order Logic}
+    %     \acro{SVM}{Support Vector Machine} \acroindefinite{SVM}{an}{a}
+    %     \acro{NMF}{Non-Negative Matrix Factorization} \acroindefinite{NMF}{an}{a}
+    %     \acro{PCA}{Principal Component Analysis}
+    %     \acro{IoU}{Intersection over Union} \acroindefinite{IoU}{an}{an}
+    %     \acro{CNN}{Convolutional Neural Network}
+    %     \acro{GNN}{Graph Neural Network}
+    %     \acro{CLIP}{Contrastive Language-Image Pre-training}
+    %     \acro{SAE}{Sparse AutoEncoder}
+    %     \acro{VAEE}{Variational Auto Embedding Encoder}
+    %     \acro{VAE}{Variational AutoEncoder}
+    %     \acro{LLM}{Large Language Model} \acroindefinite{LLM}{an}{a}
+    %     \acro{MLP}{Multi-Layer Perceptron} \acroindefinite{MLP}{an}{a}
+    %     \acro{CE}{Cross-Entropy}
+    %     \acro{GPU}{Graphics Processing Unit}
+    %     \acro{MSE}{Mean Squared Error}
+    %     \acro{AE}{AutoEncoder} \acroindefinite{AE}{an}{an}
+    % \end{acronym}
+
+\endgroup
