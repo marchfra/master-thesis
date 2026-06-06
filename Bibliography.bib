@@ -699,6 +699,17 @@
   file = {/Users/francescomarchisotti/Zotero/storage/VWDKANLL/Komanduri et al. - 2022 - SCM-VAE Learning Identifiable Causal Representations via Structural Knowledge.pdf}
 }
 
+@article{krizhevskyUsingVeryDeep2011,
+  title = {Using {{Very Deep Autoencoders}} for {{Content-Based Image Retrieval}}},
+  author = {Krizhevsky, Alex and Hinton, Geoffrey E.},
+  year = 2011,
+  month = apr,
+  journal = {19th European Symposium on Artificial Neural Networks, Computational Intelligence and Machine Learning},
+  abstract = {We show how to learn many layers of features on color images and we use these features to initialize deep autoencoders. We then use the autoencoders to map images to short binary codes. Using semantic hashing [6], 28-bit codes can be used to retrieve images that are similar to a query image in a time that is independent of the size of the database. This extremely fast retrieval makes it possible to search using multiple di erent transformations of the query image. 256-bit binary codes allow much more accurate matching and can be used to prune the set of images found using the 28-bit codes.},
+  langid = {english},
+  file = {/Users/francescomarchisotti/Zotero/storage/YQWKWVU6/Krizhevsky and Hinton - 2011 - Using Very Deep Autoencoders for Content-Based Image Retrieval.pdf}
+}
+
 @misc{lagunaConceptBottleneckModels2024,
   title = {Beyond Concept Bottleneck Models: How to Make Black Boxes Intervenable?},
   shorttitle = {Beyond {{Concept Bottleneck Models}}},
@@ -945,21 +956,18 @@
   annotation = {Page Version ID: 149051503}
 }
 
-@misc{rajamanoharanImprovingDictionaryLearning2024,
-  title = {Improving {{Dictionary Learning}} with {{Gated Sparse Autoencoders}}},
+@article{rajamanoharanImprovingSparseDecomposition2024,
+  title = {Improving {{Sparse Decomposition}} of {{Language Model Activations}} with {{Gated Sparse Autoencoders}}},
   author = {Rajamanoharan, Senthooran and Conmy, Arthur and Smith, Lewis and Lieberum, Tom and Varma, Vikrant and Kram{\'a}r, J{\'a}nos and Shah, Rohin and Nanda, Neel},
   year = 2024,
-  month = apr,
-  number = {arXiv:2404.16014},
-  eprint = {2404.16014},
-  primaryclass = {cs},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2404.16014},
-  urldate = {2026-02-23},
-  abstract = {Recent work has found that sparse autoencoders (SAEs) are an effective technique for unsupervised discovery of interpretable features in language models' (LMs) activations, by finding sparse, linear reconstructions of LM activations. We introduce the Gated Sparse Autoencoder (Gated SAE), which achieves a Pareto improvement over training with prevailing methods. In SAEs, the L1 penalty used to encourage sparsity introduces many undesirable biases, such as shrinkage -- systematic underestimation of feature activations. The key insight of Gated SAEs is to separate the functionality of (a) determining which directions to use and (b) estimating the magnitudes of those directions: this enables us to apply the L1 penalty only to the former, limiting the scope of undesirable side effects. Through training SAEs on LMs of up to 7B parameters we find that, in typical hyper-parameter ranges, Gated SAEs solve shrinkage, are similarly interpretable, and require half as many firing features to achieve comparable reconstruction fidelity.},
-  archiveprefix = {arXiv},
-  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning},
-  file = {/Users/francescomarchisotti/Zotero/storage/GFYXNA9D/Rajamanoharan et al. - 2024 - Improving Dictionary Learning with Gated Sparse Autoencoders.pdf;/Users/francescomarchisotti/Zotero/storage/M3ZDPT5I/2404.html}
+  month = dec,
+  journal = {Advances in Neural Information Processing Systems},
+  volume = {37},
+  pages = {775--818},
+  doi = {10.52202/079017-0024},
+  urldate = {2026-06-05},
+  langid = {english},
+  file = {/Users/francescomarchisotti/Zotero/storage/Y5X8PCE2/Rajamanoharan et al. - 2024 - Improving Sparse Decomposition of Language Model Activations with Gated Sparse Autoencoders.pdf}
 }
 
 @misc{rajamanoharanJumpingAheadImproving2024,
@@ -1033,6 +1041,23 @@
   langid = {english},
   keywords = {Computer science,Criminology,Science,Statistics,technology and society},
   file = {/Users/francescomarchisotti/Zotero/storage/7KUBIH5Q/Rudin - 2019 - Stop explaining black box machine learning models for high stakes decisions and use interpretable mo.pdf}
+}
+
+@inproceedings{sakuradaAnomalyDetectionUsing2014,
+  title = {Anomaly {{Detection Using Autoencoders}} with {{Nonlinear Dimensionality Reduction}}},
+  booktitle = {Proceedings of the {{MLSDA}} 2014 2nd {{Workshop}} on {{Machine Learning}} for {{Sensory Data Analysis}}},
+  author = {Sakurada, Mayu and Yairi, Takehisa},
+  year = 2014,
+  month = dec,
+  series = {{{MLSDA}}'14},
+  pages = {4--11},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  doi = {10.1145/2689746.2689747},
+  urldate = {2026-06-05},
+  abstract = {This paper proposes to use autoencoders with nonlinear dimensionality reduction in the anomaly detection task. The authors apply dimensionality reduction by using an autoencoder onto both artificial data and real data, and compare it with linear PCA and kernel PCA to clarify its property. The artificial data is generated from Lorenz system, and the real data is the spacecrafts' telemetry data. This paper demonstrates that autoencoders are able to detect subtle anomalies which linear PCA fails. Also, autoencoders can increase their accuracy by extending them to denoising autoenconders. Moreover, autoencoders can be useful as nonlinear techniques without complex computation as kernel PCA requires. Finaly, the authors examine the learned features in the hidden layer of autoencoders, and present that autoencoders learn the normal state properly and activate differently with anomalous input.},
+  isbn = {978-1-4503-3159-3},
+  file = {/Users/francescomarchisotti/Zotero/storage/LB226BQ4/Sakurada and Yairi - 2014 - Anomaly Detection Using Autoencoders with Nonlinear Dimensionality Reduction.pdf}
 }
 
 @misc{santisBetterGeneralizationInterpretability2025,
@@ -1234,6 +1259,34 @@
   abstract = {The completeness axiom renders the explanation of a post-hoc eXplainable AI (XAI) method only locally faithful to the model, i.e. for a single decision. For the trustworthy application of XAI, in particular for high-stake decisions, a more global model understanding is required. To this end, concept-based methods have been proposed, which are however not guaranteed to be bound to the actual model reasoning. To circumvent this problem, we propose Multi-dimensional Concept Discovery (MCD) as an extension of previous approaches that fulfills a completeness relation on the level of concepts. Our method starts from general linear subspaces as concepts and does neither require reinforcing concept interpretability nor re-training of model parts. We propose sparse subspace clustering to discover improved concepts and fully leverage the potential of multi-dimensional subspaces. MCD offers two complementary analysis tools for concepts in input space: (1) concept activation maps, that show where a concept is expressed within a sample, allowing for concept characterization through prototypical samples, and (2) concept relevance heatmaps, that decompose the model decision into concept contributions. Both tools together enable a detailed global understanding of the model reasoning, which is guaranteed to relate to the model via a completeness relation. Thus, MCD paves the way towards more trustworthy concept-based XAI. We empirically demonstrate the superiority of MCD against more constrained concept definitions.},
   langid = {english},
   file = {/Users/francescomarchisotti/Zotero/storage/5F8QBELW/Vielhaben et al. - 2023 - Multi-dimensional concept discovery (MCD) A unifying framework with completeness guarantees.pdf}
+}
+
+@inproceedings{vincentExtractingComposingRobust2008,
+  title = {Extracting and Composing Robust Features with Denoising Autoencoders},
+  booktitle = {Proceedings of the 25th International Conference on {{Machine}} Learning - {{ICML}} '08},
+  author = {Vincent, Pascal and Larochelle, Hugo and Bengio, Yoshua and Manzagol, Pierre-Antoine},
+  year = 2008,
+  pages = {1096--1103},
+  publisher = {ACM Press},
+  address = {Helsinki, Finland},
+  doi = {10.1145/1390156.1390294},
+  urldate = {2026-06-05},
+  copyright = {https://www.acm.org/publications/policies/copyright\_policy\#Background},
+  isbn = {978-1-60558-205-4},
+  langid = {english},
+  file = {/Users/francescomarchisotti/Zotero/storage/T8KGWS9M/Vincent et al. - 2008 - Extracting and composing robust features with denoising autoencoders.pdf}
+}
+
+@misc{wengAutoencoderBetaVAE2018,
+  title = {From {{Autoencoder}} to {{Beta-VAE}}},
+  author = {Weng, Lilian},
+  year = 2018,
+  month = aug,
+  urldate = {2026-06-05},
+  abstract = {[Updated on 2019-07-18: add a section on VQ-VAE \& VQ-VAE-2.] [Updated on 2019-07-26: add a section on TD-VAE.] Autocoder is invented to reconstruct high-dimensional data using a neural network model with a narrow bottleneck layer in the middle (oops, this is probably not true for Variational Autoencoder, and we will investigate it in details in later sections). A nice byproduct is dimension reduction: the bottleneck layer captures a compressed latent encoding. Such a low-dimensional representation can be used as en embedding vector in various applications (i.e. search), help data compression, or reveal the underlying data generative factors.},
+  chapter = {posts},
+  langid = {american},
+  file = {/Users/francescomarchisotti/Zotero/storage/Q4YXNZVA/2018-08-12-vae.html}
 }
 
 @misc{wolfTrainingNeuralNets2018,

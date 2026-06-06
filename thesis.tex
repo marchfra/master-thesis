@@ -40,6 +40,7 @@
 %********************************************************************
 % Note: Make all your adjustments in here
 %*******************************************************
+\usepackage{lipsum}
 \usepackage{acro-commands}
 \usepackage{physics}
 \usepackage{dsfont}
@@ -64,6 +65,8 @@
 %*******************************************************
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\on}{\operatorname}
+
+% \includeonly{Chapters/C02_Background}
 
 %********************************************************************
 % GO!GO!GO! MOVE IT!
@@ -99,79 +102,11 @@
     % \setcounter{page}{90}
     % use \cleardoublepage here to avoid problems with pdfbookmark
 
-    % --------------------------------------------- %
-    \chapter{Introduction}
-    % --------------------------------------------- %
-    \section{Motivation}
-
-    \section{Thesis Structure}
-
-
-    % --------------------------------------------- %
-    \chapter{Background and Related Work}
-    % --------------------------------------------- %
-    \section{NLP}
-
-    \section{XAI}
-        \subsection{Traditional XAI}
-        \subsection{C-XAI}
-            \subsubsection{Explainable-by-design Models}
-                \paragraph{CBM/CEM}
-                \paragraph{LF-CBM}
-            \subsubsection{Post-hoc Methods}
-                \paragraph{T-CAV}
-
-    \section{AutoEncoders}
-                \paragraph{Anomaly detection}
-                \paragraph{Denoising AE}
-        \subsection{SAEs}
-            \subsubsection{Architectures}
-                \paragraph{Vanilla $\ell_{1}$}
-                \paragraph{Gated SAE}
-                \paragraph{TopK SAE}
-                \paragraph{JumpReLU SAE}
-            \subsubsection{Usage}
-                \paragraph{MechInt}
-        \subsection{VAEs}
-            \subsubsection{Architectures}
-                \paragraph{$\beta$-VAE}
-                \paragraph{VQ-VAE}
-            \subsubsection{Usage}
-                \paragraph{Generative model}
-                \paragraph{XAI}
-
-    \section*{Conclusions}
-
-    % --------------------------------------------- %
-    \chapter{Methods}
-    % --------------------------------------------- %
-    \section{Definitions/Notation}
-
-    \section{Aim of the Work}
-
-    \section{Model Development}
-        \subsection{Probabilistic Formulation}
-        \subsection{Architectures}
-
-    \section*{Conclusions}
-
-    % --------------------------------------------- %
-    \chapter{Experiments}
-    % --------------------------------------------- %
-    \section{Model Training}
-
-    \section{Evaluation Metrics}
-
-    \section{Results}
-
-    \section*{Conclusions}
-
-    % --------------------------------------------- %
-    \chapter{Conclusions}
-    % --------------------------------------------- %
-    \section{Contributions}
-
-    \section{Future Work}
+    \include{Chapters/C01_Introduction}
+    \include{Chapters/C02_Background}
+    \include{Chapters/C03_Methods}
+    \include{Chapters/C04_Experiments}
+    \include{Chapters/C05_Conclusions}
 
     % \cleardoublepage \part{Background}\label{part:background}
     % \include{Chapters/C01_Introduction}
