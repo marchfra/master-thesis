@@ -47,6 +47,11 @@
 \usepackage{microtype}
 \input{classicthesis-config}
 
+% Last-resort stretch to avoid overfull lines caused by unbreakable material.
+% Only activates on lines that would otherwise overflow; normal lines are
+% unaffected.
+\setlength{\emergencystretch}{3em}
+
 % linewidth = 11.8cm
 
 %********************************************************************
@@ -65,6 +70,8 @@
 %*******************************************************
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\on}{\operatorname}
+% Keep a short inline expression from breaking across lines.
+\newcommand{\nbmath}[1]{\mbox{$#1$}}
 
 % \includeonly{Chapters/C02_Background}
 

@@ -1,40 +1,43 @@
 %************************************************
 \chapter{Background and Related Work} \label{ch:background}
 %************************************************
-% \lipsum[1]
 
 \section{NLP} \label{sec:background:nlp}
-% \lipsum[1-5]
+
+% --------------------------------------------- %
 
 \section{XAI} \label{sec:background:xai}
-% \lipsum[1]
-    \subsection{Traditional XAI} \label{sec:background:xai:trad-xai}
-    % \lipsum[1-4]
-    \subsection{C-XAI} \label{sec:background:xai:c-xai}
-    % \lipsum[1-2]
-        \subsubsection{Explainable-by-design Models}
-        % \lipsum[1-3]
-            \paragraph{CBM/CEM}
-            % \lipsum[1-2]
-            \paragraph{LF-CBM}
-            % \lipsum[1-2]
-        \subsubsection{Post-hoc Methods}
-        % \lipsum[1-3]
-            \paragraph{T-CAV}
-            % \lipsum[1-2]
+
+
+\subsection{Traditional XAI} \label{sec:background:xai:trad-xai}
+
+
+\subsection{C-XAI} \label{sec:background:xai:c-xai}
+
+\subsubsection{Explainable-by-design Models}
+
+    \paragraph{CBM/CEM}
+    \paragraph{LF-CBM}
+
+\subsubsection{Post-hoc Methods}
+
+    \paragraph{T-CAV}
+
+% --------------------------------------------- %
 
 \section{AutoEncoders} \label{sec:background:ae}
 
 \Iac{AE} is a neural network trained to reconstruct its input through an
 intermediate latent representation \cite[Ch 14]{goodfellowDeepLearning2016}. It
-consists of two components: an \textbf{encoder} $f_{\theta}: \R^{n} \rightarrow
+consists of two components: an \textbf{encoder} $f_{\phi}: \R^{n} \rightarrow
 \R^{m}$ that maps an input $\vb{x}$ to a latent code $\vb{z} =
-f_{\theta}(\vb{x})$, and a \textbf{decoder} $g_{\phi}: \R^{m} \rightarrow
-\R^{n}$ that reconstructs the input as $\hat{\vb{x}} = g_{\phi}(\vb{z})$.
+f_{\phi}(\vb{x})$, and a \textbf{decoder} $g_{\theta}: \R^{m} \rightarrow
+\R^{n}$ that reconstructs the input as $\hat{\vb{x}} = g_{\theta}(\vb{z})$.
 Training minimises a reconstruction loss, typically the \ac{MSE}:
-\begin{equation*}
-    \mathcal{L}_{\mathrm{recon}} = \norm{\vb{x} - \hat{\vb{x}}}^{2}_{2}.
-\end{equation*}
+\begin{equation} \label{eq:background:ae:recon-loss}
+    \mathcal{L}_{\mathrm{recon}} = \on{MSE}(\vb{x}, \hat{\vb{x}}) = \norm{\vb{x}
+    - \hat{\vb{x}}}^{2}_{2}.
+\end{equation}
 
 When $m < n$, the bottleneck forces the model to learn a compressed
 representation. When $m > n$, the network is overcomplete and additional
@@ -42,7 +45,10 @@ constraints are required to prevent the trivial solution of learning the
 identity. In either case, the structure of the latent space is shaped by the
 choice of architecture and regularisation.
 
-\subsection{Usage} \label{sec:background:ae:usage}
+
+\subsection{Standard AutoEncoders} \label{sec:background:ae:standard}
+
+\subsubsection{Applications} \label{sec:background:ae:standard:applications}
 
     \paragraph{Image retrieval} \citet{krizhevskyUsingVeryDeep2011} proposed
     using deep autoencoders for content-based image retrieval. Their key insight
@@ -57,45 +63,6 @@ choice of architecture and regularisation.
     autoencoder need not merely serve reconstruction, but can itself be a
     semantically meaningful and practically useful object.
 
-    \paragraph{Denoising AutoEncoder} This variation was introduced by
-    \citet{vincentExtractingComposingRobust2008} to avoid overfitting and
-    improve the robustness of the learned representation. The input is partially
-    corrupted by adding noise to or masking some values of the input vector in a
-    stochastic manner, $\vb{x}_{c} \sim \mathcal{M}_{\mathcal{D}}(\vb{x}_{c}
-    \mid \vb{x})$, as shown in
-    \cref{fig:denoising-ae}.
-    The model is then trained to reconstruct the original uncorrupted input:
-    \begin{equation*} \mathcal{L}_{\mathrm{DAE}} = \norm{\vb{x} -
-    g_{\phi}(f_{\theta}(\vb{x}_{c}))}^{2}_{2}. \end{equation*}
-
-    \begin{figure}[tb]
-        \centering
-        \includegraphics[width=0.95\linewidth]{gfx/denoising-autoencoder-architecture.png}
-        \caption{Illustration of Denoising \acl{AE} model architecture, reproduced
-        from \citet{wengAutoencoderBetaVAE2018}. \textit{Note: this figure uses
-        the convention $f_{\theta}$ for the decoder and $g_{\phi}$ for the encoder,
-        which is the reverse of the notation adopted in this thesis.}}
-        \label{fig:denoising-ae}
-    \end{figure}
-
-    This design is motivated by the fact that humans can easily recognize an
-    object or a scene even the view is partially occluded or corrupted. To
-    ``repair'' the partially destroyed input, the denoising autoencoder has to
-    discover and capture relationship between dimensions of input in order to
-    infer missing pieces.
-
-    For high dimensional input with high redundancy, like images, the model is
-    likely to depend on evidence gathered from a combination of many input
-    dimensions to recover the denoised version rather than to overfit one
-    dimension. This builds up a good foundation for learning \textit{robust}
-    latent representation.
-
-    The noise is controlled by a stochastic mapping
-    $\mathcal{M}_{\mathcal{D}}(\vb{x}_{c} \mid \vb{x})$, and it is not specific
-    to a particular type of corruption process (\ie masking noise, Gaussian
-    noise, salt-and-pepper noise, etc.). Naturally the corruption process can be
-    equipped with prior knowledge \cite{wengAutoencoderBetaVAE2018}.
-
     \paragraph{Anomaly detection} \citet{sakuradaAnomalyDetectionUsing2014} were
     among the first to explicitly propose autoencoders as a tool for anomaly
     detection. Their core insight is that an autoencoder trained on normal data
@@ -104,25 +71,268 @@ choice of architecture and regularisation.
     and the resulting reconstruction error serves as an anomaly score. To
     substantiate this claim, they apply autoencoders to both synthetic data
     generated from the Lorenz system and real spacecraft telemetry, comparing
-    against linear PCA and kernel PCA. They demonstrate that autoencoders, by
-    virtue of their nonlinear dimensionality reduction, are able to detect
-    subtle anomalies that linear PCA misses, while remaining computationally
-    lighter than kernel PCA. This work established reconstruction error as a
-    natural unsupervised anomaly signal for autoencoder-based methods.
+    against linear \ac{PCA} and kernel \ac{PCA}. They demonstrate that
+    autoencoders, by virtue of their nonlinear dimensionality reduction, are
+    able to detect subtle anomalies that linear \ac{PCA} misses, while remaining
+    computationally lighter than kernel \ac{PCA}. This work established
+    reconstruction error as a natural unsupervised anomaly signal for
+    autoencoder-based methods.
 
 
+\subsubsection{Denoising AutoEncoders} \label{sec:background:ae:standard:dae}
+The denoising autoencoder was introduced by
+\citet{vincentExtractingComposingRobust2008} to avoid overfitting and improve
+the robustness of the learned representation. The input is partially corrupted
+by adding noise to or masking some values of the input vector in a stochastic
+manner, $\vb{x}_{c} \sim \mathcal{M}_{\mathcal{D}}(\vb{x}_{c} \mid \vb{x})$, as
+shown in \cref{fig:denoising-ae}. The model is then trained to reconstruct the
+original uncorrupted input:
+\begin{equation} \label{eq:background:ae:dae-loss}
+    \mathcal{L}_{\mathrm{DAE}} = \norm{\vb{x} -
+    g_{\theta}(f_{\phi}(\vb{x}_{c}))}^{2}_{2}.
+\end{equation}
 
-\subsection{Sparse AutoEncoders} \label{sec:background:as:sae}
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.95\linewidth]{gfx/denoising-autoencoder-architecture.png}
+    \caption{Illustration of Denoising \acl{AE} model architecture, reproduced
+    from \citet{wengAutoencoderBetaVAE2018}. \textit{Note: this figure uses
+    $f$ for the decoder and $g$ for the encoder, the reverse of the
+    letter convention adopted in this thesis.}}
+    \label{fig:denoising-ae}
+\end{figure}
 
-\acp{SAE} are one of the main variants of \ac{AE}. Just like \acp{AE}, they
-learn a dictionary of feature directions from the input data, but they tipically
+This design is motivated by the fact that humans can easily recognize an object
+or a scene even the view is partially occluded or corrupted. To ``repair'' the
+partially destroyed input, the denoising autoencoder has to discover and capture
+relationship between dimensions of input in order to infer missing pieces.
+
+For high dimensional input with high redundancy, like images, the model is
+likely to depend on evidence gathered from a combination of many input
+dimensions to recover the denoised version rather than to overfit one dimension.
+This builds up a good foundation for learning \textit{robust} latent
+representation.
+
+The noise is controlled by a stochastic mapping
+$\mathcal{M}_{\mathcal{D}}(\vb{x}_{c} \mid \vb{x})$, and it is not specific to a
+particular type of corruption process (\ie masking noise, Gaussian noise,
+salt-and-pepper noise, etc.). Naturally the corruption process can be equipped
+with prior knowledge \cite{wengAutoencoderBetaVAE2018}.
+
+
+\subsection{Variational AutoEncoders} \label{sec:background:ae:vae}
+
+\acp{VAE} \cite{kingmaAutoencodingVariationalBayes2022,
+rezendeStochasticBackpropagationApproximate2014} reinterpret the autoencoder as
+a probabilistic generative model. Rather than mapping an input to a single
+latent point, the encoder maps it to a \textit{distribution} over latent codes,
+and the decoder is treated as a generative model that defines a distribution
+over inputs given a latent code. This probabilistic framing turns the
+autoencoder into a model from which new data can be sampled, and forces its
+latent space to have a smooth, continuous structure.
+
+This smoothness is the property that sets \iac{VAE} apart from a standard
+\ac{AE}. Trained for reconstruction alone, \iac{AE} is free to scatter its
+encodings into well-separated clusters with large gaps between them; those gaps
+are regions that decode to unrealistic outputs, so the space cannot be sampled
+or interpolated reliably. The \ac{VAE} objective instead pushes encodings to
+fill the latent space more uniformly and to vary smoothly, so that nearby codes
+decode to similar inputs and paths between codes stay on the data manifold.
+\Cref{fig:ae-vae-latent}
+illustrates the difference on a two-dimensional latent space trained on MNIST.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.95\linewidth]{gfx/ae-vae-latent.png}
+    \caption{Two-dimensional latent spaces learned on MNIST, coloured by digit
+    class, reproduced from \citet{shafkatIntuitivelyUnderstandingVariational2018}.
+    Optimising for reconstruction alone (left) lets a standard \acl{AE} separate
+    the classes into disconnected clusters with gaps that decode to unrealistic
+    samples, whereas the \acl{VAE} objective (right) yields a smoother, more
+    continuous arrangement, concentrated around the origin by the prior, that can
+    be sampled and interpolated.}
+    \label{fig:ae-vae-latent}
+\end{figure}
+
+\subsubsection{Variational Inference} \label{sec:background:ae:vae:inference}
+Formally, \iac{VAE} models the data through a generative process in which a
+latent code is first drawn from a prior $\vb{z} \sim p(\vb{z})$ --- typically a
+standard Gaussian $p(\vb{z}) = \mathcal{N}(\vb{0}, \vb{I})$ --- and an
+observation is then drawn from a decoder distribution $\nbmath{p_{\theta}(\vb{x}
+\mid \vb{z})}$ parameterised by a neural network. Training would ideally
+maximise the marginal likelihood
+\begin{equation*}
+    p_{\theta}(\vb{x}) = \int p_{\theta}(\vb{x} \mid \vb{z}) \, p(\vb{z})
+    \dd{\vb{z}},
+\end{equation*}
+but this integral, and the corresponding posterior
+$\nbmath{p_{\theta}(\vb{z} \mid \vb{x})}$, are intractable for any non-trivial
+decoder.
+
+The key idea of \citet{kingmaAutoencodingVariationalBayes2022} is to sidestep
+this intractability with \textit{amortised variational inference}: an encoder
+network $\nbmath{q_{\phi}(\vb{z} \mid \vb{x})}$ is trained to approximate the
+true posterior, with all data points sharing the same inference parameters
+$\phi$. The encoder outputs the parameters of a diagonal Gaussian,
+\begin{equation} \label{eq:background:ae:vae:posterior}
+    q_{\phi}(\vb{z} \mid \vb{x}) = \mathcal{N}\!\left(\vb{z};\,
+    \boldsymbol{\mu}_{\phi}(\vb{x}),\,
+    \on{diag}(\boldsymbol{\sigma}^{2}_{\phi}(\vb{x}))\right),
+\end{equation}
+so that each input is mapped to a mean and a (diagonal) covariance rather than
+to a single point.
+
+Instead of the intractable likelihood, the \ac{VAE} maximises a tractable lower
+bound on it, the \ac{ELBO}:
+\begin{equation} \label{eq:background:ae:elbo}
+    \log p_{\theta}(\vb{x}) \ge \underbrace{\mathbb{E}_{q_{\phi}(\vb{z} \mid
+    \vb{x})}\left[\log p_{\theta}(\vb{x} \mid
+    \vb{z})\right]}_{\text{reconstruction}} -
+    \underbrace{D_{\mathrm{KL}}\left(q_{\phi}(\vb{z} \mid \vb{x}) \|
+    p(\vb{z})\right)}_{\text{regularisation}}.
+\end{equation}
+The bound follows from the identity
+\begin{equation*}
+    \log p_{\theta}(\vb{x}) = \mathrm{ELBO} +
+    D_{\mathrm{KL}}\!\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
+    p_{\theta}(\vb{z} \mid \vb{x})\right),
+\end{equation*}
+together with the non-negativity of the \ac{KL} divergence; it is tight
+precisely when the approximate posterior matches the true posterior
+$\nbmath{p_{\theta}(\vb{z} \mid \vb{x})}$.
+Maximising the \ac{ELBO} simultaneously pushes the decoder to assign high
+likelihood to the data (the reconstruction term) and keeps the approximate
+posterior close to the prior (the \ac{KL} divergence term). Negating it yields
+the training loss:
+\begin{equation} \label{eq:background:ae:vae-loss}
+    \mathcal{L}_{\mathrm{VAE}} = \mathcal{L}_{\mathrm{recon}} +
+    D_{\mathrm{KL}}\!\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
+    p(\vb{z})\right).
+\end{equation}
+When the decoder is Gaussian with fixed isotropic variance, the first term
+reduces, up to an additive constant, to the \ac{MSE} reconstruction loss of
+\cref{eq:background:ae:recon-loss}; the second term, being the
+divergence between two Gaussians, has a closed form. For the standard-normal
+prior it becomes:
+\begin{equation*}
+    D_{\mathrm{KL}}\!\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
+    p(\vb{z})\right) = \frac{1}{2} \sum_{j=1}^{m} \left(\mu_{j}^{2} +
+    \sigma_{j}^{2} - \log \sigma_{j}^{2} - 1\right),
+\end{equation*}
+where $\mu_{j}$ and $\sigma_{j}$ are the components of the encoder's predicted
+mean and standard deviation.
+
+Evaluating the reconstruction term requires sampling $\vb{z}$ from
+$\nbmath{q_{\phi}(\vb{z} \mid \vb{x})}$, an operation that is not differentiable
+with respect to the encoder parameters and would therefore block gradient-based
+training. The \ac{VAE} resolves this with the \textit{reparameterisation trick}:
+the stochasticity is moved to an auxiliary noise variable, and the sample is
+expressed as a deterministic, differentiable function of the encoder outputs,
+\begin{equation*}
+    \vb{z} = \boldsymbol{\mu}_{\phi}(\vb{x}) +
+    \boldsymbol{\sigma}_{\phi}(\vb{x}) \odot \boldsymbol{\epsilon}, \qquad
+    \boldsymbol{\epsilon} \sim \mathcal{N}(\vb{0}, \vb{I}),
+\end{equation*}
+where $\odot$ denotes the element-wise product. Gradients can now flow through
+$\boldsymbol{\mu}_{\phi}$ and $\boldsymbol{\sigma}_{\phi}$ while the
+randomness is confined to $\boldsymbol{\epsilon}$, making the whole objective
+trainable end-to-end by stochastic gradient descent.
+
+\subsubsection{Architectures} \label{sec:background:ae:vae:arch}
+There exist several variants that modify the base \ac{VAE} to shape the latent
+space or the form of the latent code; two are particularly relevant here.
+
+    \paragraph{$\beta$-VAE} \citet{higginsBetaVAELearningBasic2017} introduced a
+    single modification: a scalar weight $\beta$ on the \ac{KL} term of the
+    objective,
+    \begin{equation} \label{eq:background:ae:vae:beta-loss}
+        \mathcal{L}_{\beta\text{-VAE}} = \mathcal{L}_{\mathrm{recon}} + \beta \,
+        D_{\mathrm{KL}}\!\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
+        p(\vb{z})\right).
+    \end{equation}
+    Setting $\beta > 1$ places additional pressure on the approximate posterior
+    to match the factorised prior, which encourages individual latent dimensions
+    to capture statistically independent factors of variation --- a property
+    known as \textit{disentanglement}. The standard \ac{VAE} is recovered at
+    $\beta = 1$. Changing $\beta$ offers a trade-off: a larger value improves
+    the structure and interpretability of the latent space at the cost of
+    reconstruction fidelity.
+
+    \paragraph{VQ-VAE} \citet{oordNeuralDiscreteRepresentation2018} replaced the
+    continuous Gaussian latent with a \textit{discrete} one. The encoder output
+    is quantised to the nearest entry of a learned codebook $\{\vb{e}_{1},
+    \dots, \vb{e}_{K}\}$, so that each latent is represented by a discrete index
+    rather than a continuous vector. This sidesteps the \textit{posterior
+    collapse} that can affect continuous \acp{VAE} paired with expressive
+    autoregressive decoders, in which the decoder learns to ignore the latent
+    entirely. Because the nearest-neighbour lookup is non-differentiable,
+    gradients are passed to the encoder with a straight-through estimator and
+    the codebook is learned through dedicated loss terms. VQ-VAE underpins many
+    modern generative systems, providing the discrete latent vocabulary over
+    which an autoregressive prior is subsequently trained.
+
+\subsubsection{Applications} \label{sec:background:ae:vae:applications}
+
+\acp{VAE} are used both as practical components in large generative systems and
+for interpretable representation learning; the latter is the more relevant to
+this thesis.
+
+    \paragraph{Generative modelling} Although \iac{VAE} can act as a standalone
+    generator, in modern systems it more often serves as a \textit{compression
+    backbone} for other generative models: latent diffusion models run the
+    diffusion process in a \ac{VAE}'s compact latent space rather than in pixel
+    space, as in Stable Diffusion
+    \cite{rombachHighResolutionImageSynthesis2022}, while discrete
+    VQ-VAEs\graffito{check this} \cite{oordNeuralDiscreteRepresentation2018} map
+    data to token sequences that an autoregressive model can generate. The
+    smooth latent also serves as a search space: optimising over it has been
+    used to search for new molecules with desired properties
+    \cite{gomez-bombarelliAutomaticChemicalDesign2018}.
+
+    \paragraph{Anomaly detection} Like standard \acp{AE}, \acp{VAE} can flag
+    anomalies, but they replace the single reconstruction error with a
+    probabilistic score: the reconstruction probability, or the \ac{ELBO}, gives
+    a principled measure of how well the model explains an input
+    \cite{anVariationalAutoencoderBased2015}. This is the probabilistic
+    counterpart of the approach described in
+    \cref{sec:background:ae:standard:applications}.
+
+    \paragraph{Representation learning} \acp{VAE} are also a standard tool for
+    unsupervised representation learning. The $\beta$-VAE
+    (\cref{sec:background:ae:vae:arch}) is the canonical example: up-weighting the
+    \ac{KL} term pressures the model towards \textit{disentangled} latents whose
+    individual dimensions capture independent, semantically meaningful factors of
+    variation \cite{higginsBetaVAELearningBasic2017}, yielding structured
+    low-dimensional features for downstream use.
+
+    \paragraph{Interpretability} The structured latent that makes \acp{VAE} good
+    representation learners also makes them attractive for explainability. Their
+    smoothness supports \textit{counterfactual explanation} --- perturbing the
+    latent yields plausible, on-manifold variants of an input --- and a
+    substantial line of work uses \acp{VAE} for \textit{causal representation
+    learning}, aligning latent factors with underlying causal variables
+    \cite{goyalExplainingClassifiersCausal2020,
+    komanduriSCMVAELearningIdentifiable2022}. \acp{VAE} have also been paired
+    with concept-based models such as self-explaining networks
+    \cite{alvarez-melisRobustInterpretabilitySelfexplaining2018}. Closest to this
+    thesis, variational ideas have been brought to sparse dictionary learning ---
+    variational sparse coding \cite{tonoliniVariationalSparseCoding2020} and
+    variational \aclp{SAE} \cite{bakerAnalysisVariationalSparse2025} --- seeking to
+    combine the interpretability of sparse codes with the structured latent of a
+    \ac{VAE}, the same combination developed in \cref{sec:methods:model}.
+
+
+\subsection{Sparse AutoEncoders} \label{sec:background:ae:sae}
+
+\acfp{SAE} are one of the main variants of \aclp{AE}. Just like \acp{AE}, they
+learn a dictionary of feature directions from the input data, but they typically
 are overcomplete ($m \gg n$) and their latent representation is forced to be
 sparse using some kind of sparsity mechanism. Given input $\vb{x} \in \R^{n}$,
 the \ac{SAE} encodes it as:
-\begin{equation*}
+\begin{equation} \label{eq:background:ae:sae:encode}
     \vb{z} = \operatorname{ReLU}(\vb{W}_{e}(\vb{x} - \vb{b}_{\mathrm{pre}}) +
     \vb{b}_{e}),
-\end{equation*}
+\end{equation}
 where $\vb{W}_{e} \in \R^{m \times n}$ is the encoder weight matrix,
 $\vb{b}_{e} \in \R^{m}$ is the encoder bias, and $\vb{b}_{\mathrm{pre}} \in
 \R^{n}$ is a pre-encoder bias subtracted from the input before encoding. This
@@ -130,9 +340,9 @@ learned offset allows the encoder to operate on roughly mean-centered
 activations, improving training stability
 \cite{brickenMonosemanticityDecomposingLanguage2023}. The decoder then
 reconstructs the input as:
-\begin{equation*}
+\begin{equation} \label{eq:background:ae:sae:decode}
     \hat{\vb{x}} = \vb{W}_{d} \vb{z} + \vb{b}_{\mathrm{pre}},
-\end{equation*}
+\end{equation}
 where $\vb{W}_{d} \in \R^{n \times m}$ is the decoder weight matrix. Each column
 $\vb{d}_{i}$ of $\vb{W}_{d}$ is a dictionary atom, representing a candidate
 feature direction in activation space.
@@ -141,7 +351,7 @@ When used in the context of \ac{MI}, the overcompleteness and the sparsity
 constraint are motivated by the \textit{superposition hypothesis}.
 
 \subsubsection{The Superposition Hypothesis}
-\label{sec:background:ae:superposition}
+\label{sec:background:ae:sae:superposition}
 
 A central challenge in \ac{MI} is that individual neurons in neural networks
 tend to be \textit{polysemantic}: they activate in response to multiple,
@@ -179,7 +389,7 @@ learning} \cite{olshausenSparseCodingOvercomplete1997}, a classical technique
 from computational neuroscience that \acp{SAE} adapt to the setting of modern
 language models.
 
-\subsubsection{Architectures} \label{sec:background::ae:sae:arch}
+\subsubsection{Architectures} \label{sec:background:ae:sae:arch}
 There are many ways to enforce sparsity, each with its pros and cons. Here is a
 selection of methods that range from the initial \ac{SAE} idea to more modern
 architectures that try to improve on it.
@@ -192,10 +402,9 @@ architectures that try to improve on it.
     exactly zero, so that any given activation is reconstructed from a small
     number of active features. The loss used to train this model is the
     following:
-    \begin{equation*}
-        \mathcal{L} = \norm{\vb{x} - \hat{\vb{x}}}^{2}_{2} + \lambda
-        \norm{\vb{z}}_{1}.
-    \end{equation*}
+    \begin{equation} \label{eq:background:ae:sae:l1-loss}
+        \mathcal{L} = \mathcal{L}_{\mathrm{recon}} + \lambda \norm{\vb{z}}_{1}.
+    \end{equation}
     The scalar $\lambda$ controls the sparsity--reconstruction trade-off and
     must be tuned carefully: too large, and reconstruction degrades; too small,
     and the learned features lose monosemanticity. A known side effect of
@@ -213,7 +422,7 @@ architectures that try to improve on it.
     with larger decoder norms
     \cite{rajamanoharanImprovingSparseDecomposition2024}. There is, however, a
     residual gradient-level bias that is structurally entangled with the
-    $\ell_{1}$ penalty and can't be resolved with this trick.
+    $\ell_{1}$ penalty and cannot be resolved with this trick.
 
     \paragraph{TopK SAEs} \citet{gaoScalingEvaluatingSparse2024} proposed
     replacing the $\ell_{1}$ penalty with a hard sparsity constraint,
@@ -221,10 +430,10 @@ architectures that try to improve on it.
     pre-activations and zeros the rest. This directly controls the number of
     active features per forward pass, eliminating the need to tune $\lambda$ and
     removing the shrinkage bias entirely. The full training objective is:
-    \begin{equation*}
-        \mathcal{L} = \norm{\vb{x} - \hat{\vb{x}}}^{2}_{2} + \alpha
+    \begin{equation} \label{eq:background:ae:sae:topk-loss}
+        \mathcal{L} = \mathcal{L}_{\mathrm{recon}} + \alpha
         \mathcal{L}_{\mathrm{aux}},
-    \end{equation*}
+    \end{equation}
     where the auxiliary loss $\mathcal{L}_{\mathrm{aux}}$ addresses the problem
     of dead latents, \ie features that cease to activate entirely during
     training. Latents are flagged as dead if they have not activated for a
@@ -251,99 +460,108 @@ architectures that try to improve on it.
     proposed replacing the standard ReLU with a JumpReLU activation, which is
     zero below a learned per-feature threshold $\theta_{i}$ and equal to the
     pre-activation above it:
-    \begin{equation*}
+    \begin{equation} \label{eq:background:ae:sae:jumprelu}
         \operatorname{JumpReLU}_{\theta_{i}}(z_{i}) = z_{i} \cdot \mathds{1}[z_{i} >
         \theta_{i}].
-    \end{equation*}
+    \end{equation}
 
     The key advantage of this parameterisation is that it provides a dedicated,
-    per-feature learnable threshold, which allows the $\ell_{0}$ norm of the
-    feature activations --- $\sum_{i} H(\pi_{i} - \theta_{i})$, where $\pi_{i}$
-    are the encoder pre-activations and $H(x) = \mathds{1}[x > 0]$ is the
-    Heaviside step function --- to be trained directly via a straight-through
-    estimator applied to the threshold parameter $\theta_{i}$. Because each
-    threshold can be positioned near the actual boundary between active and
-    inactive pre-activations for its feature, the gradient signal is stable and
-    controllable, making $\ell_{0}$ training practical in a way that would not
-    be possible with a fixed threshold. Training with $\ell_{0}$ rather than
-    $\ell_{1}$ eliminates shrinkage entirely, since $\ell_{0}$ penalises only
-    the number of active features and not their intensity. JumpReLU \acp{SAE}
-    achieve performance competitive with TopK \acp{SAE}.
-
-\subsubsection{Application to Mechanistic Interpretability}
-\label{sec:background:ae:sae:mechint}
-
-The primary application of \acp{SAE} in \ac{MI} is \textit{feature discovery}:
-training \iac{SAE} on the internal activations of a language model and examining
-the resulting dictionary atoms to identify human-interpretable concepts. The
-underlying hypothesis is that each dictionary atom, being active for only a
-semantically coherent set of inputs, corresponds to a monosemantic feature of
-the model's computation, a clean unit of meaning that the model had obscured in
-the neuron basis.
-
-\paragraph{Where SAEs are applied} \acp{SAE} can be trained on activations from
-any layer or component of a transformer. \graffito{Make sure to mention what the
-residual stream, \acs{MLP}, and attention heads are in a chapter about
-\acsp{LLM}} Common targets include the residual stream at various depths,
-\ac{MLP} layer outputs, and attention head outputs
-\cite{hubenSparseAutoencodersFind2023,
-brickenMonosemanticityDecomposingLanguage2023}. Each choice decomposes a
-different aspect of the model's representations, and the resulting features
-reflect the computational role of the targeted component. \graffito{Do we have a
-reference for this?} Residual stream \acp{SAE}, for instance, tend to capture
-more semantic, higher-level structure, while \ac{MLP}-targeted \acp{SAE} often
-recover features more directly tied to knowledge retrieval and factual
-associations.
-
-\paragraph{Feature interpretability} In practice, learned features often
-correspond to recognisable concepts.
-\citet{brickenMonosemanticityDecomposingLanguage2023} trained \iac{SAE} on the
-\ac{MLP} of a one-layer transformer and found features responsive to specific
-tokens, syntactic roles, and semantic categories. Scaling this approach to
-production-scale models, \citet{templetonScalingMonosemanticityExtracting} claim
-to have identified lots of interpretable features, including neurons
-representing famous people or countries, emotions, or even biases (racism,
-sexism, hatred) and sarcastic praise. These results provide strong empirical
-support for the superposition hypothesis and suggest that \acp{SAE} can serve as
-a practical lens through which to study what information \acp{LLM} represent.
-
-\paragraph{Evaluation} Assessing the quality of learned features is non-trivial,
-as interpretability is inherently subjective. Several proxy metrics are used in
-practice. \textit{Reconstruction quality} is typically measured by the
-downstream \ac{CE} loss \graffito{Could this be made clearer?} recovered when
-replacing original activations with \ac{SAE} reconstructions
-\cite{gaoScalingEvaluatingSparse2024}. \textit{Sparsity} is quantified via the
-average $\ell_{0}$ norm of the latent codes, \ie the mean number of active
-features per token. \textit{Automated interpretability} pipelines use a second
-language model to generate and score natural-language descriptions of individual
-features \cite{billsLanguageModelsCan2023}, providing a scalable if imperfect
-proxy for human judgement.
-
-The inherent tension between these metrics -- reconstruction quality, sparsity,
-and interpretability -- is a recurring theme in \ac{SAE} literature, and
-motivates both the architectural variants described in
-\cref{sec:background::ae:sae:arch}
-and the alternative approach developed in this thesis and
-described in \cref{sec:methods:model}.
+    per-feature learnable threshold, which allows the $\ell_{0}$
+    norm\footnote{The $\ell_{0}$ norm is a pseudo-norm defined as the number of
+    non-zero vector components.} of the feature activations --- $\sum_{i}
+    H(\pi_{i} - \theta_{i})$, where $\pi_{i}$ are the encoder pre-activations
+    and $H(x) = \mathds{1}[x > 0]$ is the Heaviside step function --- to be
+    trained directly via a straight-through estimator applied to the threshold
+    parameter $\theta_{i}$. Because each threshold can be positioned near the
+    actual boundary between active and inactive pre-activations for its feature,
+    the gradient signal is stable and controllable, making $\ell_{0}$ training
+    practical in a way that would not be possible with a fixed threshold.
+    Training with $\ell_{0}$ rather than $\ell_{1}$ eliminates shrinkage
+    entirely, since $\ell_{0}$ penalises only the number of active features and
+    not their intensity. JumpReLU \acp{SAE} achieve performance competitive with
+    TopK \acp{SAE}.
 
 
-\subsection{VAEs} \label{sec:background:ae:vae}
-% \lipsum[1-3]
-    \subsubsection{Architectures} \label{sec:background:ae:vae:arch}
-        \paragraph{$\beta$-VAE}
-        % \lipsum[1-3]
-        \paragraph{VQ-VAE}
-        % \lipsum[1-3]
-    \subsubsection{Usage} \label{sec:background:ae:vae:usage}
-        \paragraph{Generative model}
-        % \lipsum[1-2]
-        \paragraph{XAI}
-        % \lipsum[1-2]
+\subsubsection{Applications} \label{sec:background:ae:sae:applications}
+
+Unlike general-purpose \acp{AE} and \acp{VAE}, which are applied across a range
+of domains, \acp{SAE} find their primary application in interpreting the
+internal activations of neural networks, and \ac{MI} remains their most
+prominent application, making it the focus of this section. \acp{SAE} can be
+trained on activations from any layer or component of a
+transformer;\graffito{Make sure to mention what the residual stream, \ac{MLP},
+and attention heads are in a chapter about \acsp{LLM}} common targets include
+the residual stream at various depths, \ac{MLP} layer outputs, and attention
+head outputs \cite{hubenSparseAutoencodersFind2023,
+brickenMonosemanticityDecomposingLanguage2023}. The resulting dictionary then
+supports the applications described below.
+
+    \paragraph{Feature discovery} The primary use of \acp{SAE} is
+    \textit{feature discovery}: training \iac{SAE} on a model's internal
+    activations and examining the resulting dictionary atoms to identify
+    human-interpretable concepts. The underlying hypothesis is that each atom,
+    active for only a semantically coherent set of inputs, corresponds to a
+    monosemantic feature of the model's computation --- a clean unit of meaning
+    that the model had obscured in the neuron basis. In practice these features
+    often correspond to recognisable concepts:
+    \citet{brickenMonosemanticityDecomposingLanguage2023} trained \iac{SAE} on
+    the \ac{MLP} of a one-layer transformer and found features responsive to
+    specific tokens, syntactic roles, and semantic categories, while at
+    production scale \citet{templetonScalingMonosemanticityExtracting} report
+    features for famous people, countries, emotions, or even biases (like
+    racism, sexism, hatred) and sarcastic praise. These results provide strong
+    empirical support for the superposition hypothesis and suggest that
+    \acp{SAE} can serve as a practical lens through which to study what
+    information \acp{LLM} represent.
+
+    \paragraph{Steering} The features recovered by \iac{SAE} are not merely
+    descriptive: because each corresponds to a direction in activation space, its
+    activation can be clamped to an arbitrary value during a forward pass to
+    causally \textit{steer} the model's behaviour.
+    \citet{templetonScalingMonosemanticityExtracting} demonstrated this by
+    amplifying a single feature, causing the model to compulsively reference the
+    Golden Gate Bridge regardless of the input. Such interventions show that the
+    discovered features are causally implicated in the model's computation rather
+    than merely correlated with its inputs, and open a path to controllable
+    generation and targeted safety interventions.
+
+    \paragraph{Circuit analysis} Beyond cataloguing individual features,
+    \acp{SAE} can serve as the building blocks for reconstructing the
+    \textit{circuits} a model uses to perform a computation, expressing the
+    interactions between features across layers as an interpretable causal graph
+    \cite{marksSparseFeatureCircuits2025}. More recent work favours
+    \textit{transcoders} --- a variant trained to approximate the input--output
+    behaviour of an \ac{MLP} sublayer with a sparse hidden representation,
+    rather than to reconstruct a single activation --- which should disentangle
+    the model's computation more cleanly and yield sparser, more faithful
+    circuits \cite{dunefskyTranscodersFindInterpretable2024,
+    ameisenCircuitTracingRevealing2025}.
+
+\subsubsection{Evaluation} \label{sec:background:ae:sae:evaluation}
+Assessing the quality of learned features is non-trivial, as interpretability is
+inherently subjective. Several proxy metrics are used in practice.
+\textit{Reconstruction quality} is typically measured by the downstream \ac{CE}
+loss \graffito{Could this be made clearer?} recovered when replacing original
+activations with \ac{SAE} reconstructions \cite{gaoScalingEvaluatingSparse2024}.
+\textit{Sparsity} is quantified via the average $\ell_{0}$ norm of the latent
+codes, \ie the mean number of active features per token. \textit{Automated
+interpretability} pipelines use a second language model to generate and score
+natural-language descriptions of individual features
+\cite{billsLanguageModelsCan2023}, providing a scalable if imperfect proxy for
+human judgement.
+
+
+
+% --------------------------------------------- %
 
 \section*{Conclusions}
-% \lipsum[1]
 
-
+\graffito{Rough seed --- expand into a proper chapter conclusion.}
+The inherent tension between reconstruction quality, sparsity, and
+interpretability is a recurring theme in the \ac{SAE} literature, and motivates
+both the architectural variants described in \cref{sec:background:ae:sae:arch}
+and the alternative approach developed in this thesis and described in
+\cref{sec:methods:model}.
 
 
 %*****************************************
