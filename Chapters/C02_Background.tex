@@ -261,18 +261,19 @@ space or the form of the latent code; two are particularly relevant here.
     the structure and interpretability of the latent space at the cost of
     reconstruction fidelity.
 
-    \paragraph{VQ-VAE} \citet{oordNeuralDiscreteRepresentation2018} replaced the
-    continuous Gaussian latent with a \textit{discrete} one. The encoder output
-    is quantised to the nearest entry of a learned codebook $\{\vb{e}_{1},
-    \dots, \vb{e}_{K}\}$, so that each latent is represented by a discrete index
-    rather than a continuous vector. This sidesteps the \textit{posterior
-    collapse} that can affect continuous \acp{VAE} paired with expressive
-    autoregressive decoders, in which the decoder learns to ignore the latent
-    entirely. Because the nearest-neighbour lookup is non-differentiable,
-    gradients are passed to the encoder with a straight-through estimator and
-    the codebook is learned through dedicated loss terms. VQ-VAE underpins many
-    modern generative systems, providing the discrete latent vocabulary over
-    which an autoregressive prior is subsequently trained.
+    \paragraph{VQ-VAE} \citet{vandenoordNeuralDiscreteRepresentation2017}
+    replaced the continuous Gaussian latent with a \textit{discrete} one. The
+    encoder output is quantised to the nearest entry of a learned codebook
+    $\{\vb{e}_{1}, \dots, \vb{e}_{K}\}$, so that each latent is represented by a
+    discrete index rather than a continuous vector. This sidesteps the
+    \textit{posterior collapse} that can affect continuous \acp{VAE} paired with
+    expressive autoregressive decoders, in which the decoder learns to ignore
+    the latent entirely. Because the nearest-neighbour lookup is
+    non-differentiable, gradients are passed to the encoder with a
+    straight-through estimator and the codebook is learned through dedicated
+    loss terms. VQ-VAE underpins many modern generative systems, providing the
+    discrete latent vocabulary over which an autoregressive prior is
+    subsequently trained.
 
 \subsubsection{Applications} \label{sec:background:ae:vae:applications}
 
@@ -287,11 +288,12 @@ this thesis.
     in pixel space. The autoencoder behind Stable Diffusion
     \cite{rombachHighResolutionImageSynthesis2022} is regularised only weakly,
     with a small \ac{KL} penalty (in the manner of a \ac{VAE}) or with vector
-    quantisation. Discrete VQ-VAEs \cite{oordNeuralDiscreteRepresentation2018}
-    encode data into a grid of discrete codes from a learned codebook, which an
-    autoregressive prior can then generate. The smooth latent also serves as a
-    search space: optimising over it has been used to search for new molecules
-    with desired properties \cite{gomez-bombarelliAutomaticChemicalDesign2018}.
+    quantisation. Discrete VQ-VAEs
+    \cite{vandenoordNeuralDiscreteRepresentation2017} encode data into a grid of
+    discrete codes from a learned codebook, which an autoregressive prior can
+    then generate. The smooth latent also serves as a search space: optimising
+    over it has been used to search for new molecules with desired properties
+    \cite{gomez-bombarelliAutomaticChemicalDesign2018}.
 
     \paragraph{Anomaly detection} Like standard autoencoders, \acp{VAE} can flag
     anomalies, but they replace the single reconstruction error with a
@@ -319,12 +321,12 @@ this thesis.
     \cite{goyalExplainingClassifiersCausal2020,
     komanduriSCMVAELearningIdentifiable2022}. \acp{VAE} have also been paired
     with concept-based models such as self-explaining networks
-    \cite{alvarez-melisRobustInterpretabilitySelfexplaining2018}. Closest to this
-    thesis, variational ideas have been brought to sparse dictionary learning ---
-    variational sparse coding \cite{tonoliniVariationalSparseCoding2020} and
-    variational \aclp{SAE} \cite{bakerAnalysisVariationalSparse2025} --- seeking to
-    combine the interpretability of sparse codes with the structured latent of a
-    \ac{VAE}, the same combination developed in \cref{sec:methods:model}.
+    \cite{alvarezmelisRobustInterpretabilitySelfExplaining2018}. Closest to this
+    thesis, variational ideas have been brought to sparse dictionary learning
+    --- variational sparse coding \cite{tonoliniVariationalSparseCoding2020} and
+    variational \aclp{SAE} \cite{bakerAnalysisVariationalSparse2025} --- seeking
+    to combine the interpretability of sparse codes with the structured latent
+    of a \ac{VAE}, the same combination developed in \cref{sec:methods:model}.
 
 
 \subsection{Sparse AutoEncoders} \label{sec:background:ae:sae}
