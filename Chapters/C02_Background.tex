@@ -546,23 +546,20 @@ supports the applications described below.
     circuits \cite{dunefskyTranscodersFindInterpretable2024,
     ameisenCircuitTracingRevealing2025}.
 
-\subsubsection{Evaluation} \label{sec:background:ae:sae:evaluation}
-Assessing the quality of learned features is non-trivial, as interpretability is
+\subsubsection{Evaluation} \label{sec:background:ae:sae:evaluation} Assessing
+the quality of learned features is non-trivial, as interpretability is
 inherently subjective. Several proxy metrics are used in practice.
 \textit{Reconstruction quality} is judged by its effect on the model rather than
 by the raw reconstruction error: the \ac{SAE}'s output is substituted for the
-original activations, the model is run forward, and the resulting increase in its
-next-token \ac{CE} loss is measured \cite{gaoScalingEvaluatingSparse2024}. A
+original activations, the model is run forward, and the resulting increase in
+its next-token \ac{CE} loss is measured \cite{gaoScalingEvaluatingSparse2024}. A
 faithful \ac{SAE} leaves this loss almost unchanged, indicating that it has
-retained the information the model actually uses.
-\textit{Sparsity} is quantified via the average $\ell_{0}$ norm of the latent
-codes, \ie the mean number of active features per token. \textit{Automated
-interpretability} pipelines use a second language model to generate and score
-natural-language descriptions of individual features
-\cite{billsLanguageModelsCan2023}, providing a scalable if imperfect proxy for
-human judgement.
-
-
+retained the information the model actually uses. \textit{Sparsity} is
+quantified via the average $\ell_{0}$ norm of the latent codes, \ie the mean
+number of active features per token. \textit{Automated interpretability}
+pipelines use a second language model to generate and score natural-language
+descriptions of individual features \cite{billsLanguageModelsCan2023}, providing
+a scalable if imperfect proxy for human judgement.
 
 % --------------------------------------------- %
 
