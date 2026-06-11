@@ -2,26 +2,113 @@
 \chapter{Background and Related Work} \label{ch:background}
 %************************************************
 
-\section{NLP} \label{sec:background:nlp}
+\section{Natural Language Processing} \label{sec:background:nlp}
 
 % --------------------------------------------- %
 
-\section{XAI} \label{sec:background:xai}
+\section{eXplainable AI} \label{sec:background:xai}
 
+Modern machine-learning systems' incredible performance comes at the cost of
+transparency: a deep network's output is the product of millions of interacting
+parameters, with no accompanying account of why it was produced. \ac{XAI} is the
+field that sets out to supply such accounts, making a model's behaviour
+intelligible enough to be trusted, debugged, or learnt from. The methods
+relevant to this thesis are most naturally organised around a shift in what
+counts as an explanation: from \emph{attribution}, which asks \emph{where} ---
+which inputs drove a prediction --- to \emph{concepts}, the human-meaningful
+units in terms of which a model can be said to reason. It is this latter,
+concept-based view on which this work builds, in the service of understanding
+\aclp{LLM}.
 
 \subsection{Traditional XAI} \label{sec:background:xai:trad-xai}
 
+\subsubsection{Intrinsically Interpretable Models}
+\label{sec:background:xai:trad-xai:intrinsic}
 
-\subsection{C-XAI} \label{sec:background:xai:c-xai}
+    The most direct route to an interpretable model is to choose one whose
+    decision process is transparent by construction. Linear and logistic
+    regression, decision trees, naive Bayes classifiers, and $k$-nearest
+    neighbours are the canonical examples: their parameters or structure can be
+    inspected directly, so that the explanation \emph{is} the model rather than
+    a separate artifact derived from it
+    \citep{molnarInterpretableMachineLearning2025}.
+    \citet{rudinStopExplainingBlack2019} argues that such models should be
+    preferred wherever they are competitive, since post-hoc explanations of an
+    opaque model are approximations that need not be faithful to its actual
+    computation. This route is, however, closed for the systems studied in this
+    thesis: \aclp{LLM} comprise billions of nonlinearly interacting parameters,
+    and no direct reading of their weights yields a human-understandable account
+    of their behaviour. Interpretability must therefore be recovered \emph{post
+    hoc}, from a model that is already trained and fixed.
+
+\subsubsection{Post-hoc Attribution Methods}
+\label{sec:background:xai:trad-xai:post-hoc}
+
+    The dominant post-hoc paradigm explains an individual prediction by
+    \emph{attributing} it to the input features, assigning each feature a score
+    that quantifies its contribution to the output. LIME
+    \citep{ribeiroWhyShouldTrust2016} does this by fitting a simple,
+    interpretable surrogate (typically a sparse linear model) to the behaviour
+    of the black box in a local neighbourhood of the instance being explained.
+    SHAP \citep{lundbergUnifiedApproachInterpreting2017} unifies this and
+    several related schemes under the Shapley value from cooperative game
+    theory, yielding feature attributions that are additive and satisfy a set of
+    desirable axioms. For models operating on images, gradient-based saliency
+    maps \citep{simonyanDeepConvolutionalNetworks2014} and their refinements
+    such as Grad-CAM \citep{selvarajuGradCAMVisualExplanations2017} produce a
+    heatmap over the input that highlights the regions most influential to the
+    prediction. What these methods share is also their central limitation: they
+    indicate \emph{where} in the input the model is sensitive, but not
+    \emph{what} the model has internally come to represent. An attribution map
+    can mark a pixel or a token as important without revealing the
+    human-meaningful concept it participates in: a gap that motivates the
+    concept-based methods of \cref{sec:background:xai:c-xai}.
+
+    \paragraph{Counterfactual explanations} A counterfactual explanation answers
+    a contrastive question: what is the smallest change to the input that would
+    have produced a different, desired prediction
+    \citep{wachterCounterfactualExplanationsOpening2017}? Rather than scoring
+    the features of the present input, it points to a nearby instance on the
+    other side of the decision boundary: ``had this applicant's income been
+    slightly higher, the loan would have been granted''. Such explanations are
+    attractive because they are actionable and require no access to the model's
+    internals, only the ability to query it. Generating counterfactuals that are
+    at the same time close to the original input and realistic is itself a
+    modelling problem, one to which generative models are naturally suited to
+    solve.
+
+\subsubsection{Prototypes}
+\label{sec:background:xai:trad-xai:prototypes}
+
+    A complementary, example-based strategy explains a model not through feature
+    scores but through representative instances. A \emph{prototype} is a data
+    point that is typical of a region of the input space, chosen so that a small
+    set of such points summarises the data (or the model's behaviour upon it) in
+    terms a human can grasp by inspection \citep{kimExamplesAreNot2016}. The
+    defining characteristic, for the purposes of this thesis, is that a
+    prototype in this traditional sense is an \emph{input instance}: an actual
+    or representative example drawn from the data space.
+
+\subsection{Concept-based XAI} \label{sec:background:xai:c-xai}
+    % Intro para: concepts (human-meaningful units) as the unit of explanation;
+    % the paradigm this thesis lives in.
 
 \subsubsection{Explainable-by-design Models}
 
-    \paragraph{CBM/CEM}
+    \paragraph{CBM}
+
+    \paragraph{CEM}
+
     \paragraph{LF-CBM}
 
 \subsubsection{Post-hoc Methods}
 
     \paragraph{T-CAV}
+
+    \paragraph{SAEs and Mechanistic Interpretability}
+    % Bridge paragraph ONLY -- do not explain SAEs here. State that unsupervised
+    % concept extraction via SAEs is the line this thesis builds on, and \cref
+    % forward to the full treatment in \cref{sec:background:ae:sae}.
 
 % --------------------------------------------- %
 
@@ -314,10 +401,12 @@ this thesis.
 
     \paragraph{Interpretability} The structured latent that makes \acp{VAE} good
     representation learners also makes them attractive for explainability. Their
-    smoothness supports \textit{counterfactual explanation} --- perturbing the
-    latent yields plausible, on-manifold variants of an input --- and a
-    substantial line of work uses \acp{VAE} for \textit{causal representation
-    learning}, aligning latent factors with underlying causal variables
+    smoothness supports \textit{counterfactual explanation}
+    (\cref{sec:background:xai:trad-xai:post-hoc}),
+    as perturbing the latent yields plausible, on-manifold variants of an input
+    \cite{joshiRealisticIndividualRecourse2019}. A substantial line of work uses
+    \acp{VAE} for \textit{causal representation learning}, aligning latent
+    factors with underlying causal variables
     \cite{goyalExplainingClassifiersCausal2020,
     komanduriSCMVAELearningIdentifiable2022}. \acp{VAE} have also been paired
     with concept-based models such as self-explaining networks
