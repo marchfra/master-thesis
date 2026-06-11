@@ -253,6 +253,32 @@
 % 7. Further adjustments (experimental)
 % ****************************************************************************************************
 % ********************************************************************
+% Heading hierarchy overrides (must come after \usepackage{classicthesis})
+% Goal: distinguish every level by shape/size while keeping the
+% classicthesis vocabulary (letterspaced caps / small caps / italic).
+%   chapter   : as upstream, title enlarged
+%   section   : as upstream (spaced low small caps), enlarged
+%   subsection: takes the old section style (spaced low small caps), body size
+%   subsubsec.: unchanged (normal-size italic) -- now distinct from subsection
+%   paragraph : unchanged (run-in spaced low small caps)
+%   subparag. : copies paragraph, indented by \parindent
+% ********************************************************************
+% chapter -- upstream definition with an enlarged title (\Large)
+\titleformat{\chapter}[display]%
+  {\relax}{\mbox{}\oldmarginpar{\vspace*{-3\baselineskip}\color{CTsemi}\chapterNumber\thechapter}}{0pt}%
+  {\raggedright\Large\spacedallcaps}[\normalsize\vspace*{.8\baselineskip}\titlerule]%
+% section -- enlarged (\large), still spaced low small caps
+\titleformat{\section}%
+  {\large}{\textsc{\MakeTextLowercase{\thesection}}}{1em}{\Large\spacedlowsmallcaps}
+% subsection -- now uses the former section style (spaced low small caps, body size)
+\titleformat{\subsection}%
+  {\relax}{\textsc{\MakeTextLowercase{\thesubsection}}}{1em}{\spacedlowsmallcaps}
+% subparagraph -- like paragraph (run-in spaced low small caps), but indented
+\titleformat{\subparagraph}[runin]%
+  {\normalfont\normalsize}{\thesubparagraph}{0pt}{\spacedlowsmallcaps}
+\titlespacing*{\subparagraph}{\parindent}{1\baselineskip}{1\baselineskip}
+
+% ********************************************************************
 % Changing the text area
 % ********************************************************************
 %\areaset[current]{312pt}{761pt} % 686 (factor 2.2) + 33 head + 42 head \the\footskip
