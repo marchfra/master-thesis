@@ -10,19 +10,47 @@
 \let\cleardoublepage\relax
 
 \chapter*{Abstract}
-Short summary of the contents in English\dots a great guide by
-Kent Beck how to write good abstracts can be found here:
-\begin{center}
-\url{https://plg.uwaterloo.ca/~migod/research/beckOOPSLA.html}
-\end{center}
+% Short summary of the contents in English\dots a great guide by
+% Kent Beck how to write good abstracts can be found here:
+% \begin{center}
+% \url{https://plg.uwaterloo.ca/~migod/research/beckOOPSLA.html}
+% \end{center}
 
-\vfill
+% THIS IS ONLY A DRAFT
+Large Language Models encode their computations in dense, high-dimensional
+activations whose individual dimensions seldom correspond to anything a human
+can name, and Sparse AutoEncoders (SAEs) have become the standard tool for
+decomposing these activations into interpretable concepts. Yet SAEs impose a
+steep sparsity–reconstruction trade-off: because each concept is a single scalar
+coefficient, holding the reconstruction error at an acceptable level leaves far
+too many active concepts per token for the decomposition to be interpretable.
+This thesis introduces the Variational Auto Embedding Encoder (VAEE), a model
+that represents each concept not as a scalar but as a learned vector embedding,
+drawing together ideas from Concept Embedding Models, Variational AutoEncoders,
+and Vector-Quantized Variational AutoEncoders (VQ-VAEs); like a VQ-VAE it
+decodes through a learned codebook, but rather than reconstructing from a single
+embedding it stacks every embedding deemed active --- each selected by comparing
+the encoded input against a learned prototype --- and decodes from that stack.
+Derived from first principles, the VAEE markedly relaxes the
+sparsity–reconstruction trade-off: on Mistral 7B residual-stream activations, a
+VAEE with eight active concepts matches the reconstruction of a
+parameter-matched TopK SAE that requires 128. These gains come with honest
+caveats: reconstruction was assessed only by mean squared error, each concept
+now spans several active neurons rather than one, and the recovered concepts
+were not found to be more interpretable than the SAE's --- so the VAEE's
+contribution lies in expanding the capacity and sparsity of concept
+representations, leaving their interpretability and downstream steering as the
+central open questions.
+% END DRAFT
 
-\begin{otherlanguage}{ngerman}
-\pdfbookmark[1]{Zusammenfassung}{Zusammenfassung}
-\chapter*{Zusammenfassung}
-Kurze Zusammenfassung des Inhaltes in deutscher Sprache\dots
-\end{otherlanguage}
+
+% \vfill
+
+% \begin{otherlanguage}{ngerman}
+% \pdfbookmark[1]{Zusammenfassung}{Zusammenfassung}
+% \chapter*{Zusammenfassung}
+% Kurze Zusammenfassung des Inhaltes in deutscher Sprache\dots
+% \end{otherlanguage}
 
 \endgroup
 
