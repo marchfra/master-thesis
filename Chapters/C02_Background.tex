@@ -11,58 +11,56 @@
 The incredible performance of modern machine-learning systems comes at the cost
 of transparency: a deep network's output is the product of millions of
 interacting parameters, with no accompanying account of why it was produced.
-\ac{XAI} is the field that sets out to supply such accounts, making a model's
+\acf{XAI} is the field that sets out to supply such accounts, making a model's
 behaviour intelligible enough to be trusted, debugged, or learnt from. The
 methods relevant to this thesis are most naturally organised around a shift in
 what counts as an explanation: from \emph{attribution}, which asks \emph{where}
 (``which input features drove a prediction?''), to \emph{concepts}, the
 human-meaningful units in terms of which a model can be said to reason. It is
 this latter, concept-based view on which this work builds, in the service of
-understanding \aclp{LLM}.
+understanding \acp{LLM}.
 
 \subsection{Traditional XAI} \label{sec:background:xai:trad-xai}
 
 \subsubsection{Intrinsically Interpretable Models}
 \label{sec:background:xai:trad-xai:intrinsic}
 
-    The most direct route to an interpretable model is to choose one whose
-    decision process is transparent by construction. Linear and logistic
-    regression, decision trees, naive Bayes classifiers, and $k$-nearest
-    neighbours are the canonical examples: their parameters or structure can be
-    inspected directly, so that the explanation \emph{is} the model rather than
-    a separate artifact derived from it
-    \citep{molnarInterpretableMachineLearning2025}.
-    \citet{rudinStopExplainingBlack2019} argues that such models should be
-    preferred wherever they are competitive, since post-hoc explanations of an
-    opaque model are approximations that need not be faithful to its actual
-    computation. This route is, however, closed for the systems studied in this
-    thesis: \acp{LLM} comprise billions of nonlinearly interacting parameters,
-    and no direct reading of their weights yields a human-understandable account
-    of their behaviour. Interpretability must therefore be recovered \emph{post
-    hoc}, from a model that is already trained and fixed.
+The most direct route to an interpretable model is to choose one whose decision
+process is transparent by construction. Linear and logistic regression, decision
+trees, naive Bayes classifiers, and $k$-nearest neighbours are the canonical
+examples: their parameters or structure can be inspected directly, so that the
+explanation \emph{is} the model rather than a separate artifact derived from it
+\citep{molnarInterpretableMachineLearning2025}.
+\citet{rudinStopExplainingBlack2019} argues that such models should be preferred
+wherever they are competitive, since post-hoc explanations of an opaque model
+are approximations that need not be faithful to its actual computation. This
+route is, however, closed for the systems studied in this thesis: \acp{LLM}
+comprise billions of nonlinearly interacting parameters, and no direct reading
+of their weights yields a human-understandable account of their behaviour.
+Interpretability must therefore be recovered \emph{post hoc}, from a model that
+is already trained and fixed.
 
 \subsubsection{Post-hoc Attribution Methods}
 \label{sec:background:xai:trad-xai:post-hoc}
 
-    The dominant post-hoc paradigm explains an individual prediction by
-    \emph{attributing} it to the input features, assigning each feature a score
-    that quantifies its contribution to the output. LIME
-    \citep{ribeiroWhyShouldTrust2016} does this by fitting a simple,
-    interpretable surrogate (typically a sparse linear model) to the behaviour
-    of the black box in a local neighbourhood of the instance being explained.
-    SHAP \citep{lundbergUnifiedApproachInterpreting2017} unifies this and
-    several related schemes under the Shapley value from cooperative game
-    theory, yielding feature attributions that are additive and satisfy a set of
-    desirable axioms. For models operating on images, gradient-based saliency
-    maps \citep{simonyanDeepConvolutionalNetworks2014} and their refinements
-    such as Grad-CAM \citep{selvarajuGradCAMVisualExplanations2017} produce a
-    heatmap over the input that highlights the regions most influential to the
-    prediction. What these methods share is also their central limitation: they
-    indicate \emph{where} in the input the model is sensitive, but not
-    \emph{what} the model has internally come to represent. An attribution map
-    can mark a pixel or a token as important without revealing the
-    human-meaningful concept it participates in: a gap that motivates the
-    concept-based methods of \cref{sec:background:xai:c-xai}.
+The dominant post-hoc paradigm explains an individual prediction by
+\emph{attributing} it to the input features, assigning each feature a score that
+quantifies its contribution to the output. LIME
+\citep{ribeiroWhyShouldTrust2016} does this by fitting a simple, interpretable
+surrogate (typically a sparse linear model) to the behaviour of the black box in
+a local neighbourhood of the instance being explained. SHAP
+\citep{lundbergUnifiedApproachInterpreting2017} unifies this and several related
+schemes under the Shapley value from cooperative game theory, yielding feature
+attributions that are additive and satisfy a set of desirable axioms. For models
+operating on images, gradient-based saliency maps
+\citep{simonyanDeepConvolutionalNetworks2014} and their refinements such as
+Grad-CAM \citep{selvarajuGradCAMVisualExplanations2017} produce a heatmap over
+the input that highlights the regions most influential to the prediction. What
+these methods share is also their central limitation: they indicate \emph{where}
+in the input the model is sensitive, but not \emph{what} the model has
+internally come to represent. An attribution map can mark a pixel or a token as
+important without revealing the human-meaningful concept it participates in: a
+gap that motivates the concept-based methods of \cref{sec:background:xai:c-xai}.
 
     \paragraph{Counterfactual explanations} A counterfactual explanation answers
     a contrastive question: what is the smallest change to the input that would
@@ -80,35 +78,114 @@ understanding \aclp{LLM}.
 \subsubsection{Prototypes}
 \label{sec:background:xai:trad-xai:prototypes}
 
-    A complementary, example-based strategy explains a model not through feature
-    scores but through representative instances. A \emph{prototype} is a data
-    point that is typical of a region of the input space, chosen so that a small
-    set of such points summarises the data (or the model's behaviour upon it) in
-    terms a human can grasp by inspection \citep{kimExamplesAreNot2016}. The
-    defining characteristic, for the purposes of this thesis, is that a
-    prototype in this traditional sense is an \emph{input instance}: an actual
-    or representative example drawn from the data space.
+A complementary, example-based strategy explains a model not through feature
+scores but through representative instances. A \emph{prototype} is a data point
+that is typical of a region of the input space, chosen so that a small set of
+such points summarises the data (or the model's behaviour upon it) in terms a
+human can grasp by inspection \citep{kimExamplesAreNot2016}. The defining
+characteristic, for the purposes of this thesis, is that a prototype in this
+traditional sense is an \emph{input instance}: an actual or representative
+example drawn from the data space.
 
 \subsection{Concept-based XAI} \label{sec:background:xai:c-xai}
-    % Intro para: concepts (human-meaningful units) as the unit of explanation;
-    % the paradigm this thesis lives in.
+
+\ac{CXAI} answers the \emph{what} question that attribution leaves open:
+instead of pointing to the inputs responsible for a prediction, it explains the
+prediction in terms of high-level, human-meaningful \emph{concepts}
+(``striped'', ``has wheels'', ``expresses uncertainty'') of the kind a person
+would use to describe the same decision. Methods in this family differ chiefly
+in whether the concepts are built into the model from the outset or recovered
+from a model that was trained without them.
 
 \subsubsection{Explainable-by-design Models}
 
-    \paragraph{CBM}
+One way to guarantee that concepts genuinely take part in a model's decision is
+to make them an explicit, intermediate stage of the computation, so that the
+prediction is forced to pass through a concept representation before reaching
+the output.
 
-    \paragraph{CEM}
+    \paragraph{Concept Bottleneck Models} \acp{CBM}
+    \citep{kohConceptBottleneckModels2020} insert exactly such a stage: the
+    network first maps the input to a set of human-specified concepts and then
+    predicts the label from those concepts alone. Because the output depends on
+    the input only through the concept layer, the model's reasoning can be read
+    off the activated concepts, and a user can intervene on them, correcting a
+    mistaken concept and observing the effect on the prediction. The downside is
+    supervision: training \iac{CBM} requires data annotated by human experts
+    with concept labels, which is costly and ties the model to a fixed,
+    predefined vocabulary.
 
-    \paragraph{LF-CBM}
+    \paragraph{Concept Embedding Models} A known weakness of \acp{CBM} is an
+    accuracy--interpretability trade-off: when the predefined concepts do not
+    carry all the information the task requires, forcing the prediction through
+    a narrow concept bottleneck degrades performance. \Acp{CEM}
+    \citep{espinosazarlengaConceptEmbeddingModels2022} loosen the bottleneck by
+    representing each concept not as a single scalar but as a pair of
+    high-dimensional embeddings, one for its active and one for its inactive
+    state. This recovers accuracy comparable to an unconstrained black box while
+    retaining concept-level interpretability and the possibility of
+    intervention. Like \acp{CBM}, these models require a concept-annotated
+    dataset.
+
+    \paragraph{Label-free Concept Bottleneck Models} \Acp{LFCBM}
+    \citep{oikarinenLabelfreeConceptBottleneck2022} address the annotation cost
+    directly. Rather than relying on a hand-labelled concept set, they extract
+    candidate concepts from \iac{LLM} and align the network's activations with
+    them through a vision--language model such as \acs{CLIP}, converting a
+    standard backbone into \iac{CBM} without any concept supervision. This makes
+    the approach scalable to settings where dense concept annotation would be
+    impractical.
+
+    \paragraph{Concept Bottleneck LLMs} The concept-bottleneck idea has recently
+    been carried over to language. \Acp{CBLLM}
+    \citep{sunConceptBottleneckLarge2025a} insert a concept bottleneck layer
+    into \iac{LLM}, routing text classification --- and, in a generative
+    variant, generation itself --- through a set of interpretable concepts
+    before the output. As in \iac{LFCBM}, a hand-annotated concept set is not
+    needed: the concepts are generated by a prompted \ac{LLM} and each training
+    text is scored against them automatically, so the bottleneck is built
+    without concept supervision. The explicit concept layer also makes the model
+    \emph{steerable}, since intervening on a concept predictably shifts its
+    behaviour. Like the other methods in this group, \acp{CBLLM} are
+    \emph{explainable by design}: interpretability is secured by training the
+    model with the concept bottleneck built in.
+
+    Even so, that interpretability is only partial. In the generative variant
+    the next-token prediction is shaped not by the concept bottleneck alone but
+    by the bottleneck together with a parallel layer of unsupervised,
+    uninterpretable neurons added to preserve generation quality. When the
+    dataset labels are reused as concepts the bottleneck can be tiny --- four
+    neurons for the four AGnews classes --- yet in the authors' implementation
+    it runs alongside $768$ unsupervised ones,\footnote{The width of the
+    unsupervised layer is fixed at $768$ in the authors' released code
+    (\url{https://github.com/Trustworthy-ML-Lab/CB-LLMs}); the paper itself
+    leaves it unspecified.} so only 4 of the $772$ dimensions feeding each token
+    prediction carry interpretable concepts.
 
 \subsubsection{Post-hoc Methods}
 
-    \paragraph{T-CAV}
+The alternative to \textit{explainable-by-design} models is to leave the trained
+model untouched and probe it for the concepts it has already come to represent.
 
-    \paragraph{SAEs and Mechanistic Interpretability}
-    % Bridge paragraph ONLY -- do not explain SAEs here. State that unsupervised
-    % concept extraction via SAEs is the line this thesis builds on, and \cref
-    % forward to the full treatment in \cref{sec:background:ae:sae}.
+    \paragraph{Testing with Concept Activation Vectors} T-CAV
+    \citep{kimInterpretabilityFeatureAttribution2018} represents a concept as a
+    direction in a layer's activation space: given example inputs exhibiting the
+    concept and a set of random ones, it fits a linear classifier to separate
+    them and takes the normal to the decision boundary --- the concept activation
+    vector --- as the concept's direction. The model's sensitivity to the concept
+    is then quantified by the directional derivative of the output along this
+    vector, yielding a global statement of how much a given concept influences a
+    class prediction. The concept must still be supplied in advance, as a set of
+    examples.
+
+    \paragraph{SAEs and Mechanistic Interpretability} A final, unsupervised
+    strand removes even that requirement. Rather than testing for concepts named
+    ahead of time, \acp{SAE} learn a dictionary of concept-like features directly
+    from a model's internal activations \citep{hubenSparseAutoencodersFind2023},
+    and have become a central tool of \ac{MI} --- the effort to reverse-engineer
+    the computations of neural networks, and of \aclp{LLM} in particular. This
+    unsupervised discovery of interpretable features is the line of work on which
+    this thesis builds, and it is treated in full in \cref{sec:background:ae:sae}.
 
 % --------------------------------------------- %
 
@@ -358,7 +435,7 @@ space or the form of the latent code; two are particularly relevant here.
     the latent entirely. Because the nearest-neighbour lookup is
     non-differentiable, gradients are passed to the encoder with a
     straight-through estimator and the codebook is learned through dedicated
-    loss terms. VQ-VAE underpins many modern generative systems, providing the
+    loss terms. \ac{VQVAE} underpins many modern generative systems, providing the
     discrete latent vocabulary over which an autoregressive prior is
     subsequently trained.
 
