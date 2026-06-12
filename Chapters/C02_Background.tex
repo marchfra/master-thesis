@@ -8,17 +8,17 @@
 
 \section{eXplainable AI} \label{sec:background:xai}
 
-Modern machine-learning systems' incredible performance comes at the cost of
-transparency: a deep network's output is the product of millions of interacting
-parameters, with no accompanying account of why it was produced. \ac{XAI} is the
-field that sets out to supply such accounts, making a model's behaviour
-intelligible enough to be trusted, debugged, or learnt from. The methods
-relevant to this thesis are most naturally organised around a shift in what
-counts as an explanation: from \emph{attribution}, which asks \emph{where} ---
-which inputs drove a prediction --- to \emph{concepts}, the human-meaningful
-units in terms of which a model can be said to reason. It is this latter,
-concept-based view on which this work builds, in the service of understanding
-\aclp{LLM}.
+The incredible performance of modern machine-learning systems comes at the cost
+of transparency: a deep network's output is the product of millions of
+interacting parameters, with no accompanying account of why it was produced.
+\ac{XAI} is the field that sets out to supply such accounts, making a model's
+behaviour intelligible enough to be trusted, debugged, or learnt from. The
+methods relevant to this thesis are most naturally organised around a shift in
+what counts as an explanation: from \emph{attribution}, which asks \emph{where}
+(``which input features drove a prediction?''), to \emph{concepts}, the
+human-meaningful units in terms of which a model can be said to reason. It is
+this latter, concept-based view on which this work builds, in the service of
+understanding \aclp{LLM}.
 
 \subsection{Traditional XAI} \label{sec:background:xai:trad-xai}
 
@@ -36,7 +36,7 @@ concept-based view on which this work builds, in the service of understanding
     preferred wherever they are competitive, since post-hoc explanations of an
     opaque model are approximations that need not be faithful to its actual
     computation. This route is, however, closed for the systems studied in this
-    thesis: \aclp{LLM} comprise billions of nonlinearly interacting parameters,
+    thesis: \acp{LLM} comprise billions of nonlinearly interacting parameters,
     and no direct reading of their weights yields a human-understandable account
     of their behaviour. Interpretability must therefore be recovered \emph{post
     hoc}, from a model that is already trained and fixed.
@@ -74,7 +74,7 @@ concept-based view on which this work builds, in the service of understanding
     attractive because they are actionable and require no access to the model's
     internals, only the ability to query it. Generating counterfactuals that are
     at the same time close to the original input and realistic is itself a
-    modelling problem, one to which generative models are naturally suited to
+    modelling problem, one which generative models are naturally suited to
     solve.
 
 \subsubsection{Prototypes}
