@@ -1,23 +1,101 @@
 %************************************************
 \chapter{Methods} \label{ch:methods}
 %************************************************
-% \lipsum[1]
 
-\section{Definitions/Notation} \label{sec:methods:def}
-% \lipsum[1-3]
+% TODO chapter opener (Mizzaro: objective + ordered section preview) — draft once
+% the sections exist.
 
 \section{Aim of the Work} \label{sec:methods:aim}
-% \lipsum[1-3]
+
+\acp{SAE} have become the standard tool for decomposing the activations of
+\iac{LLM} into a dictionary of concept-like features
+(\cref{sec:background:ae:sae}). Their
+reach is bounded, though, by a structural trade-off between sparsity and
+reconstruction \citep{gaoScalingEvaluatingSparse2024}: because each concept
+enters the reconstruction through a single scalar coefficient, reconstructing an
+activation faithfully tends to require many concepts active at once, whereas the
+interpretability that motivates the decomposition rests on keeping only a few
+active per token \citep{hubenSparseAutoencodersFind2023,%
+brickenMonosemanticityDecomposingLanguage2023}.
+Pushed to a useful sparsity, the reconstruction degrades far enough that the
+reconstructed activation leaves the data manifold. This is more than an
+aesthetic flaw: a downstream circuit then processes an out-of-distribution
+signal even before any intervention, and when a feature is amplified or ablated
+the resulting change in behaviour conflates the intended edit with this
+uncontrolled reconstruction error, so the very analyses the decomposition is
+built for become less reliable than they appear.
+
+The limitation lies in the representation rather than the training: a scalar can
+record only how strongly a concept is present. This thesis asks whether giving
+each concept a \textit{vector} embedding relaxes the trade-off. The idea is
+familiar from \acp{CEM}
+(\cref{sec:background:xai:c-xai}), which
+replace the scalar concept bottleneck of \iac{CBM} with per-concept embeddings
+and so recover the accuracy a narrow bottleneck gives up
+\citep{espinosazarlengaConceptEmbeddingModels2022} --- but \acp{CEM} are
+supervised, trained against concept labels. The aim here is to carry the
+vector-concept idea into the \textit{unsupervised} setting of activation
+decomposition, and to do so from first principles, defining a probabilistic
+generative model whose inference procedure and training objective follow from
+the model itself rather than being assembled by hand. The starting point is the
+\ac{LCBM} of \citet{desantisBetterGeneralizationInterpretability2025}, an
+unsupervised concept-based image classifier whose encoder produces a vector
+embedding per concept, gates each concept by comparing that embedding to a
+learnable prototype, and reconstructs the input and simultaneously classifies it
+from the embeddings of the active concepts. \ac{LCBM} supplied the idea rather
+than the architecture: this thesis keeps its core structure --- concepts as
+embeddings gated against prototypes and decoded by reconstruction --- but
+rebuilds it from the ground up as a fully variational generative model, giving
+the concept embeddings a probabilistic latent that \ac{LCBM} leaves
+deterministic and dropping the supervised classification task, so that the model
+reconstructs activations from no labels at all.
+
+That model --- the \ac{VAEE} --- sits where three of the families surveyed in
+\cref{ch:background} meet. From
+\acp{CEM} it takes the representation of a concept as a high-dimensional
+embedding rather than a scalar; from \acp{VAE} it takes a probabilistic latent
+and amortised variational inference
+(\cref{sec:background:ae:vae});
+and from \acp{VQVAE} it takes a learned set of concept prototypes together with
+a discrete choice of which concepts are active\graffito{sure about this?}
+(\cref{sec:background:ae:vae:arch}). The
+result is a probabilistic counterpart to discrete quantisation: independent
+Bernoulli activations route continuous, prototype-anchored embeddings into
+separate concept slots, retaining the expressivity of a continuous latent while
+keeping the routing sparse and selective. Nothing in this construction is
+specific to language models --- the vector-concept primitive applies wherever a
+scalar concept code trades capacity for simplicity --- but this thesis develops
+and demonstrates it for one application: the decomposition of \ac{LLM}
+activations.
+
+What this thesis contributes, then, is the architecture itself and its
+derivation: an unsupervised, vector-valued concept model obtained from a
+probabilistic generative model rather than assembled by hand. Its aim is
+correspondingly bounded --- to expand the representational capacity of a concept
+code, leaving the interpretability and steering of the recovered concepts to
+future work --- and \cref{ch:experiments} tests it on
+the decomposition of \ac{LLM} activations.
+
+\section{Definitions/Notation} \label{sec:methods:def}
+% TODO: the reconciled VAEE notation (see .claude/notation.md "VAEE notation
+% LOCKED") + the "prototype" disambiguation (VAEE h_k vs XAI input-instance).
 
 \section{Model Development} \label{sec:methods:model}
-% \lipsum[1-3]
     \subsection{Probabilistic Formulation} \label{sec:methods:model:proba}
-    % \lipsum[1-5]
+    % TODO: Gated Gaussian generative model (c -> z -> x) + PGM; amortised
+    % inference (encoder, embedding posterior, prototype-similarity gating,
+    % Gumbel-Sigmoid, gating step); the ELBO (3 terms) -> design choices ->
+    % practical loss; similarity metrics. Full A.1/A.2 algebra goes to
+    % Chapters/C0A_VAEEDerivations (app:vaee:gating, app:vaee:elbo).
+
     \subsection{Architectures} \label{sec:methods:model:arch}
-    % \lipsum[1-3]
+    % TODO: encoder/decoder instantiations (shallow/linear/MLP); stacked vs summed
+    % topologies (stacked = headline); interventions (formulation supports them;
+    % evaluation deferred to future work); decoder orthogonality (formulated then
+    % dropped as empirically negligible).
 
 \section*{Conclusions}
-% \lipsum[1]
+% TODO: bridge to C04 (Experiments).
 
 
 %*****************************************
