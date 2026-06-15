@@ -40,6 +40,15 @@
 %********************************************************************
 % Note: Make all your adjustments in here
 %*******************************************************
+% Ensure xcolor receives the dvipsnames palette at its FIRST load, whoever
+% triggers it (tikz/pgf or classicthesis). classicthesis defines its Maroon /
+% RoyalBlue link and title colours as dvipsnames \definecolor{...}{named}{...};
+% if tikz loads xcolor first without this option, those names are undefined and
+% the classicthesis colours break. \PassOptionsToPackage only queues the option
+% (no load), so it cannot clash with classicthesis's own identical request.
+% Must precede any package that loads xcolor.
+\PassOptionsToPackage{dvipsnames}{xcolor}
+
 \usepackage{lipsum}
 \usepackage{acro-commands}
 \usepackage{physics}
@@ -99,6 +108,8 @@
     % \cleardoublepage\include{FrontBackmatter/Publications}
     \cleardoublepage\include{FrontBackmatter/Acknowledgments}
     \cleardoublepage\include{FrontBackmatter/Contents}
+
+    \acresetall
 
     %****************************************************************
     % Mainmatter
