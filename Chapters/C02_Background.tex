@@ -120,7 +120,7 @@ distributions. Each block is made of two sublayers with complementary roles: an
             (rslabel) at (-0.9,5.45) {residual stream};
         \draw[->, gray!55!black] (rslabel) -- (\sx-0.1,5.45);
     \end{tikzpicture}
-    \caption{
+    \caption[A decoder-only transformer drawn around the residual stream]{
         A decoder-only transformer, drawn around the \textit{residual stream}.
         Each token is embedded into a vector; the resulting per-position state
         flows up the central stream, and every block reads from the stream and
@@ -441,10 +441,12 @@ original uncorrupted input:
 \begin{figure}[tb]
     \centering
     \includegraphics[width=0.95\linewidth]{gfx/denoising-autoencoder-architecture.png}
-    \caption{Illustration of Denoising autoencoder model architecture, reproduced
-    from \citet{wengAutoencoderBetaVAE2018}. \textit{Note: this figure uses
-    $f$ for the decoder and $g$ for the encoder, the reverse of the
-    letter convention adopted in this thesis.}}
+    \caption[Denoising autoencoder architecture]{
+        Illustration of Denoising autoencoder model architecture, reproduced
+        from \citet{wengAutoencoderBetaVAE2018}. \textit{Note: this figure uses
+        $f$ for the decoder and $g$ for the encoder, the reverse of the letter
+        convention adopted in this thesis.}
+    }
     \label{fig:denoising-ae}
 \end{figure}
 
@@ -491,7 +493,7 @@ illustrates the difference on a two-dimensional latent space trained on MNIST.
 \begin{figure}[tb]
     \centering
     \includegraphics[width=0.95\linewidth]{gfx/ae-vae-latent.png}
-    \caption{
+    \caption[Autoencoder and VAE latent spaces on MNIST]{
         Two-dimensional latent spaces learned on MNIST, coloured by digit class,
         reproduced from \citet{shafkatIntuitivelyUnderstandingVariational2018}.
         Optimising for reconstruction alone (left) lets a standard autoencoder
@@ -721,7 +723,7 @@ neurons with clean, well-defined roles.
 \begin{figure}[tb]
     \centering
     \includegraphics[width=0.95\linewidth]{gfx/polysemanticity.png}
-    \caption{
+    \caption[A polysemantic neuron in InceptionV1]{
         Neuron 4e:55, a polysemantic neuron from InceptionV1 which responds to
         cat faces, fronts of cars, and cat legs. Reproduced from
         \citet{olahZoomIntroductionCircuits2020}.
