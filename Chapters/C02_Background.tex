@@ -2,7 +2,189 @@
 \chapter{Background and Related Work} \label{ch:background}
 %************************************************
 
+This chapter establishes the background on which the thesis builds and reviews
+the related work, moving from the setting in which the contribution is
+demonstrated to the ideas from which it is built. \Cref{sec:background:nlp}
+introduces \aclp*{LLM} and the transformer architecture that produces the dense
+internal activations on which that demonstration rests.
+\Cref{sec:background:xai} reviews explainable AI,
+tracing the field's shift from attributing a prediction to input features
+towards explaining it in terms of human-meaningful \textit{concepts}, the view
+this work adopts. \Cref{sec:background:ae} then
+develops the autoencoder family, from the standard autoencoder through the
+variational and sparse variants between which the thesis's contribution sits. A
+single tension runs through all three: reconstructing a model's activations
+faithfully while decomposing them into a small, interpretable set of concepts
+--- the tension the method of \cref{sec:methods:model}
+sets out to relax.
+
 \section{Natural Language Processing} \label{sec:background:nlp}
+
+\ac{NLP} is the branch of machine learning concerned with getting computers to
+process and generate human language. For most of its history the field advanced
+through task-specific systems --- separate models for translation, sentiment
+analysis, or question answering --- but it has since converged on a single
+recipe: train one large neural network to predict text on a vast corpus, then
+reuse it across tasks. The \acp{LLM} that result are the systems on which the
+thesis's contribution is demonstrated. What follows introduces only as much of
+their training and architecture as the later chapters rely on, with the emphasis
+on the internal activations these models compute rather than the text they
+emit.
+
+\subsection{Language Modelling} \label{sec:background:nlp:lm}
+
+A language model defines a probability distribution over sequences of text. In
+the dominant \textit{autoregressive} formulation, this distribution is
+factorised left to right, so that the model repeatedly predicts the next unit of
+text given all the units before it \citep{radfordLanguageModelsAre2019}. The
+units are \textit{tokens}, words or sub-word fragments drawn from a fixed
+vocabulary, and the model is a neural network that maps a sequence of tokens to
+a probability distribution over the vocabulary for the next position. Training
+minimises the \ac{CE} between this predicted distribution and the true next
+token, averaged over a large corpus; the objective requires no human annotation,
+since the supervision signal is the text itself.
+
+Scaling this recipe to more parameters, more data, and more computing power
+yields \acp{LLM} whose capabilities extend well beyond the literal next-token
+task they were trained on. A network trained only to continue text acquires the
+ability to translate, summarise, answer questions, and follow instructions,
+often from nothing more than a description and a few examples supplied in its
+input, with no change to its weights \citep{brownLanguageModelsAre2020,%
+dongSurveyIncontextLearning2024}. This generality is what makes \acp{LLM} both
+powerful and hard to interpret: a single fixed network comes to encode a vast
+range of linguistic and world knowledge, distributed across its parameters and
+activations in a form that no direct reading of the weights makes legible.
+
+\subsection{The Transformer} \label{sec:background:nlp:transformer}
+
+Modern \acp{LLM} are almost universally built on the \textit{transformer}
+architecture \citep{vaswaniAttentionAllYou2017}. It embeds the input tokens into
+a sequence of vectors, one per position, and refines them through a stack
+of identical \textit{blocks} before reading the final vectors out as next-token
+distributions. Each block is made of two sublayers with complementary roles: an
+\textit{attention} sublayer, which exchanges information between positions, and
+\iac{MLP} sublayer, which transforms each position on its own.
+\Cref{fig:transformer-block} shows this organisation.
+
+\begin{figure}[tb]
+    \centering
+    \begin{tikzpicture}[
+        >={Stealth[round]},
+        font=\small,
+        block/.style={draw, rounded corners, align=center,
+            minimum width=2.7cm, minimum height=0.9cm, fill=gray!8},
+        op/.style={draw, circle, inner sep=0pt, minimum size=5mm, fill=gray!8},
+        io/.style={align=center},
+    ]
+        \def\sx{0}      % residual-stream x
+        \def\bx{3.5}    % sublayer-box x
+
+        % spine: input, embedding, sublayer adds, unembedding, output
+        \node[io]    (tokens) at (\sx,-0.9) {Input tokens
+            $\langle t_{1}, \dots, t_{T}\rangle$};
+        \node[block] (emb)    at (\sx,0.3)  {Token $+$ positional\\embedding};
+        \node[op]    (add1)   at (\sx,2.4)  {$+$};
+        \node[op]    (add2)   at (\sx,4.4)  {$+$};
+        \node[block] (unemb)  at (\sx,6.2)  {Unembedding\\$+$ softmax};
+        \node[io]    (out)    at (\sx,7.3)  {Next-token distribution};
+
+        % sublayers
+        \node[block] (attn) at (\bx,2.4) {Multi-head\\self-attention};
+        \node[block] (mlp)  at (\bx,4.4) {MLP\\(position-wise)};
+
+        % spine arrows
+        \draw[->] (tokens) -- (emb);
+        \draw[->] (emb)  -- (add1);
+        \draw[->] (add1) -- (add2);
+        \draw[->] (add2) -- (unemb);
+        \draw[->] (unemb) -- (out);
+
+        % sublayer read/write branches; name the turn points so the block
+        % below can fit them
+        \coordinate (aread) at (\sx,1.6);
+        \coordinate (mread) at (\sx,3.6);
+        \draw[->] (aread) -| (attn);   \draw[->] (attn) -- (add1);
+        \draw[->] (mread) -| (mlp);    \draw[->] (mlp)  -- (add2);
+
+        % one block, repeated N times; fitting the read-branch turn points
+        % (aread/mread) makes the dashed box enclose the branch arrows too
+        \begin{scope}[on background layer]
+            \node[draw, dashed, rounded corners, fill=blue!4,
+                  fit=(add1)(add2)(attn)(mlp)(aread)(mread),
+                  inner sep=9pt] (blk) {};
+        \end{scope}
+        \node[anchor=west, font=\itshape] at (blk.east) {$\times\,N$};
+
+        % stream label: tag the spine line itself (outside the block)
+        \node[anchor=east, font=\footnotesize\itshape, text=gray!55!black]
+            (rslabel) at (-0.9,5.45) {residual stream};
+        \draw[->, gray!55!black] (rslabel) -- (\sx-0.1,5.45);
+    \end{tikzpicture}
+    \caption{
+        A decoder-only transformer, drawn around the \textit{residual stream}.
+        Each token is embedded into a vector; the resulting per-position state
+        flows up the central stream, and every block reads from the stream and
+        adds its result back through a residual connection --- first a
+        multi-head self-attention sublayer, which mixes information across
+        positions, then a position-wise \acs{MLP} sublayer. After $N$ such
+        blocks the final stream state is unembedded into a next-token
+        distribution. The additive structure of
+        \cref{eq:background:nlp:residual} is what makes the
+        residual stream a single, well-defined activation space to decompose;
+        the view follows \citet{elhageMathematicalFrameworkTransformer2021}.
+    }
+    \label{fig:transformer-block}
+\end{figure}
+
+    \paragraph{Attention} \textit{Attention} is the mechanism by which positions
+    exchange information. At each position, an \textit{attention head} forms a
+    query and compares it against a key emitted by every position in the
+    sequence; the better a position matches, the more it contributes to a
+    weighted average of values gathered from across the sequence, and that
+    average becomes the head's output for the current position
+    \citep{vaswaniAttentionAllYou2017}. A sublayer runs several such heads in
+    parallel, each free to specialise (one might link a pronoun to its referent,
+    another a verb to its subject). Because attention is the only component that
+    moves information between positions, it is where the model assembles
+    context: it turns a position's representation from a fact about a single
+    token into one that reflects the surrounding text.
+
+    \paragraph{MLP sublayers} Where attention mixes information across
+    positions, \iac{MLP} sublayer processes each position on its own, applying
+    the same feed-forward transformation --- a projection up to a wider hidden
+    layer, a nonlinearity, and a projection back down --- to the vector at every
+    position independently. Much of the model's capacity sits in these
+    sublayers, which are widely thought to store and retrieve its learned
+    associations and are a primary site at which interpretable features appear
+    \citep{brickenMonosemanticityDecomposingLanguage2023}.
+
+    \paragraph{The residual stream} A single detail ties these sublayers
+    together. Neither sublayer overwrites the vector it is given; each computes
+    an update and \textit{adds} it back, through a \textit{residual connection}.
+    Every position therefore carries one running vector --- the \textit{residual
+    stream} --- that every sublayer of every block reads from and writes to.
+    Let $\vb{x}^{(\ell)}_{t}$ denote the residual stream at position $t$ as it
+    enters block $\ell$; the block updates it as
+    % CLAUDE: review this equation
+    \begin{equation} \label{eq:background:nlp:residual}
+        \vb{x}^{(\ell+1)}_{t} = \vb{x}^{(\ell)}_{t} + \on{Attn}^{(\ell)} \left(
+        \vb{x}^{(\ell)}_{t}; \left\{\vb{x}^{(\ell)}_{t'}\right\}_{t' = 1, \dots,
+        t-1, t+1, \dots, T} \right) + \on{MLP}^{(\ell)} \left(
+        \vb{x}^{(\ell)}_{t} \right),
+    \end{equation}
+    where $\on{Attn}^{(\ell)}$ also reads the residual stream at the other
+    positions. The stream starts as the token's embedding and accumulates the
+    output of every sublayer in turn; because attention writes into it, a
+    position's stream is never a fact about that token alone but a running
+    summary of the context around it. This additive structure is what makes the
+    residual stream a single, well-defined space in which to study the model's
+    computation --- the view developed in the mechanistic-interpretability
+    literature \citep{elhageMathematicalFrameworkTransformer2021} and adopted
+    throughout this thesis. It is also the object the later chapters take apart:
+    the activation vector $\vb{x} \in \R^{n}$ that the autoencoders of
+    \cref{sec:background:ae} receive as input is
+    exactly such a residual-stream state $\vb{x}^{(\ell)}$, read off at a chosen
+    layer $\ell$.
 
 % --------------------------------------------- %
 
@@ -12,13 +194,12 @@ The incredible performance of modern machine-learning systems comes at the cost
 of transparency: a deep network's output is the product of millions of
 interacting parameters, with no accompanying account of why it was produced.
 \acf{XAI} is the field that sets out to supply such accounts, making a model's
-behaviour intelligible enough to be trusted, debugged, or learnt from. The
+behaviour intelligible enough to be trusted, debugged, or learned from. The
 methods relevant to this thesis are most naturally organised around a shift in
-what counts as an explanation: from \emph{attribution}, which asks \emph{where}
-(``which input features drove a prediction?''), to \emph{concepts}, the
-human-meaningful units in terms of which a model can be said to reason. It is
-this latter, concept-based view on which this work builds, in the service of
-understanding \acp{LLM}.
+what counts as an explanation: from \textit{attribution}, which asks
+\textit{where} (``which input features drove a prediction?''), to
+\textit{concepts}, the human-meaningful units in terms of which a model can be
+said to reason. It is this latter, concept-based view on which this work builds.
 
 \subsection{Traditional XAI} \label{sec:background:xai:trad-xai}
 
@@ -29,23 +210,23 @@ The most direct route to an interpretable model is to choose one whose decision
 process is transparent by construction. Linear and logistic regression, decision
 trees, naive Bayes classifiers, and $k$-nearest neighbours are the canonical
 examples: their parameters or structure can be inspected directly, so that the
-explanation \emph{is} the model rather than a separate artifact derived from it
-\citep{molnarInterpretableMachineLearning2025}.
+explanation \textit{is} the model rather than a separate artefact derived from
+it \citep{molnarInterpretableMachineLearning2025}.
 \citet{rudinStopExplainingBlack2019} argues that such models should be preferred
 wherever they are competitive, since post-hoc explanations of an opaque model
 are approximations that need not be faithful to its actual computation. This
 route is, however, closed for the systems studied in this thesis: \acp{LLM}
 comprise billions of nonlinearly interacting parameters, and no direct reading
 of their weights yields a human-understandable account of their behaviour.
-Interpretability must therefore be recovered \emph{post hoc}, from a model that
-is already trained and fixed.
+Interpretability must therefore be recovered \textit{post hoc}, from a model
+that is already trained and fixed.
 
 \subsubsection{Post-hoc Attribution Methods}
 \label{sec:background:xai:trad-xai:post-hoc}
 
 The dominant post-hoc paradigm explains an individual prediction by
-\emph{attributing} it to the input features, assigning each feature a score that
-quantifies its contribution to the output. LIME
+\textit{attributing} it to the input features, assigning each feature a score
+that quantifies its contribution to the output. LIME
 \citep{ribeiroWhyShouldTrust2016} does this by fitting a simple, interpretable
 surrogate (typically a sparse linear model) to the behaviour of the black box in
 a local neighbourhood of the instance being explained. SHAP
@@ -56,11 +237,12 @@ operating on images, gradient-based saliency maps
 \citep{simonyanDeepConvolutionalNetworks2014} and their refinements such as
 Grad-CAM \citep{selvarajuGradCAMVisualExplanations2017} produce a heatmap over
 the input that highlights the regions most influential to the prediction. What
-these methods share is also their central limitation: they indicate \emph{where}
-in the input the model is sensitive, but not \emph{what} the model has
-internally come to represent. An attribution map can mark a pixel or a token as
-important without revealing the human-meaningful concept it participates in: a
-gap that motivates the concept-based methods of \cref{sec:background:xai:c-xai}.
+these methods share is also their central limitation: they indicate
+\textit{where} in the input the model is sensitive, but not \textit{what} the
+model has internally come to represent. An attribution map can mark a pixel or a
+token as important without revealing the human-meaningful concept it
+participates in: a gap that motivates the concept-based methods of
+\cref{sec:background:xai:c-xai}.
 
     \paragraph{Counterfactual explanations} A counterfactual explanation answers
     a contrastive question: what is the smallest change to the input that would
@@ -79,19 +261,19 @@ gap that motivates the concept-based methods of \cref{sec:background:xai:c-xai}.
 \label{sec:background:xai:trad-xai:prototypes}
 
 A complementary, example-based strategy explains a model not through feature
-scores but through representative instances. A \emph{prototype} is a data point
-that is typical of a region of the input space, chosen so that a small set of
-such points summarises the data (or the model's behaviour upon it) in terms a
+scores but through representative instances. A \textit{prototype} is a data
+point that is typical of a region of the input space, chosen so that a small set
+of such points summarises the data (or the model's behaviour upon it) in terms a
 human can grasp by inspection \citep{kimExamplesAreNot2016}. The defining
 characteristic, for the purposes of this thesis, is that a prototype in this
-traditional sense is an \emph{input instance}: an actual or representative
+traditional sense is an \textit{input instance}: an actual or representative
 example drawn from the data space.
 
 \subsection{Concept-based XAI} \label{sec:background:xai:c-xai}
 
-\ac{CXAI} answers the \emph{what} question that attribution leaves open:
+\ac{CXAI} answers the \textit{what} question that attribution leaves open:
 instead of pointing to the inputs responsible for a prediction, it explains the
-prediction in terms of high-level, human-meaningful \emph{concepts}
+prediction in terms of high-level, human-meaningful \textit{concepts}
 (``striped'', ``has wheels'', ``expresses uncertainty'') of the kind a person
 would use to describe the same decision. Methods in this family differ chiefly
 in whether the concepts are built into the model from the outset or recovered
@@ -145,17 +327,17 @@ the output.
     needed: the concepts are generated by a prompted \ac{LLM} and each training
     text is scored against them automatically, so the bottleneck is built
     without concept supervision. The explicit concept layer also makes the model
-    \emph{steerable}, since intervening on a concept predictably shifts its
+    \textit{steerable}, since intervening on a concept predictably shifts its
     behaviour. Like the other methods in this group, \acp{CBLLM} are
-    \emph{explainable by design}: interpretability is secured by training the
+    \textit{explainable by design}: interpretability is secured by training the
     model with the concept bottleneck built in.
 
     Even so, that interpretability is only partial. In the generative variant
     the next-token prediction is shaped not by the concept bottleneck alone but
     by the bottleneck together with a parallel layer of unsupervised,
     uninterpretable neurons added to preserve generation quality. When the
-    dataset labels are reused as concepts the bottleneck can be tiny --- four
-    neurons for the four AGnews classes --- yet in the authors' implementation
+    dataset labels are reused as concepts the bottleneck can be tiny --- 4
+    neurons for the 4 AG News classes --- yet in the authors' implementation
     it runs alongside $768$ unsupervised ones,\footnote{The width of the
     unsupervised layer is fixed at $768$ in the authors' released code
     (\url{https://github.com/Trustworthy-ML-Lab/CB-LLMs}); the paper itself
@@ -171,21 +353,21 @@ model untouched and probe it for the concepts it has already come to represent.
     \citep{kimInterpretabilityFeatureAttribution2018} represents a concept as a
     direction in a layer's activation space: given example inputs exhibiting the
     concept and a set of random ones, it fits a linear classifier to separate
-    them and takes the normal to the decision boundary --- the concept activation
-    vector --- as the concept's direction. The model's sensitivity to the concept
-    is then quantified by the directional derivative of the output along this
-    vector, yielding a global statement of how much a given concept influences a
-    class prediction. The concept must still be supplied in advance, as a set of
-    examples.
+    them and takes the normal to the decision boundary --- the concept
+    activation vector --- as the concept's direction. The model's sensitivity to
+    the concept is then quantified by the directional derivative of the output
+    along this vector, yielding a global statement of how much a given concept
+    influences a class prediction. The concept must still be supplied in
+    advance, as a set of examples.
 
     \paragraph{SAEs and Mechanistic Interpretability} A final, unsupervised
     strand removes even that requirement. Rather than testing for concepts named
-    ahead of time, \acp{SAE} learn a dictionary of concept-like features directly
-    from a model's internal activations \citep{hubenSparseAutoencodersFind2023},
-    and have become a central tool of \ac{MI} --- the effort to reverse-engineer
-    the computations of neural networks, and of \aclp{LLM} in particular. This
-    unsupervised discovery of interpretable features is the line of work on which
-    this thesis builds, and it is treated in full in \cref{sec:background:ae:sae}.
+    ahead of time, \acp{SAE} learn a dictionary of concept-like features
+    directly from a model's internal activations
+    \citep{hubenSparseAutoencodersFind2023}, and have become a central tool of
+    \ac{MI} --- the effort to reverse-engineer the computations of neural
+    networks, and of \aclp{LLM} in particular. This unsupervised discovery of
+    interpretable features is treated in full in \cref{sec:background:ae:sae}.
 
 % --------------------------------------------- %
 
@@ -266,15 +448,16 @@ original uncorrupted input:
     \label{fig:denoising-ae}
 \end{figure}
 
-This design is motivated by the fact that humans can easily recognize an object
-or a scene even the view is partially occluded or corrupted. To ``repair'' the
-partially destroyed input, the denoising autoencoder has to discover and capture
-relationship between dimensions of input in order to infer missing pieces.
+This design is motivated by the fact that humans can easily recognise an object
+or a scene even when the view is partially occluded or corrupted. To ``repair''
+the partially destroyed input, the denoising autoencoder has to discover and
+capture the relationship between dimensions of the input in order to infer
+missing pieces.
 
-For high dimensional input with high redundancy, like images, the model is
+For high-dimensional input with high redundancy, like images, the model is
 likely to depend on evidence gathered from a combination of many input
 dimensions to recover the denoised version rather than to overfit one dimension.
-This builds up a good foundation for learning \textit{robust} latent
+This builds up a good foundation for learning a \textit{robust} latent
 representation.
 
 The noise is controlled by a stochastic mapping
@@ -435,8 +618,8 @@ space or the form of the latent code; two are particularly relevant here.
     the latent entirely. Because the nearest-neighbour lookup is
     non-differentiable, gradients are passed to the encoder with a
     straight-through estimator and the codebook is learned through dedicated
-    loss terms. \ac{VQVAE} underpins many modern generative systems, providing the
-    discrete latent vocabulary over which an autoregressive prior is
+    loss terms. \ac{VQVAE} underpins many modern generative systems, providing
+    the discrete latent vocabulary over which an autoregressive prior is
     subsequently trained.
 
 \subsubsection{Applications} \label{sec:background:ae:vae:applications}
@@ -492,7 +675,7 @@ this thesis.
     --- variational sparse coding \cite{tonoliniVariationalSparseCoding2020} and
     variational \aclp{SAE} \cite{bakerAnalysisVariationalSparse2025} --- seeking
     to combine the interpretability of sparse codes with the structured latent
-    of a \ac{VAE}, the same combination developed in \cref{sec:methods:model}.
+    of a \ac{VAE}.
 
 
 \subsection{Sparse AutoEncoders} \label{sec:background:ae:sae}
@@ -509,7 +692,7 @@ to be sparse using some kind of sparsity mechanism. Given input $\vb{x} \in
 where $\vb{W}_{e} \in \R^{m \times n}$ is the encoder weight matrix,
 $\vb{b}_{e} \in \R^{m}$ is the encoder bias, and $\vb{b}_{\mathrm{pre}} \in
 \R^{n}$ is a pre-encoder bias subtracted from the input before encoding. This
-learned offset allows the encoder to operate on roughly mean-centered
+learned offset allows the encoder to operate on roughly mean-centred
 activations, improving training stability
 \cite{brickenMonosemanticityDecomposingLanguage2023}. The decoder then
 reconstructs the input as:
@@ -663,11 +846,10 @@ Unlike general-purpose autoencoders and \acp{VAE}, which are applied across a
 range of domains, \acp{SAE} find their primary application in interpreting the
 internal activations of neural networks, and \ac{MI} remains their most
 prominent application, making it the focus of this section. \acp{SAE} can be
-trained on activations from any layer or component of a
-transformer;\graffito{Make sure to mention what the residual stream, \ac{MLP},
-and attention heads are in a chapter about \acsp{LLM}} common targets include
-the residual stream at various depths, \ac{MLP} layer outputs, and attention
-head outputs \cite{hubenSparseAutoencodersFind2023,
+trained on activations from any layer or component of a transformer
+(\cref{sec:background:nlp:transformer});
+common targets include the residual stream at various depths, \ac{MLP} layer
+outputs, and attention head outputs \cite{hubenSparseAutoencodersFind2023,
 brickenMonosemanticityDecomposingLanguage2023}. The resulting dictionary then
 supports the applications described below.
 
@@ -690,15 +872,15 @@ supports the applications described below.
     information \acp{LLM} represent.
 
     \paragraph{Steering} The features recovered by \iac{SAE} are not merely
-    descriptive: because each corresponds to a direction in activation space, its
-    activation can be clamped to an arbitrary value during a forward pass to
+    descriptive: because each corresponds to a direction in activation space,
+    its activation can be clamped to an arbitrary value during a forward pass to
     causally \textit{steer} the model's behaviour.
     \citet{templetonScalingMonosemanticityExtracting} demonstrated this by
     amplifying a single feature, causing the model to compulsively reference the
     Golden Gate Bridge regardless of the input. Such interventions show that the
-    discovered features are causally implicated in the model's computation rather
-    than merely correlated with its inputs, and open a path to controllable
-    generation and targeted safety interventions.
+    discovered features are causally implicated in the model's computation
+    rather than merely correlated with its inputs, and open a path to
+    controllable generation and targeted safety interventions.
 
     \paragraph{Circuit analysis} Beyond cataloguing individual features,
     \acp{SAE} can serve as the building blocks for reconstructing the
@@ -731,12 +913,33 @@ a scalable if imperfect proxy for human judgement.
 
 \section*{Conclusions}
 
-% \graffito{Rough seed --- expand into a proper chapter conclusion.}
-% The inherent tension between reconstruction quality, sparsity, and
-% interpretability is a recurring theme in the \ac{SAE} literature, and motivates
-% both the architectural variants described in \cref{sec:background:ae:sae:arch}
-% and the alternative approach developed in this thesis and described in
-% \cref{sec:methods:model}.
+This chapter has assembled the three strands the thesis builds on: the
+transformer and its residual stream
+(\cref{sec:background:nlp}), whose
+dense, polysemantic activations are the object to be decomposed; the shift in
+explainability from attribution to concepts
+(\cref{sec:background:xai}), and the
+concept-based methods that describe a model's computation in human-meaningful
+terms; and the autoencoder family
+(\cref{sec:background:ae}), from the variational
+and discrete latents of \acp{VAE} and \acp{VQVAE} to the overcomplete, sparse
+dictionaries of \acp{SAE}.
+
+A single limitation runs through these concept-based methods. Whether a concept
+is a unit in the bottleneck of \iac{CBM} or an atom in the dictionary of
+\iac{SAE}, it is encoded as a single scalar and can vary only in magnitude. This
+is what forces the sparsity--reconstruction trade-off at the heart of the
+\ac{SAE} literature --- a faithful reconstruction needs many active concepts, an
+interpretable decomposition only few --- and the architectures of
+\cref{sec:background:ae:sae:arch} all
+work within it. \Acp{CEM} are the exception already met: by giving each concept
+a vector embedding rather than a scalar, they recover the capacity a scalar
+bottleneck gives up. \Cref{sec:methods:model}
+carries that idea into the unsupervised
+setting of activation decomposition --- combining the vector-valued concepts of
+\acp{CEM} with the variational inference and discrete latents developed in
+\cref{sec:background:ae} --- and derives the
+resulting model from first principles.
 
 
 %*****************************************
