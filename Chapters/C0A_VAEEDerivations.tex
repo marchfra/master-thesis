@@ -3,16 +3,96 @@
 %************************************************
 
 This appendix collects the full derivations supporting the probabilistic
-formulation of \cref{sec:methods:model:proba}: the optimal form of the gating
-mechanism (\cref{app:vaee:gating}) and the explicit derivation of the evidence
-lower bound (\cref{app:vaee:elbo}).
+formulation of
+\cref{sec:methods:model:proba}:
+the optimal form of the gating mechanism
+(\cref{app:vaee:gating}) and the
+explicit derivation of the evidence lower bound
+(\cref{app:vaee:elbo}).
 
 \section{Optimal Gating Mechanism} \label{app:vaee:gating}
 
-% TODO: port Appendix A.1 of probabilistic_formulation_v7.tex (derivation of
-% alpha_k from the Gated Gaussian prior via Bayes log-odds), reconciled to thesis
-% notation (encoder f_phi / decoder g_theta; x in R^n). Drafted alongside
-% sec:methods:model:proba.
+The gate of \cref{eq:methods:proba:alpha} ties a concept's
+activation probability to the similarity between its predicted embedding and its
+prototype. This section shows that this is not an arbitrary heuristic but the
+mathematically optimal parametric form dictated by the Gated Gaussian prior of
+\cref{eq:methods:proba:prior-z}, recovered by inverting the
+generative flow with Bayes' rule.
+
+Because the mask entry $c_k$ is binary, the posterior
+$\nbmath{p(c_k = 1 \mid \vb{z}_k)}$ is fully characterised by its log-odds: the
+sigmoid is the inverse of the logit transform\footnote{The logit transform is
+defined as $\on{logit}(u) = \log \frac{u}{1 - u}$.}, so
+\begin{equation*}
+    \begin{split}
+        p(c_k = 1 \mid \vb{z}_k)
+        &= \on{sigmoid}\left( \log \frac{p(c_k = 1 \mid \vb{z}_k)}{1 - p(c_k = 1 \mid \vb{z}_k)} \right) \\
+        &= \on{sigmoid}\left( \log \frac{p(c_k = 1 \mid \vb{z}_k)}{p(c_k = 0 \mid \vb{z}_k)} \right).
+    \end{split}
+\end{equation*}
+Computing the posterior thus reduces to computing its log-odds, which by Bayes'
+rule expand into a tractable function of the priors and likelihoods,
+\begin{equation*}
+    \log \frac{p(c_k = 1 \mid \vb{z}_k)}{p(c_k = 0 \mid \vb{z}_k)} =
+    \underbrace{\log \frac{p(\vb{z}_k \mid c_k = 1)}{p(\vb{z}_k \mid c_k = 0)}}_{\text{likelihood ratio}} +
+    \underbrace{\log \frac{p(c_k = 1)}{p(c_k = 0)}}_{=\, \on{logit}(\pi)}.
+\end{equation*}
+The prior ratio is just the logit of the Bernoulli activation rate $\pi$ of
+\cref{eq:methods:proba:prior-c}, since
+$\on{logit}(\pi) = \log\left(\flatfrac{\pi}{(1-\pi)}\right)$. For the likelihood
+ratio we substitute the two branches of the Gated Gaussian prior,
+$\nbmath{p(\vb{z}_k \mid c_k = 1)} = \mathcal{N}\left(\vb{z}_k;\, \vb{h}_k,\, \sigma_0^2 \vb{I}\right)$
+and $\nbmath{p(\vb{z}_k \mid c_k = 0)} = \mathcal{N}\left(\vb{z}_k;\, \vb{0},\, \sigma_0^2 \vb{I}\right)$.
+The two share the same isotropic covariance, so their $(2\pi\sigma_0^2)^{-d/2}$
+normalising constants cancel inside the log-ratio, leaving only the
+exponents,\footnote{Throughout the appendix, the notation $\norm{\,\cdot\,}$ is
+used instead of $\norm{\,\cdot\,}_{2}$ to avoid making the notation excessively
+verbose.}
+\begin{equation*}
+    \begin{split}
+        \log \frac{p(\vb{z}_k \mid c_k = 1)}{p(\vb{z}_k \mid c_k = 0)}
+        &= \log \frac{\exp\left(-\frac{1}{2\sigma_0^2}\norm{\vb{z}_k - \vb{h}_k}^2\right)}{\exp\left(-\frac{1}{2\sigma_0^2}\norm{\vb{z}_k}^2\right)} \\
+        &= \frac{1}{2\sigma_0^2}\left(\norm{\vb{z}_k}^2 - \norm{\vb{z}_k - \vb{h}_k}^2\right).
+    \end{split}
+\end{equation*}
+Expanding the squared distance,
+$\norm{\vb{z}_k - \vb{h}_k}^2 = \norm{\vb{z}_k}^2 - 2\,\vb{z}_k \cdot \vb{h}_k + \norm{\vb{h}_k}^2$,
+makes the $\norm{\vb{z}_k}^2$ terms cancel exactly, so the likelihood ratio
+collapses to an inner product against the prototype,
+\begin{equation*}
+    \log \frac{p(\vb{z}_k \mid c_k = 1)}{p(\vb{z}_k \mid c_k = 0)} =
+    \frac{1}{\sigma_0^2}\left(\vb{z}_k \cdot \vb{h}_k
+    - \tfrac{1}{2}\norm{\vb{h}_k}^2\right).
+\end{equation*}
+Adding the prior log-odds back in, converting to a probability through the
+sigmoid, and substituting the encoder's predicted mean $\vb*{\mu}_k(\vb{x})$ for
+the embedding $\vb{z}_k$ yields an inner-product gate that is exact under the
+Gated Gaussian prior,
+\begin{equation} \label{eq:app:vaee:alpha-exact}
+    \alpha_k(\vb{x}) = \on{sigmoid}\left(
+    \frac{1}{\sigma_0^2}\left(\vb*{\mu}_k(\vb{x}) \cdot \vb{h}_k
+    - \tfrac{1}{2}\norm{\vb{h}_k}^2\right) + \on{logit}(\pi)
+    \right).
+\end{equation}
+
+To recover the form used in practice
+(\cref{eq:methods:proba:alpha}), the additive constants
+$-\frac{1}{2\sigma_0^2}\norm{\vb{h}_k}^2 + \on{logit}(\pi)$ are dropped and the
+remaining scale $1/\sigma_0^2$ is folded into a single learnable inverse
+temperature $1/\tau$, so that the logit is parameterised as
+$(1/\tau)\,\vb*{\mu}_k(\vb{x}) \cdot \vb{h}_k$; the per-prototype bias is left
+to be absorbed implicitly into $\tau$ and into the optimisation of $\vb{h}_k$
+itself. Under the exact gate of \cref{eq:app:vaee:alpha-exact} the
+decision boundary $\alpha_k = \tfrac{1}{2}$ sits where
+$\vb*{\mu}_k \cdot \vb{h}_k = \tfrac{1}{2}\norm{\vb{h}_k}^2$,
+which is well calibrated only as long as
+$\norm{\vb*{\mu}_k} \approx \norm{\vb{h}_k}$; otherwise the model can inflate
+$\norm{\vb*{\mu}_k}$ to push the inner product up and force a concept active.
+The cosine-similarity variant of \cref{eq:methods:proba:sim} removes
+this magnitude coupling by construction, which is why it is the choice of
+similarity used in this thesis. Either way, the derivation shows that gating a
+concept on the proximity of its embedding to its prototype is the optimal form
+the Gated Gaussian prior prescribes.
 
 \section{Explicit ELBO Derivation} \label{app:vaee:elbo}
 
