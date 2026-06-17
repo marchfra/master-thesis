@@ -49,7 +49,7 @@ yields \acp{LLM} whose capabilities extend well beyond the literal next-token
 task they were trained on. A network trained only to continue text acquires the
 ability to translate, summarise, answer questions, and follow instructions,
 often from nothing more than a description and a few examples supplied in its
-input, with no change to its weights \citep{brownLanguageModelsAre2020,%
+input, with no change to its weights \citep{brownLanguageModelsAre2020,
 dongSurveyIncontextLearning2024}. This generality is what makes \acp{LLM} both
 powerful and hard to interpret: a single fixed network comes to encode a vast
 range of linguistic and world knowledge, distributed across its parameters and
@@ -138,22 +138,38 @@ distributions. Each block is made of two sublayers with complementary roles: an
 
     \paragraph{Attention} \textit{Attention} is the mechanism by which positions
     exchange information. At each position, an \textit{attention head} forms a
-    query and compares it against a key emitted by every position in the
-    sequence; the better a position matches, the more it contributes to a
-    weighted average of values gathered from across the sequence, and that
-    average becomes the head's output for the current position
-    \citep{vaswaniAttentionAllYou2017}. A sublayer runs several such heads in
-    parallel, each free to specialise (one might link a pronoun to its referent,
-    another a verb to its subject). Because attention is the only component that
-    moves information between positions, it is where the model assembles
-    context: it turns a position's representation from a fact about a single
-    token into one that reflects the surrounding text.
+    query and compares it against a key emitted by itself and every position
+    before it; the better a position matches, the more it contributes to a
+    weighted average of the corresponding values, which becomes the head's output
+    for the current position \citep{vaswaniAttentionAllYou2017}. Concretely, the
+    head projects each stream vector to a query, key, and value,
+    $\vb{q}_t = \vb{Q} \vb{x}_t$, $\vb{k}_s = \vb{K} \vb{x}_s$, and
+    $\vb{v}_s = \vb{V} \vb{x}_s$, and returns
+    \begin{equation} \label{eq:background:nlp:attention}
+        \on{head}(\vb{x}_{1:t}) = \sum_{s=1}^{t} a_{ts} \vb{v}_s, \qquad
+        a_{ts} = \on{softmax}_{s}\left(
+        \frac{\vb{q}_t^{\top} \vb{k}_s}{\sqrt{d_k}}\right),
+    \end{equation}
+    where $d_k$ is the dimension of the queries and keys, and the softmax runs
+    over $s = 1, \dots, t$, so that a position attends only to itself and those
+    before it. A sublayer runs several such heads in parallel
+    --- each free to specialise, one linking a pronoun to its referent, another a
+    verb to its subject --- and combines their outputs by concatenation and a
+    learned output projection. Because attention is the only component that moves
+    information between positions, it is where the model assembles context: it
+    turns a position's representation from a fact about a single token into one
+    that reflects the surrounding text.
 
-    \paragraph{MLP sublayers} Where attention mixes information across
-    positions, \iac{MLP} sublayer processes each position on its own, applying
-    the same feed-forward transformation --- a projection up to a wider hidden
-    layer, a nonlinearity, and a projection back down --- to the vector at every
-    position independently. Much of the model's capacity sits in these
+    \paragraph{MLP sublayers} Where attention mixes information across positions,
+    \iac{MLP} sublayer processes each position on its own, applying the same
+    feed-forward transformation to the vector at every position independently,
+    \begin{equation} \label{eq:background:nlp:mlp}
+        \on{MLP}(\vb{x}_t) = \vb{W}_2\,
+        \phi\left(\vb{W}_1 \vb{x}_t + \vb{b}_1\right) + \vb{b}_2,
+    \end{equation}
+    with a pointwise nonlinearity $\phi$, an up-projection $\vb{W}_1$ to a wider
+    hidden layer and a down-projection $\vb{W}_2$ back. Much of the model's
+    capacity sits in these
     sublayers, which are widely thought to store and retrieve its learned
     associations and are a primary site at which interpretable features appear
     \citep{brickenMonosemanticityDecomposingLanguage2023}.
@@ -165,25 +181,26 @@ distributions. Each block is made of two sublayers with complementary roles: an
     stream} --- that every sublayer of every block reads from and writes to.
     Let $\vb{x}^{(\ell)}_{t}$ denote the residual stream at position $t$ as it
     enters block $\ell$; the block updates it as
-    % CLAUDE: review this equation
     \begin{equation} \label{eq:background:nlp:residual}
-        \vb{x}^{(\ell+1)}_{t} = \vb{x}^{(\ell)}_{t} + \on{Attn}^{(\ell)} \left(
-        \vb{x}^{(\ell)}_{t}; \left\{\vb{x}^{(\ell)}_{t'}\right\}_{t' = 1, \dots,
-        t-1, t+1, \dots, T} \right) + \on{MLP}^{(\ell)} \left(
-        \vb{x}^{(\ell)}_{t} \right),
+        \vb{x}^{(\ell+1)}_{t} = \vb{x}^{(\ell)}_{t} +
+        \on{Attn}^{(\ell)}\left(\vb{x}^{(\ell)}_{1:t}\right) +
+        \on{MLP}^{(\ell)}\left(\vb{x}^{(\ell)}_{t}\right),
     \end{equation}
-    where $\on{Attn}^{(\ell)}$ also reads the residual stream at the other
-    positions. The stream starts as the token's embedding and accumulates the
-    output of every sublayer in turn; because attention writes into it, a
-    position's stream is never a fact about that token alone but a running
-    summary of the context around it. This additive structure is what makes the
-    residual stream a single, well-defined space in which to study the model's
-    computation --- the view developed in the mechanistic-interpretability
-    literature \citep{elhageMathematicalFrameworkTransformer2021} and adopted
-    throughout this thesis. It is also the object the later chapters take apart:
-    the activation vector $\vb{x} \in \R^{n}$ that the autoencoders of
+    where $\vb{x}^{(\ell)}_{1:t} = (\vb{x}^{(\ell)}_{1}, \dots,
+    \vb{x}^{(\ell)}_{t})$ is the prefix of stream states up to position $t$ ---
+    so the attention term, unlike the \ac{MLP} term, depends on the whole prefix
+    rather than on $\vb{x}^{(\ell)}_{t}$ alone. The stream starts as the token's
+    embedding and accumulates the output of every sublayer in turn; because
+    attention writes into it, a position's stream is never a fact about that
+    token alone but a running summary of the context around it. This additive
+    structure is what makes the residual stream a single, well-defined space in
+    which to study the model's computation --- the view developed in the
+    mechanistic-interpretability literature
+    \citep{elhageMathematicalFrameworkTransformer2021} and adopted throughout
+    this thesis. It is also the object the later chapters take apart: the
+    activation vector $\vb{x} \in \R^{n}$ that the autoencoders of
     \cref{sec:background:ae} receive as input is
-    exactly such a residual-stream state $\vb{x}^{(\ell)}$, read off at a chosen
+    exactly such a residual stream state $\vb{x}^{(\ell)}$, read off at a chosen
     layer $\ell$.
 
 % --------------------------------------------- %
@@ -342,7 +359,11 @@ the output.
     unsupervised layer is fixed at $768$ in the authors' released code
     (\url{https://github.com/Trustworthy-ML-Lab/CB-LLMs}); the paper itself
     leaves it unspecified.} so only 4 of the $772$ dimensions feeding each token
-    prediction carry interpretable concepts.
+    prediction carry interpretable concepts. Those interpretable dimensions
+    remain intervenable nonetheless: because they feed the prediction directly,
+    clamping or amplifying one steers the model's behaviour predictably --- the
+    steerability the bottleneck is built for --- even if they carry only a
+    fraction of the signal.
 
 \subsubsection{Post-hoc Methods}
 
@@ -392,81 +413,81 @@ identity. In either case, the structure of the latent space is shaped by the
 choice of architecture and regularisation.
 
 
-\subsection{Standard AutoEncoders} \label{sec:background:ae:standard}
-
-\subsubsection{Applications} \label{sec:background:ae:standard:applications}
-
-    \paragraph{Image retrieval} \citet{krizhevskyUsingVeryDeep2011} proposed
-    using deep autoencoders for content-based image retrieval. Their key insight
-    is that a deep autoencoder can learn to map images to short binary codes
-    that preserve semantic similarity: images that are perceptually similar are
-    mapped to nearby codes in the latent space, allowing retrieval to be reduced
-    to a fast lookup rather than an exhaustive search over the full database.
-    They demonstrate this on a dataset of 1.6 million tiny images, showing that
-    codes produced by deep autoencoders yield qualitatively and quantitatively
-    better retrieval results than matching in raw pixel space. This work
-    illustrated that the compressed latent representation learned by an
-    autoencoder need not merely serve reconstruction, but can itself be a
-    semantically meaningful and practically useful object.
-
-    \paragraph{Anomaly detection} \citet{sakuradaAnomalyDetectionUsing2014} were
-    among the first to explicitly propose autoencoders as a tool for anomaly
-    detection. Their core insight is that an autoencoder trained on normal data
-    learns a compressed representation of the normal data distribution; at test
-    time, inputs that deviate from this distribution are reconstructed poorly,
-    and the resulting reconstruction error serves as an anomaly score. To
-    substantiate this claim, they apply autoencoders to both synthetic data
-    generated from the Lorenz system and real spacecraft telemetry, comparing
-    against linear \ac{PCA} and kernel \ac{PCA}. They demonstrate that
-    autoencoders, by virtue of their nonlinear dimensionality reduction, are
-    able to detect subtle anomalies that linear \ac{PCA} misses, while remaining
-    computationally lighter than kernel \ac{PCA}. This work established
-    reconstruction error as a natural unsupervised anomaly signal for
-    autoencoder-based methods.
-
-
-\subsubsection{Denoising AutoEncoders} \label{sec:background:ae:standard:dae}
-The denoising autoencoder was introduced by
-\citet{vincentExtractingComposingRobust2008} to avoid overfitting and improve
-the robustness of the learned representation. The input is partially corrupted
-by adding noise to or masking some values of the input vector in a stochastic
-manner, $\vb{x}_{c} \sim \mathcal{M}_{\mathcal{D}}(\vb{x}_{c} \mid \vb{x})$, as
-shown in \cref{fig:denoising-ae}. The model is then trained to reconstruct the
-original uncorrupted input:
-\begin{equation} \label{eq:background:ae:dae-loss}
-    \mathcal{L}_{\mathrm{DAE}} = \norm{\vb{x} -
-    g_{\theta}(f_{\phi}(\vb{x}_{c}))}^{2}_{2}.
-\end{equation}
-
-\begin{figure}[tb]
-    \centering
-    \includegraphics[width=0.95\linewidth]{gfx/denoising-autoencoder-architecture.png}
-    \caption[Denoising autoencoder architecture]{
-        Illustration of Denoising autoencoder model architecture, reproduced
-        from \citet{wengAutoencoderBetaVAE2018}. \textit{Note: this figure uses
-        $f$ for the decoder and $g$ for the encoder, the reverse of the letter
-        convention adopted in this thesis.}
-    }
-    \label{fig:denoising-ae}
-\end{figure}
-
-This design is motivated by the fact that humans can easily recognise an object
-or a scene even when the view is partially occluded or corrupted. To ``repair''
-the partially destroyed input, the denoising autoencoder has to discover and
-capture the relationship between dimensions of the input in order to infer
-missing pieces.
-
-For high-dimensional input with high redundancy, like images, the model is
-likely to depend on evidence gathered from a combination of many input
-dimensions to recover the denoised version rather than to overfit one dimension.
-This builds up a good foundation for learning a \textit{robust} latent
-representation.
-
-The noise is controlled by a stochastic mapping
-$\mathcal{M}_{\mathcal{D}}(\vb{x}_{c} \mid \vb{x})$, and it is not specific to a
-particular type of corruption process (\ie masking noise, Gaussian noise,
-salt-and-pepper noise, etc.). Naturally the corruption process can be equipped
-with prior knowledge \cite{wengAutoencoderBetaVAE2018}.
+% \subsection{Standard AutoEncoders} \label{sec:background:ae:standard}
+%
+% \subsubsection{Applications} \label{sec:background:ae:standard:applications}
+%
+%     \paragraph{Image retrieval} \citet{krizhevskyUsingVeryDeep2011} proposed
+%     using deep autoencoders for content-based image retrieval. Their key insight
+%     is that a deep autoencoder can learn to map images to short binary codes
+%     that preserve semantic similarity: images that are perceptually similar are
+%     mapped to nearby codes in the latent space, allowing retrieval to be reduced
+%     to a fast lookup rather than an exhaustive search over the full database.
+%     They demonstrate this on a dataset of 1.6 million tiny images, showing that
+%     codes produced by deep autoencoders yield qualitatively and quantitatively
+%     better retrieval results than matching in raw pixel space. This work
+%     illustrated that the compressed latent representation learned by an
+%     autoencoder need not merely serve reconstruction, but can itself be a
+%     semantically meaningful and practically useful object.
+%
+%     \paragraph{Anomaly detection} \citet{sakuradaAnomalyDetectionUsing2014} were
+%     among the first to explicitly propose autoencoders as a tool for anomaly
+%     detection. Their core insight is that an autoencoder trained on normal data
+%     learns a compressed representation of the normal data distribution; at test
+%     time, inputs that deviate from this distribution are reconstructed poorly,
+%     and the resulting reconstruction error serves as an anomaly score. To
+%     substantiate this claim, they apply autoencoders to both synthetic data
+%     generated from the Lorenz system and real spacecraft telemetry, comparing
+%     against linear \ac{PCA} and kernel \ac{PCA}. They demonstrate that
+%     autoencoders, by virtue of their nonlinear dimensionality reduction, are
+%     able to detect subtle anomalies that linear \ac{PCA} misses, while remaining
+%     computationally lighter than kernel \ac{PCA}. This work established
+%     reconstruction error as a natural unsupervised anomaly signal for
+%     autoencoder-based methods.
+%
+%
+% \subsubsection{Denoising AutoEncoders} \label{sec:background:ae:standard:dae}
+% The denoising autoencoder was introduced by
+% \citet{vincentExtractingComposingRobust2008} to avoid overfitting and improve
+% the robustness of the learned representation. The input is partially corrupted
+% by adding noise to or masking some values of the input vector in a stochastic
+% manner, $\vb{x}_{c} \sim \mathcal{M}_{\mathcal{D}}(\vb{x}_{c} \mid \vb{x})$, as
+% shown in \cref{fig:denoising-ae}. The model is then trained to reconstruct the
+% original uncorrupted input:
+% \begin{equation} \label{eq:background:ae:dae-loss}
+%     \mathcal{L}_{\mathrm{DAE}} = \norm{\vb{x} -
+%     g_{\theta}(f_{\phi}(\vb{x}_{c}))}^{2}_{2}.
+% \end{equation}
+%
+% \begin{figure}[tb]
+%     \centering
+%     \includegraphics[width=0.95\linewidth]{gfx/denoising-autoencoder-architecture.png}
+%     \caption[Denoising autoencoder architecture]{
+%         Illustration of Denoising autoencoder model architecture, reproduced
+%         from \citet{wengAutoencoderBetaVAE2018}. \textit{Note: this figure uses
+%         $f$ for the decoder and $g$ for the encoder, the reverse of the letter
+%         convention adopted in this thesis.}
+%     }
+%     \label{fig:denoising-ae}
+% \end{figure}
+%
+% This design is motivated by the fact that humans can easily recognise an object
+% or a scene even when the view is partially occluded or corrupted. To ``repair''
+% the partially destroyed input, the denoising autoencoder has to discover and
+% capture the relationship between dimensions of the input in order to infer
+% missing pieces.
+%
+% For high-dimensional input with high redundancy, like images, the model is
+% likely to depend on evidence gathered from a combination of many input
+% dimensions to recover the denoised version rather than to overfit one dimension.
+% This builds up a good foundation for learning a \textit{robust} latent
+% representation.
+%
+% The noise is controlled by a stochastic mapping
+% $\mathcal{M}_{\mathcal{D}}(\vb{x}_{c} \mid \vb{x})$, and it is not specific to a
+% particular type of corruption process (\ie masking noise, Gaussian noise,
+% salt-and-pepper noise, etc.). Naturally the corruption process can be equipped
+% with prior knowledge \cite{wengAutoencoderBetaVAE2018}.
 
 
 \subsection{Variational AutoEncoders} \label{sec:background:ae:vae}
@@ -624,60 +645,60 @@ space or the form of the latent code; two are particularly relevant here.
     the discrete latent vocabulary over which an autoregressive prior is
     subsequently trained.
 
-\subsubsection{Applications} \label{sec:background:ae:vae:applications}
-
-\acp{VAE} are used both as practical components in large generative systems and
-for interpretable representation learning; the latter is the more relevant to
-this thesis.
-
-    \paragraph{Generative modelling} Although \iac{VAE} can act as a standalone
-    generator, in modern systems it more often serves as a \textit{compression
-    backbone} for other generative models: latent diffusion models run the
-    diffusion process in the compact latent space of an autoencoder rather than
-    in pixel space. The autoencoder behind Stable Diffusion
-    \cite{rombachHighResolutionImageSynthesis2022} is regularised only weakly,
-    with a small \ac{KL} penalty (in the manner of a \ac{VAE}) or with vector
-    quantisation. Discrete VQ-VAEs
-    \cite{vandenoordNeuralDiscreteRepresentation2017} encode data into a grid of
-    discrete codes from a learned codebook, which an autoregressive prior can
-    then generate. The smooth latent also serves as a search space: optimising
-    over it has been used to search for new molecules with desired properties
-    \cite{gomez-bombarelliAutomaticChemicalDesign2018}.
-
-    \paragraph{Anomaly detection} Like standard autoencoders, \acp{VAE} can flag
-    anomalies, but they replace the single reconstruction error with a
-    probabilistic score: the reconstruction probability, or the \ac{ELBO}, gives
-    a principled measure of how well the model explains an input
-    \cite{anVariationalAutoencoderBased2015}. This is the probabilistic
-    counterpart of the approach described in
-    \cref{sec:background:ae:standard:applications}.
-
-    \paragraph{Representation learning} \acp{VAE} are also a standard tool for
-    unsupervised representation learning. The $\beta$-VAE
-    (\cref{sec:background:ae:vae:arch})
-    is the canonical example: up-weighting the \ac{KL} term pressures the model
-    towards \textit{disentangled} latents whose individual dimensions capture
-    independent, semantically meaningful factors of variation
-    \cite{higginsBetaVAELearningBasic2017}, yielding structured low-dimensional
-    features for downstream use.
-
-    \paragraph{Interpretability} The structured latent that makes \acp{VAE} good
-    representation learners also makes them attractive for explainability. Their
-    smoothness supports \textit{counterfactual explanation}
-    (\cref{sec:background:xai:trad-xai:post-hoc}),
-    as perturbing the latent yields plausible, on-manifold variants of an input
-    \cite{joshiRealisticIndividualRecourse2019}. A substantial line of work uses
-    \acp{VAE} for \textit{causal representation learning}, aligning latent
-    factors with underlying causal variables
-    \cite{goyalExplainingClassifiersCausal2020,
-    komanduriSCMVAELearningIdentifiable2022}. \acp{VAE} have also been paired
-    with concept-based models such as self-explaining networks
-    \cite{alvarezmelisRobustInterpretabilitySelfExplaining2018}. Closest to this
-    thesis, variational ideas have been brought to sparse dictionary learning
-    --- variational sparse coding \cite{tonoliniVariationalSparseCoding2020} and
-    variational \aclp{SAE} \cite{bakerAnalysisVariationalSparse2025} --- seeking
-    to combine the interpretability of sparse codes with the structured latent
-    of a \ac{VAE}.
+% \subsubsection{Applications} \label{sec:background:ae:vae:applications}
+%
+% \acp{VAE} are used both as practical components in large generative systems and
+% for interpretable representation learning; the latter is the more relevant to
+% this thesis.
+%
+%     \paragraph{Generative modelling} Although \iac{VAE} can act as a standalone
+%     generator, in modern systems it more often serves as a \textit{compression
+%     backbone} for other generative models: latent diffusion models run the
+%     diffusion process in the compact latent space of an autoencoder rather than
+%     in pixel space. The autoencoder behind Stable Diffusion
+%     \cite{rombachHighResolutionImageSynthesis2022} is regularised only weakly,
+%     with a small \ac{KL} penalty (in the manner of a \ac{VAE}) or with vector
+%     quantisation. Discrete VQ-VAEs
+%     \cite{vandenoordNeuralDiscreteRepresentation2017} encode data into a grid of
+%     discrete codes from a learned codebook, which an autoregressive prior can
+%     then generate. The smooth latent also serves as a search space: optimising
+%     over it has been used to search for new molecules with desired properties
+%     \cite{gomez-bombarelliAutomaticChemicalDesign2018}.
+%
+%     \paragraph{Anomaly detection} Like standard autoencoders, \acp{VAE} can flag
+%     anomalies, but they replace the single reconstruction error with a
+%     probabilistic score: the reconstruction probability, or the \ac{ELBO}, gives
+%     a principled measure of how well the model explains an input
+%     \cite{anVariationalAutoencoderBased2015}. This is the probabilistic
+%     counterpart of the approach described in
+%     \cref{sec:background:ae:standard:applications}.
+%
+%     \paragraph{Representation learning} \acp{VAE} are also a standard tool for
+%     unsupervised representation learning. The $\beta$-VAE
+%     (\cref{sec:background:ae:vae:arch})
+%     is the canonical example: up-weighting the \ac{KL} term pressures the model
+%     towards \textit{disentangled} latents whose individual dimensions capture
+%     independent, semantically meaningful factors of variation
+%     \cite{higginsBetaVAELearningBasic2017}, yielding structured low-dimensional
+%     features for downstream use.
+%
+%     \paragraph{Interpretability} The structured latent that makes \acp{VAE} good
+%     representation learners also makes them attractive for explainability. Their
+%     smoothness supports \textit{counterfactual explanation}
+%     (\cref{sec:background:xai:trad-xai:post-hoc}),
+%     as perturbing the latent yields plausible, on-manifold variants of an input
+%     \cite{joshiRealisticIndividualRecourse2019}. A substantial line of work uses
+%     \acp{VAE} for \textit{causal representation learning}, aligning latent
+%     factors with underlying causal variables
+%     \cite{goyalExplainingClassifiersCausal2020,
+%     komanduriSCMVAELearningIdentifiable2022}. \acp{VAE} have also been paired
+%     with concept-based models such as self-explaining networks
+%     \cite{alvarezmelisRobustInterpretabilitySelfExplaining2018}. Closest to this
+%     thesis, variational ideas have been brought to sparse dictionary learning
+%     --- variational sparse coding \cite{tonoliniVariationalSparseCoding2020} and
+%     variational \aclp{SAE} \cite{bakerAnalysisVariationalSparse2025} --- seeking
+%     to combine the interpretability of sparse codes with the structured latent
+%     of a \ac{VAE}.
 
 
 \subsection{Sparse AutoEncoders} \label{sec:background:ae:sae}
@@ -842,10 +863,13 @@ architectures that try to improve on it.
     achieve comparable performance to TopK \acp{SAE}.
 
 
-\subsubsection{Applications} \label{sec:background:ae:sae:applications}
+% TODO: if including sections about AE and VAE applications, remove "to MechInt"
+% and reword initial sentence
+\subsubsection{Applications to MechInt} \label{sec:background:ae:sae:applications}
 
-Unlike general-purpose autoencoders and \acp{VAE}, which are applied across a
-range of domains, \acp{SAE} find their primary application in interpreting the
+% Unlike general-purpose autoencoders and \acp{VAE}, which are applied across a
+% range of domains, \acp{SAE}
+\Acp{SAE} find their primary application in interpreting the
 internal activations of neural networks, and \ac{MI} remains their most
 prominent application, making it the focus of this section. \acp{SAE} can be
 trained on activations from any layer or component of a transformer
