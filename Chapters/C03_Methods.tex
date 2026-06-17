@@ -75,17 +75,231 @@ selection sparse.
 % and \cref{ch:experiments} tests it on the decomposition of \ac{LLM}
 % activations.
 
-\section{Definitions/Notation} \label{sec:methods:def}
-% TODO: the reconciled VAEE notation (see .claude/notation.md "VAEE notation
-% LOCKED") + the "prototype" disambiguation (VAEE h_k vs XAI input-instance).
+\section{Notation} \label{sec:methods:notation}
+
+The \ac{VAEE} operates on a single input vector $\vb{x} \in \R^{n}$ --- in
+the experiments of \cref{ch:experiments}, a residual
+stream state of \iac{LLM}
+(\cref{sec:background:nlp:transformer}) ---
+and decomposes it into a dictionary of $K$ concepts. Where \iac{SAE} represents
+each concept by a single scalar coefficient
+(\cref{sec:background:ae:sae}), the
+\ac{VAEE} represents it by a $d$-dimensional embedding. The symbols used
+throughout the chapter are:
+\begin{itemize}
+    \item $\vb{x} \in \R^{n}$: the input vector, to be reconstructed;
+    \item $K$: the number of concepts in the dictionary;
+    \item $d$: the dimension of each concept embedding;
+    \item $\vb{c} = (c_1, \dots, c_K) \in \{0,1\}^{K}$: the binary
+        \textit{concept-activation mask}, where $c_k = 1$ marks concept $k$
+        active for the given input;
+    \item $\vb{z}_k \in \R^{d}$: the \textit{embedding} of concept $k$ for the
+        given input, collected into
+        $\vb{z} = (\vb{z}_1, \dots, \vb{z}_K) \in \R^{K \times d}$;
+    \item $\vb{h}_k \in \R^{d}$: the learned \textit{prototype} of concept $k$,
+        a global parameter shared across all inputs;
+    \item $\vb*{\mu}_k(\vb{x}) \in \R^{d}$: the encoder's output for
+        concept $k$, the mean of the embedding $\vb{z}_k$;
+    \item $\alpha_k(\vb{x}) \in [0,1]$: the probability that concept $k$ is
+        active for input $\vb{x}$.
+\end{itemize}
+As in \cref{sec:background:ae}, $f_{\phi}$ denotes
+the encoder and $g_{\theta}$ the decoder, with parameters $\phi$ and $\theta$
+respectively.
+
+The word \textit{prototype} needs a caveat, since
+\cref{sec:background:xai:trad-xai:prototypes}
+used it in a different sense. There a prototype was an \textit{input instance}
+--- an actual data point, typical of a region of the data, chosen to summarise
+it by inspection. The \ac{VAEE}'s prototypes are similar in their function, as
+they act as a centroid of sorts for a group of input data, but instead of living
+in the input space they live in latent space. % unrelated: each $\vb{h}_k$ is a
+% learned parameter vector in the embedding space, not a data point, against which
+% the encoded input is compared to decide whether concept $k$ is active.
+% Throughout this chapter, \textit{prototype} refers only to this learned
+% vector.\graffito{explain why it's called prototype}
 
 \section{Model Development} \label{sec:methods:model}
     \subsection{Probabilistic Formulation} \label{sec:methods:model:proba}
-    % TODO: Gated Gaussian generative model (c -> z -> x) + PGM; amortised
-    % inference (encoder, embedding posterior, prototype-similarity gating,
-    % Gumbel-Sigmoid, gating step); the ELBO (3 terms) -> design choices ->
-    % practical loss; similarity metrics. Full A.1/A.2 algebra goes to
-    % Chapters/C0A_VAEEDerivations (app:vaee:gating, app:vaee:elbo).
+
+    The \ac{VAEE} is defined as a probabilistic generative model of an
+    observation $\vb{x}$, built so that a sparse set of concept embeddings
+    accounts for it.
+
+    \paragraph{Generative model} A concept is generated in two stages. First, a
+    binary mask decides whether the concept is present: each $c_k$ is drawn
+    independently from a Bernoulli with a fixed prior activation rate $\pi$,
+    shared across concepts,
+    \begin{equation} \label{eq:methods:proba:prior-c}
+        p(c_k) = \on{Bern}\left(c_k; \pi\right).
+    \end{equation}
+    The mask then gates a \textit{Gated Gaussian} prior over the embedding: an
+    inactive concept ($c_k = 0$) draws its embedding from a Gaussian at the
+    origin, an active one ($c_k = 1$) from a Gaussian centred on the concept's
+    prototype $\vb{h}_k$,
+    \begin{equation} \label{eq:methods:proba:prior-z}
+        p\left(\vb{z}_k \mid c_k\right) =
+        \mathcal{N}\left(\vb{z}_k;\, c_k \vb{h}_k,\, \sigma_0^2
+        \vb{I}\right),
+    \end{equation}
+    with a fixed isotropic variance $\sigma_0^2$. The prototype $\vb{h}_k$
+    thus has a precise meaning: it is the mean embedding of concept $k$ when the
+    concept is active --- its canonical location in embedding space. Finally,
+    the observation is generated from the embeddings through the decoder, taken
+    to be Gaussian about the decoder output,
+    \begin{equation} \label{eq:methods:proba:likelihood}
+        p_\theta\left(\vb{x} \mid \vb{z}\right) =
+        \mathcal{N}\left(\vb{x};\, g_\theta(\vb{z}),\, \vb{I}\right).
+    \end{equation}
+    This is a strict generative flow $\vb{c} \to \vb{z} \to \vb{x}$
+    (\cref{fig:vaee-pgm}): the mask fixes where each embedding sits, and the
+    observation follows from the embeddings.
+
+    \begin{figure}[tb]
+        \centering
+        \begin{tikzpicture}[
+            >={Stealth[round]}, thick,
+            obs/.style={circle, draw, fill=gray!20, minimum size=9mm, inner sep=0pt},
+            lat/.style={circle, draw, minimum size=9mm, inner sep=0pt},
+            param/.style={minimum size=6mm},
+        ]
+            \node[param] (pi) at (-2.2,0)   {$\pi$};
+            \node[lat]   (c)  at (0,0)      {$c_{i,k}$};
+            \node[lat]   (z)  at (2.2,0)    {$\vb{z}_{i,k}$};
+            \node[param] (h)  at (2.2,2.2)  {$\vb{h}_k$};
+            \node[obs]   (x)  at (2.2,-2.2) {$\vb{x}_i$};
+
+            \draw[->] (pi) -- (c);
+            \draw[->] (h)  -- (z);
+            \draw[->] (c)  -- (z);
+            \draw[->] (z)  -- (x);
+
+            % plate K (concepts): solid
+            \draw[rounded corners] (-0.85,-0.85) rectangle (3.05,3.05);
+            \node at (2.65,2.65) {$K$};
+            % plate N (observations): dashed
+            \draw[rounded corners, dashed] (-1.0,-3.1) rectangle (3.2,0.95);
+            \node at (2.8,-2.75) {$N$};
+        \end{tikzpicture}
+        \caption[The VAEE generative model]{
+            The \ac{VAEE} generative model as a probabilistic graphical model.
+            For each of the $K$ concepts, a binary mask $c_{i,k}$ (drawn from a
+            Bernoulli with rate $\pi$) gates a Gaussian embedding $\vb{z}_{i,k}$
+            centred either at the origin or at the learned prototype $\vb{h}_k$;
+            the gated embeddings generate the observation $\vb{x}_i$. Shaded
+            nodes are observed and unshaded latent, bare symbols are global
+            parameters; the solid plate replicates over concepts and the dashed
+            plate over the $N$ observations.
+        }
+        \label{fig:vaee-pgm}
+    \end{figure}
+
+    \paragraph{Inference} Exact inference is intractable: it would require
+    marginalizing over the continuous embeddings $\vb{z}$ and summing over all
+    $2^K$ possible discrete masks configurations for $\vb{c}$. The \ac{VAEE}
+    instead uses amortised variational inference
+    (\cref{sec:background:ae:vae}),
+    with an encoder $f_\phi$ that maps the input to the parameters of an
+    approximate posterior shared across all data points. The encoder predicts a
+    mean embedding $\vb*{\mu}_k(\vb{x})$ for each concept; the embedding
+    posterior is Gaussian about this mean, with the posterior variance frozen to
+    the prior's $\sigma_0^2$,
+    \begin{equation} \label{eq:methods:proba:posterior-z}
+        q_{\phi}\left(\vb{z}_{k} \mid \vb{x}\right) =
+        \mathcal{N}\left(\vb{z}_{k}; \,\vb*{\mu}_{k}(\vb{x}), \,\sigma^{2}_{0}
+        \vb{I}\right),
+    \end{equation}
+    or, using the reparameterisation trick,
+    \begin{equation*} \label{eq:methods:proba:reparam-z}
+        \vb{z}_{k} = \vb*{\mu_{k}}(\vb{x}) + \sigma_{0} \vb*{\epsilon}, \qquad
+        \vb*{\epsilon} \sim \mathcal{N}(\vb{0}, \vb{I}).
+    \end{equation*}
+    % \begin{equation} \label{eq:methods:proba:posterior-z}
+    %     q_\phi\left(\vb{z}_k \mid \vb{x}\right) =
+    %     \mathcal{N}\left(\vb{z}_k;\, \vb*{\mu}_k(\vb{x}),\,
+    %     \sigma_0^2 \vb{I}\right), \quad
+    %     \vb{z}_k = \vb*{\mu}_k(\vb{x}) + \sigma_0 \vb*{\epsilon},
+    %     \quad \vb*{\epsilon} \sim \mathcal{N}(\vb{0}, \vb{I}),
+    % \end{equation}
+    % so the encoder's only task is to predict the mean, and the sample is
+    % reparameterisable.
+
+    The activation probability is not predicted directly but \textit{derived}
+    from the predicted location, inverting the generative flow $\vb{x} \to
+    \vb{z} \to \vb{c}$: a concept should be judged active precisely when its
+    embedding lands near its prototype. As shown in
+    \cref{app:vaee:gating}, the optimal
+    posterior over the mask dictated by the Gated Gaussian prior is a sigmoid of
+    the similarity between the predicted embedding and the prototype,
+    \begin{equation} \label{eq:methods:proba:alpha}
+        \alpha_k(\vb{x}) = \on{sigmoid}\left(
+        \frac{\on{sim}\left(\vb*{\mu}_k(\vb{x}), \vb{h}_k\right)}{\tau}
+        \right),
+    \end{equation}
+    scaled by an inverse temperature $1/\tau$ --- a single learnable scalar,
+    initialised to $\tau = 0.1$, in the manner of the CLIP logit scale. This
+    activation probability parameterises the Bernoulli posterior over the mask,
+    \begin{equation} \label{eq:methods:proba:c_k}
+        q_\phi\left(c_k \mid \vb{x}\right) = \on{Bern}\left(c_k; \,
+        \alpha_k(\vb{x})\right).
+    \end{equation}
+    To train through the discrete mask, $c_k$ is drawn during training with the
+    continuous Gumbel-Sigmoid\graffito{add a paragraph explaining this better} relaxation\footnote{The Gumbel-Sigmoid is a
+    continuous, reparameterisable relaxation of a Bernoulli draw --- the binary
+    case of the Gumbel-Softmax (Concrete) distribution
+    \citep{jangCategoricalReparameterizationGumbelSoftmax2017,%
+    maddisonConcreteDistributionContinuous2017} --- which makes the otherwise
+    non-differentiable sampling trainable; the temperature $\tau_g$ controls its
+    sharpness, with $\tau_g \to 0$ recovering a hard $\{0,1\}$ sample.} of
+    \cref{eq:methods:proba:c_k} at temperature $\tau_g$.
+
+    One subtlety remains. The embedding posterior of
+    \cref{eq:methods:proba:posterior-z} does not depend on the
+    mask, since the encoder produces $\vb*{\mu}_k$ from $\vb{x}$ alone, so a
+    sampled $\vb{z}_k$ would pass signal to the decoder regardless of whether
+    the concept is active. To enforce that inactive concepts contribute exactly
+    nothing, a multiplicative gate is applied before decoding,
+    \begin{equation} \label{eq:methods:proba:gate}
+        \hat{\vb{x}} = g_\theta\left(\vb{c} \odot \vb{z}\right), \qquad
+        \left(\vb{c} \odot \vb{z}\right)_k = c_k \vb{z}_k.
+    \end{equation}
+    The gate is empirically load-bearing: without it, the soft penalty on
+    inactive embeddings derived in \cref{sec:methods:model:loss}
+    is too weak to drive them to zero, because the reconstruction gradient keeps
+    inflating them. It also exposes the mask $\vb{c}$ as a clean handle for
+    concept-level interventions
+    (\cref{sec:methods:model:arch}).
+
+    \paragraph{Similarity} The gate of \cref{eq:methods:proba:alpha}
+    is written for a generic similarity $\on{sim}(\cdot, \cdot)$, for which
+    three choices are considered:
+    \begin{equation} \label{eq:methods:proba:sim}
+        \on{sim}\left(\vb*{\mu}_k, \vb{h}_k\right) =
+        \begin{cases}
+            \frac{\vb*{\mu}_k \cdot
+            \vb{h}_k}{\norm{\vb*{\mu}_k}\,\norm{\vb{h}_k}} & \text{(cosine
+            similarity)} \\
+            \vb*{\mu}_k \cdot \vb{h}_k & \text{(inner product)} \\
+            b - \norm{\vb*{\mu}_k - \vb{h}_k} & \text{(negative Euclidean)}
+        \end{cases}.
+    \end{equation}
+    Because the embeddings are decoded unnormalised, the choice determines
+    whether the gate is coupled to the embedding's magnitude. \textit{Cosine
+    similarity} depends only on the angle between $\vb*{\mu}_k$ and $\vb{h}_k$:
+    the angle controls the discrete gate while the magnitude is left free to
+    carry information to the decoder. The plain inner product is unbounded and
+    entangles gating with magnitude (the network can inflate
+    $\norm{\vb*{\mu}_k}$ to force a concept on) while the negative Euclidean
+    distance fits the Gaussian prior most directly but requires learning the
+    radius offset $b$. Cosine similarity is used throughout unless stated
+    otherwise.
+
+    \subsection{Training Objective} \label{sec:methods:model:loss}
+    % TODO (next pass): the ELBO (reconstruction + mask-prior KL +
+    % conditional-embedding KL); design choices (per-sample -> batch-wise
+    % sparsity, entropy binarisation, mean reductions over K/d, stop-gradient on
+    % alpha); the practical loss. Full derivation -> Chapters/C0A_VAEEDerivations
+    % (app:vaee:elbo).
 
     \subsection{Architectures} \label{sec:methods:model:arch}
     % TODO: encoder/decoder instantiations (shallow/linear/MLP); stacked vs summed
