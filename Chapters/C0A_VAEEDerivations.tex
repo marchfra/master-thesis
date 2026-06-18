@@ -18,10 +18,8 @@ The gate of \cref{eq:methods:proba:alpha} ties a concept's
 activation probability to the similarity between its predicted embedding and its
 prototype. This section shows that this is not an arbitrary heuristic but the
 \textit{optimal} mask factor of the mean-field posterior
-$\nbmath{\prod_{k} q_\phi(\vb{z}_k \mid \vb{x})\, q_\phi(c_k \mid \vb{x})}$
-adopted in
-\cref{sec:methods:model:loss}, dictated
-by the Gated Gaussian prior of \cref{eq:methods:proba:prior-z}.
+(\cref{eq:methods:proba:posterior}), dictated by the Gated Gaussian
+prior of \cref{eq:methods:proba:prior-z}.
 
 For a mean-field family, the factor that maximises the \ac{ELBO} while the
 remaining factors are held fixed has a closed form: its logarithm equals the
@@ -44,8 +42,7 @@ constant, leaving only the prior $p(c_k)$ and the Gated Gaussian term.
 
 Because the mask entry $c_k$ is binary, the factor $q_\phi^{\star}(c_k \mid
 \vb{x})$ is fully characterised by its log-odds: the sigmoid is the inverse of
-the logit transform\footnote{The logit transform is defined as $\on{logit}(s) =
-\log \frac{s}{1 - s}$.}, so
+the logit transform, so
 \begin{equation*}
     \begin{split}
         q_\phi^{\star}(c_k = 1 \mid \vb{x})
@@ -130,15 +127,13 @@ the model gates on the predicted mean directly.
 \section{Explicit ELBO Derivation} \label{app:vaee:elbo}
 
 This section derives the \ac{ELBO} of \cref{eq:methods:loss:elbo}
-under the mean-field posterior
-$\nbmath{q_\phi(\vb{c}, \vb{z} \mid \vb{x}) = \prod_{k} q_\phi(\vb{z}_k \mid \vb{x})\, q_\phi(c_k \mid \vb{x})}$
-of \cref{sec:methods:model:loss}. This
-factorisation is the model's central variational approximation: the true
-posterior couples the mask and its embedding through the generative $\vb{c} \to
-\vb{z}$ edge, so that even given $\vb{x}$ the two remain dependent. Treating
-them as conditionally independent given $\vb{x}$ is what lets all three terms
-below close in form; it is the only approximation made, every step that follows
-being exact.
+under the mean-field posterior of
+\cref{eq:methods:proba:posterior}. This factorisation is the model's
+central variational approximation: the true posterior couples the mask and its
+embedding through the generative $\vb{c} \to \vb{z}$ edge, so that even given
+$\vb{x}$ the two remain dependent. Treating them as conditionally independent
+given $\vb{x}$ is what lets all three terms below close in form; it is the only
+approximation made, every step that follows being exact.
 
 The marginal likelihood requires marginalising over both latents, an integral
 over the continuous $\vb{z}$ and a sum over the $2^K$ configurations of $\vb{c}$
@@ -177,12 +172,13 @@ splitting the logarithm of the resulting product gives
 \end{equation*}
 Under the mean-field posterior the joint expectation factorises as
 $\nbmath{\mathbb{E}_{q_\phi(\vb{c}, \vb{z} \mid \vb{x})} = \mathbb{E}_{q_\phi(\vb{z} \mid \vb{x})}\mathbb{E}_{q_\phi(\vb{c} \mid \vb{x})}}$,
-and the three summands separate. The first carries no mask, so the expectation
-over $\vb{c}$ is trivial and it reduces to the reconstruction term
+and the three summands separate.
+
+The first carries no mask, so the expectation over $\vb{c}$ is trivial and it
+reduces to the reconstruction term
 \begin{equation} \label{eq:app:vaee:elbo:recon}
     \mathbb{E}_{q_\phi(\vb{z} \mid \vb{x})}[\log p_\theta(\vb{x} \mid \vb{z})].
 \end{equation}
-
 The second carries no embedding, so the expectation over $\vb{z}$ is trivial and
 the expectation over $\vb{c}$ collects into the negative \ac{KL} between the
 Bernoulli posterior and prior,
@@ -192,7 +188,6 @@ Bernoulli posterior and prior,
     - \sum_{k=1}^{K} D_{\mathrm{KL}} \left(q_\phi(c_k \mid \vb{x}) \,\big\|\, p(c_k)\right).
 \end{equation}
 and represents the mask-prior \ac{KL}.
-
 In the third summand the inner expectation over $\vb{z}_k$ is itself a \ac{KL},
 \begin{equation*}
     \mathbb{E}_{q_\phi(\vb{z}_k \mid \vb{x})}\left[\log \frac{p(\vb{z}_k \mid c_k)}{q_\phi(\vb{z}_k \mid \vb{x})}\right]

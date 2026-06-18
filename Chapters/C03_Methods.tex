@@ -130,8 +130,14 @@ observation $\vb{x}$, built so that a sparse set of concept embeddings
 accounts for it.
 
 \subsubsection{Generative model} \label{sec:methods:model:proba:gen-model}
-\graffito{I want to write $p(\vb{c}, \vb{z}, \vb{x}) = p(\vb{x} \mid \vb{z}) p(\vb{z} \mid \vb{c}) p(\vb{c})$}
-A concept is generated in two stages. First, a binary mask decides whether the
+The \ac{VAEE} places a joint distribution over the mask $\vb{c}$, the embeddings
+$\vb{z}$, and the observation $\vb{x}$ that factorises along the generative flow
+$\vb{c} \to \vb{z} \to \vb{x}$,
+\begin{equation} \label{eq:methods:proba:joint}
+    p(\vb{c}, \vb{z}, \vb{x}) = p(\vb{c})\, p(\vb{z} \mid \vb{c})\,
+    p_\theta(\vb{x} \mid \vb{z}).
+\end{equation}
+Its three factors are specified in turn. First, a binary mask decides whether the
 concept is present: each $c_k$ is drawn independently from a Bernoulli with a
 fixed prior activation rate $\pi$, shared across concepts,
 \begin{equation} \label{eq:methods:proba:prior-c}
@@ -148,16 +154,15 @@ $\vb{h}_k$,
 \end{equation}
 both with a fixed isotropic variance $\sigma_0^2$. The prototype $\vb{h}_k$ thus
 has a precise meaning: it is the mean embedding of concept $k$ when the concept
-is active --- its canonical location in embedding space. Finally, the
-observation is generated from the embeddings through the decoder, taken to be
-Gaussian about the decoder output,\graffito{This sentence is weird}
+is active --- its canonical location in embedding space. Finally, the decoder
+$g_\theta$ maps the embeddings to the observation through a Gaussian likelihood
+centred on its output,
 \begin{equation} \label{eq:methods:proba:likelihood}
     p_\theta\left(\vb{x} \mid \vb{z}\right) =
     \mathcal{N}\left(\vb{x};\, g_\theta(\vb{z}),\, \mathbb{I}\right).
 \end{equation}
-This is a strict generative flow $\vb{c} \to \vb{z} \to \vb{x}$
-(\cref{fig:vaee-pgm}):
-the mask fixes where each embedding sits, and the observation follows from the
+\Cref{fig:vaee-pgm} shows this structure as a probabilistic graphical model: the
+mask fixes where each embedding sits, and the observation follows from the
 embeddings.
 
 \begin{figure}[tb]
@@ -200,9 +205,6 @@ embeddings.
 \end{figure}
 
 \subsubsection{Inference} \label{sec:methods:model:proba:inference}
-\graffito{Explicitly write the mean-field posterior somewhere in here: right
-now it's only expressed in words, and then written out mathematically in sec
-3.3.2, which refers back here for its introduction}
 Exact inference is intractable: it would require marginalizing over the
 continuous embeddings $\vb{z}$ and summing over all $2^K$ possible discrete
 masks configurations for $\vb{c}$:
@@ -210,9 +212,15 @@ masks configurations for $\vb{c}$:
     p(\vb{x}) = \sum_{\vb{c}} \int p(\vb{x}, \vb{c}, \vb{z}) \dd{\vb{z}}.
 \end{equation*}
 The \ac{VAEE} instead uses amortised variational inference
-(\cref{sec:background:ae:vae}),
-with an encoder $f_\phi$ that maps the input to the parameters of an approximate
-posterior shared across all data points. The encoder predicts a mean embedding
+(\cref{sec:background:ae:vae}), approximating the true posterior with a
+\textit{mean-field} family that factorises over both latents and across
+concepts,
+\begin{equation} \label{eq:methods:proba:posterior}
+    q_\phi(\vb{c}, \vb{z} \mid \vb{x}) = \prod_{k=1}^{K}
+    q_\phi(\vb{z}_k \mid \vb{x})\, q_\phi(c_k \mid \vb{x}),
+\end{equation}
+with an encoder $f_\phi$ that predicts the parameters of each factor, shared
+across all data points. The encoder predicts a mean embedding
 $\vb{\mu}_k(\vb{x})$ for each concept; the embedding posterior is Gaussian
 about this mean, with the posterior variance frozen to the prior's $\sigma_0^2$,
 \begin{equation} \label{eq:methods:proba:posterior-z}
@@ -256,16 +264,36 @@ activation probability parameterises the Bernoulli posterior over the mask,
     q_\phi\left(c_k \mid \vb{x}\right) = \on{Bern}\left(c_k; \,
     \alpha_k(\vb{x})\right).
 \end{equation}
-To train through the discrete mask, $c_k$ is drawn during training with the
-continuous Gumbel-Sigmoid\graffito{add a paragraph explaining this better}
-relaxation\footnote{The Gumbel-Sigmoid is a continuous, reparameterisable
-    relaxation of a Bernoulli draw --- the binary case of the Gumbel-Softmax
-    (Concrete) distribution
-    \citep{jangCategoricalReparameterizationGumbelSoftmax2017,
-    maddisonConcreteDistributionContinuous2017} --- which makes the otherwise
-    non-differentiable sampling trainable; the temperature $\tau_g$ controls its
-sharpness, with $\tau_g \to 0$ recovering a hard $\{0,1\}$ sample.} of
-\cref{eq:methods:proba:c_k} at temperature $\tau_g$.
+Sampling the mask directly from this Bernoulli is not differentiable with
+respect to $\alpha_k$, which would block the gradient from
+reaching the encoder through the gate. During training the draw is therefore
+replaced by the reparameterisable \textit{Gumbel-Sigmoid} relaxation, the
+binary, multilabel analogue of the Gumbel-Softmax (Concrete) distribution
+\citep{jangCategoricalReparameterizationGumbelSoftmax2017,
+maddisonConcreteDistributionContinuous2017}: rather than relaxing a single
+mutually-exclusive choice over categories, it applies an independent relaxed
+Bernoulli to each concept, so any subset of concepts may be active at once. A
+Bernoulli draw can be written as
+$\mathds{1}\left[u < \alpha_{k}(\vb{x})\right] = \mathds{1}\left[\on{logit}\alpha_k(\vb{x}) > g\right]$
+with logistic noise $g = \on{logit}(u)$, $u \sim \on{Uniform}(0,
+1)$;\footnote{The logit transform is defined as $\on{logit}(s) = \log \frac{s}{1
+- s}$.}\footnote{This logistic noise is the difference of two standard Gumbel
+variates, which is what ties the relaxation to the Gumbel-Softmax family.}
+replacing the indicator with a temperature-controlled sigmoid gives the
+differentiable surrogate
+\begin{equation} \label{eq:methods:proba:gumbel}
+    \tilde{c}_k = \on{sigmoid}\left(\frac{\on{logit}\alpha_k(\vb{x}) - g}{\tau_g}\right).
+\end{equation}
+The relaxation temperature $\tau_g$ sets the sharpness: as $\tau_g \to 0$ the
+sigmoid tends to the indicator and $\tilde{c}_k$ recovers an exact $\{0, 1\}$
+Bernoulli sample, while a larger $\tau_g$ gives smoother values that keep the
+gradient well-behaved. At inference the stochastic draw is dropped and both
+latents are replaced by their posterior means --- the embedding $\vb{z}_{k}$ by
+$\vb{\mu}_k$ and the mask $c_{k}$ by its expectation $\alpha_k(\vb{x})$. The gate
+is then nominally soft, but in practice effectively hard: the binarisation
+pressure of the training objective (\cref{sec:methods:model:loss}) drives the
+learned activations to a strongly bimodal distribution concentrated near $0$ and
+$1$.
 
 One subtlety remains. The embedding posterior of
 \cref{eq:methods:proba:posterior-z} does not depend on the
@@ -316,11 +344,10 @@ Because the latent now splits into a discrete mask and a set of continuous
 embeddings, the bound carries an extra divergence term. The true posterior
 couples the two latents --- the generative $\vb{c} \to \vb{z}$ edge makes a
 concept's mask and its embedding dependent even given $\vb{x}$ --- but the
-\ac{VAEE} approximates it with the \textit{mean-field} factorisation
-$\nbmath{\prod_{k} q_\phi(\vb{z}_k \mid \vb{x})\, q_\phi(c_k \mid \vb{x})}$ of
-\cref{sec:methods:model:proba},
-which treats them as independent given $\vb{x}$ in exchange of a tractable,
-closed-form bound. Under it the \ac{ELBO} decomposes into three analytic
+\ac{VAEE} approximates it with the mean-field factorisation of
+\cref{eq:methods:proba:posterior}, which treats them as independent given
+$\vb{x}$ in exchange for a tractable, closed-form bound. Under it the \ac{ELBO}
+decomposes into three analytic
 components --- a reconstruction term and one \ac{KL} term per latent,
 \begin{equation} \label{eq:methods:loss:elbo}
     \begin{split}
@@ -346,22 +373,35 @@ Turning the \ac{ELBO} into a practical loss takes a few deliberate departures
 from a strict negated bound, each motivated by interpretability or training
 stability rather than mathematical necessity.
 
-    \paragraph{Batch-wise sparsity}\graffito{This is the same that LCBM used.
-    Check paper for better explanation} Applied per sample, the mask-prior
-    \ac{KL} would pull every input's $\alpha_k(\vb{x})$ toward $\pi$
-    independently, which over-constrains the model: different inputs ought to
-    activate different concepts. We instead impose the constraint at the
-    population level, requiring only that the batch-average activation
-    $\bar{\alpha}_k = \frac{1}{B} \sum_{i} \alpha_k(\vb{x}_i)$ match the prior
+    \paragraph{Batch-wise sparsity} Conventional sparsity penalties --- the
+    $\ell_1$ and TopK constraints of \cref{sec:background:ae:sae}
+    --- act along the concept axis, bounding how many concepts a \textit{single
+    sample} may activate. Applied per sample, the mask-prior \ac{KL} would do
+    the same, pulling every input's $\alpha_k(\vb{x})$ toward $\pi$
+    independently and so holding every sample to one fixed activation budget. We
+    instead constrain sparsity along the \textit{batch} axis
+    \citep{desantisBetterGeneralizationInterpretability2025}: rather than how
+    many concepts a sample uses, we limit how often a \textit{given} concept
+    fires across a batch. The per-sample term is replaced by a single \ac{KL}
+    between Bernoullis that matches each concept's batch-average activation
+    $\bar{\alpha}_k = \frac{1}{B} \sum_{i} \alpha_k(\vb{x}_i)$ to the prior
     rate,
     \begin{equation*}
-        \beta \sum_{k=1}^{K} D_{\mathrm{KL}}\!\left(\bar{\alpha}_k \,\big\|\,
+        \beta \sum_{k=1}^{K} D_{\mathrm{KL}}\left(\bar{\alpha}_k \,\big\|\,
         \pi\right),
     \end{equation*}
-    where $B$ is the batch size and $\beta$ is this term hyperparameter. This
-    still penalises dead concepts --- those whose activation collapses across
-    the dataset --- while letting individual samples make confident on/off
-    decisions.
+    with $B$ the batch size and $\beta$ the term's weight; matching
+    $\bar{\alpha}_k$ to $\pi$ lets concept $k$ fire on about a $\pi$ fraction of
+    the batch.
+
+    A per-sample budget is not as good a target because inputs differ in
+    complexity: some are explained by a few generative features, others by many.
+    After shuffling, a batch mixes both, and it is unlikely that many of its
+    samples all call for the same concept. Constraining each concept's firing
+    rate rather than each sample's count therefore leaves the per-sample count
+    free, letting the model spend many concepts on a complex input and few on a
+    simple one, while still keeping any single concept from firing everywhere or
+    dying out across the dataset.
 
     \paragraph{Entropy binarisation} Batch-wise sparsity does not by itself
     force per-sample decisions to be sharp: activations clustered around $\pi$
