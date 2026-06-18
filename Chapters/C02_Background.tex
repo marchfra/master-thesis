@@ -140,11 +140,11 @@ distributions. Each block is made of two sublayers with complementary roles: an
     exchange information. At each position, an \textit{attention head} forms a
     query and compares it against a key emitted by itself and every position
     before it; the better a position matches, the more it contributes to a
-    weighted average of the corresponding values, which becomes the head's output
-    for the current position \citep{vaswaniAttentionAllYou2017}. Concretely, the
-    head projects each stream vector to a query, key, and value,
-    $\vb{q}_t = \vb{Q} \vb{x}_t$, $\vb{k}_s = \vb{K} \vb{x}_s$, and
-    $\vb{v}_s = \vb{V} \vb{x}_s$, and returns
+    weighted average of the corresponding values, which becomes the head's
+    output for the current position \citep{vaswaniAttentionAllYou2017}.
+    Concretely, the head projects each stream vector to a query, key, and value,
+    $\vb{q}_t = Q \vb{x}_t$, $\vb{k}_s = K \vb{x}_s$, and
+    $\vb{v}_s = V \vb{x}_s$, and returns
     \begin{equation} \label{eq:background:nlp:attention}
         \on{head}(\vb{x}_{1:t}) = \sum_{s=1}^{t} a_{ts} \vb{v}_s, \qquad
         a_{ts} = \on{softmax}_{s}\left(
@@ -152,23 +152,24 @@ distributions. Each block is made of two sublayers with complementary roles: an
     \end{equation}
     where $d_k$ is the dimension of the queries and keys, and the softmax runs
     over $s = 1, \dots, t$, so that a position attends only to itself and those
-    before it. A sublayer runs several such heads in parallel
-    --- each free to specialise, one linking a pronoun to its referent, another a
-    verb to its subject --- and combines their outputs by concatenation and a
-    learned output projection. Because attention is the only component that moves
-    information between positions, it is where the model assembles context: it
-    turns a position's representation from a fact about a single token into one
-    that reflects the surrounding text.
+    before it. A sublayer runs several such heads in parallel --- each free to
+    specialise, one linking a pronoun to its referent, another a verb to its
+    subject --- and combines their outputs by concatenation and a learned output
+    projection. Because attention is the only component that moves information
+    between positions, it is where the model assembles context: it turns a
+    position's representation from a fact about a single token into one that
+    reflects the surrounding text.
 
-    \paragraph{MLP sublayers} Where attention mixes information across positions,
-    \iac{MLP} sublayer processes each position on its own, applying the same
-    feed-forward transformation to the vector at every position independently,
+    \paragraph{MLP sublayers} Where attention mixes information across
+    positions, \iac{MLP} sublayer processes each position on its own, applying
+    the same feed-forward transformation to the vector at every position
+    independently,
     \begin{equation} \label{eq:background:nlp:mlp}
-        \on{MLP}(\vb{x}_t) = \vb{W}_2\,
-        \phi\left(\vb{W}_1 \vb{x}_t + \vb{b}_1\right) + \vb{b}_2,
+        \on{MLP}(\vb{x}_t) = W_2\,
+        \varphi\left(W_1 \vb{x}_t + \vb{b}_1\right) + \vb{b}_2,
     \end{equation}
-    with a pointwise nonlinearity $\phi$, an up-projection $\vb{W}_1$ to a wider
-    hidden layer and a down-projection $\vb{W}_2$ back. Much of the model's
+    with a pointwise nonlinearity $\varphi$, an up-projection $W_1$ to a wider
+    hidden layer and a down-projection $W_2$ back. Much of the model's
     capacity sits in these
     sublayers, which are widely thought to store and retrieve its learned
     associations and are a primary site at which interpretable features appear
@@ -402,8 +403,9 @@ f_{\phi}(\vb{x})$, and a \textbf{decoder} $g_{\theta}: \R^{m} \rightarrow
 \R^{n}$ that reconstructs the input as $\hat{\vb{x}} = g_{\theta}(\vb{z})$.
 Training minimises a reconstruction loss, typically the \ac{MSE}:
 \begin{equation} \label{eq:background:ae:recon-loss}
-    \mathcal{L}_{\mathrm{recon}} = \on{MSE}(\vb{x}, \hat{\vb{x}}) = \norm{\vb{x}
-    - \hat{\vb{x}}}^{2}_{2}.
+    \mathcal{L}_{\mathrm{recon}}
+    = \on{MSE}(\vb{x}, \,\hat{\vb{x}})
+    = \frac{1}{n} \norm{\vb{x} - \hat{\vb{x}}}^{2}_{2}.
 \end{equation}
 
 When $m < n$, the bottleneck forces the model to learn a compressed
@@ -529,7 +531,7 @@ illustrates the difference on a two-dimensional latent space trained on MNIST.
 \subsubsection{Variational Inference} \label{sec:background:ae:vae:inference}
 Formally, \iac{VAE} models the data through a generative process in which a
 latent code is first drawn from a prior $\vb{z} \sim p(\vb{z})$ --- typically a
-standard Gaussian $p(\vb{z}) = \mathcal{N}(\vb{0}, \vb{I})$ --- and an
+standard Gaussian $p(\vb{z}) = \mathcal{N}(\vb{0}, \mathbb{I})$ --- and an
 observation is then drawn from a decoder distribution $\nbmath{p_{\theta}(\vb{x}
 \mid \vb{z})}$ parameterised by a neural network. Training would ideally
 maximise the marginal likelihood
@@ -561,7 +563,7 @@ bound on it, the \ac{ELBO}:
     \log p_{\theta}(\vb{x}) \ge \underbrace{\mathbb{E}_{q_{\phi}(\vb{z} \mid
     \vb{x})}\left[\log p_{\theta}(\vb{x} \mid
     \vb{z})\right]}_{\text{reconstruction}} -
-    \underbrace{D_{\mathrm{KL}}\left(q_{\phi}(\vb{z} \mid \vb{x}) \|
+    \underbrace{D_{\mathrm{KL}}\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
     p(\vb{z})\right)}_{\text{regularisation}}.
 \end{equation}
 The bound follows from the identity
@@ -604,7 +606,7 @@ expressed as a deterministic, differentiable function of the encoder outputs,
 \begin{equation*}
     \vb{z} = \boldsymbol{\mu}_{\phi}(\vb{x}) +
     \boldsymbol{\sigma}_{\phi}(\vb{x}) \odot \boldsymbol{\epsilon}, \quad
-    \boldsymbol{\epsilon} \sim \mathcal{N}(\vb{0}, \vb{I}),
+    \boldsymbol{\epsilon} \sim \mathcal{N}(\vb{0}, \mathbb{I}),
 \end{equation*}
 where $\odot$ denotes the element-wise product. Gradients can now flow through
 $\boldsymbol{\mu}_{\phi}$ and $\boldsymbol{\sigma}_{\phi}$ while the
@@ -709,10 +711,10 @@ typically are overcomplete ($m \gg n$) and their latent representation is forced
 to be sparse using some kind of sparsity mechanism. Given input $\vb{x} \in
 \R^{n}$, the \ac{SAE} encodes it as:
 \begin{equation} \label{eq:background:ae:sae:encode}
-    \vb{z} = \operatorname{ReLU}(\vb{W}_{e}(\vb{x} - \vb{b}_{\mathrm{pre}}) +
+    \vb{z} = \operatorname{ReLU}(W_{e}(\vb{x} - \vb{b}_{\mathrm{pre}}) +
     \vb{b}_{e}),
 \end{equation}
-where $\vb{W}_{e} \in \R^{m \times n}$ is the encoder weight matrix,
+where $W_{e} \in \R^{m \times n}$ is the encoder weight matrix,
 $\vb{b}_{e} \in \R^{m}$ is the encoder bias, and $\vb{b}_{\mathrm{pre}} \in
 \R^{n}$ is a pre-encoder bias subtracted from the input before encoding. This
 learned offset allows the encoder to operate on roughly mean-centred
@@ -720,10 +722,10 @@ activations, improving training stability
 \cite{brickenMonosemanticityDecomposingLanguage2023}. The decoder then
 reconstructs the input as:
 \begin{equation} \label{eq:background:ae:sae:decode}
-    \hat{\vb{x}} = \vb{W}_{d} \vb{z} + \vb{b}_{\mathrm{pre}},
+    \hat{\vb{x}} = W_{d} \vb{z} + \vb{b}_{\mathrm{pre}},
 \end{equation}
-where $\vb{W}_{d} \in \R^{n \times m}$ is the decoder weight matrix. Each column
-$\vb{d}_{i}$ of $\vb{W}_{d}$ is a dictionary atom, representing a candidate
+where $W_{d} \in \R^{n \times m}$ is the decoder weight matrix. Each column
+$\vb{d}_{i}$ of $W_{d}$ is a dictionary atom, representing a candidate
 feature direction in activation space.
 
 When used in the context of \ac{MI}, the overcompleteness and the sparsity
