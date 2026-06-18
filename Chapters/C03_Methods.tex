@@ -56,14 +56,18 @@ it takes the representation of a concept as a high-dimensional embedding rather
 than a scalar; from \acp{VAE} it takes a probabilistic latent and amortised
 variational inference
 (\cref{sec:background:ae:vae});
-and from \acp{VQVAE} it takes a discrete latent\graffito{Does it?} over a
-learned set of vectors
-(\cref{sec:background:ae:vae:arch}). The
-result is a probabilistic counterpart to discrete quantisation: where a
-\ac{VQVAE} selects a single code from a fixed codebook, the \ac{VAEE} applies
-independent Bernoulli gates to a set of continuous, prototype-anchored
-embeddings, retaining the expressivity of a continuous latent while keeping the
-selection sparse.
+and from \acp{VQVAE} it takes the idea of a discrete latent over a learned
+dictionary of vectors
+(\cref{sec:background:ae:vae:arch}). The two differ in what is made discrete:
+\iac{VQVAE} quantises each input to a single codebook entry, so its latent is a
+categorical index and the vector passed to the decoder is one of finitely many.
+The \ac{VAEE} instead keeps its embeddings continuous, its only discrete latent
+being the binary mask $\vb{c}$, which decides \textit{which} prototype-anchored
+concepts are active rather than what their embeddings are. It is in this sense a
+probabilistic, multilabel counterpart to vector quantisation: independent
+Bernoulli gates over continuous embeddings in place of a single hard codebook
+lookup, keeping the expressivity of a continuous latent while holding the active
+set sparse.
 % Nothing in this construction is specific to language models --- the
 % vector-concept primitive applies wherever a scalar concept code trades
 % capacity for simplicity --- but this thesis develops and demonstrates it for
