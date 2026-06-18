@@ -3,16 +3,14 @@
 %************************************************
 
 This appendix collects the full derivations supporting the probabilistic
-formulation of
-\cref{sec:methods:model:proba}:
-the optimal form of the gating mechanism
+formulation of \cref{sec:methods:model}: the
+optimal form of the gating mechanism
 (\cref{app:vaee:gating}) and the
 explicit derivation of the evidence lower bound
 (\cref{app:vaee:elbo}).
 
-Throughout the appendix, the notation $\norm{\,\cdot\,}$ is
-used instead of $\norm{\,\cdot\,}_{2}$ to avoid making the notation excessively
-verbose.
+Throughout the appendix, $\norm{\,\cdot\,}$ is used instead of
+$\norm{\,\cdot\,}_{2}$ to avoid making the notation excessively verbose.
 
 \section{Optimal Gating Mechanism} \label{app:vaee:gating}
 
@@ -20,9 +18,8 @@ The gate of \cref{eq:methods:proba:alpha} ties a concept's
 activation probability to the similarity between its predicted embedding and its
 prototype. This section shows that this is not an arbitrary heuristic but the
 \textit{optimal} mask factor of the mean-field posterior
-$\nbmath{\prod_{k} q_\phi(\vb{z}_k \mid \vb{x})\, q_\phi(c_k \mid \vb{x})}$ adopted in
-\cref{sec:methods:model:loss}, dictated by the Gated Gaussian prior of
-\cref{eq:methods:proba:prior-z}.
+(\cref{eq:methods:proba:posterior}), dictated by the Gated Gaussian
+prior of \cref{eq:methods:proba:prior-z}.
 
 For a mean-field family, the factor that maximises the \ac{ELBO} while the
 remaining factors are held fixed has a closed form: its logarithm equals the
@@ -30,23 +27,22 @@ expectation of the log-joint over those other factors, up to an additive
 constant \citep{bleiVariationalInferenceReview2017}. Applied to the mask factor
 $q_\phi(c_k \mid \vb{x})$, with the expectation taken over the embedding factor
 $q_\phi(\vb{z}_k \mid \vb{x})$,
-\begin{equation*}
+\begin{equation} \label{eq:app:vaee:gating:optimality}
     \begin{split}
         \log q_\phi^{\star}(c_k \mid \vb{x})
-        &= \mathbb{E}_{q_\phi(\vb{z}_k \mid \vb{x})}\!\left[\log p(c_k, \vb{z}_k)\right] + \on{const} \\
-        &= \log p(c_k) + \mathbb{E}_{q_\phi(\vb{z}_k \mid \vb{x})}\!\left[\log p(\vb{z}_k \mid c_k)\right] + \on{const}.
+        &= \mathbb{E}_{q_\phi(\vb{z}_k \mid \vb{x})}\left[\log p(c_k, \vb{z}_k)\right] + \on{const} \\
+        &= \log p(c_k) + \mathbb{E}_{q_\phi(\vb{z}_k \mid \vb{x})}\left[\log p(\vb{z}_k \mid c_k)\right] + \on{const}.
     \end{split}
-\end{equation*}
+\end{equation}
 The likelihood $\nbmath{p_\theta(\vb{x} \mid \vb{z})}$ of
-\cref{eq:methods:proba:likelihood} carries no $c_k$ --- the generative flow is
-$\vb{c} \to \vb{z} \to \vb{x}$, so $\vb{x}$ depends on the mask only through the
-embeddings --- and is therefore absorbed into the constant, leaving only the
-prior $p(c_k)$ and the Gated Gaussian term.
+\cref{eq:methods:proba:likelihood} carries no $c_k$ --- the
+generative flow is $\vb{c} \to \vb{z} \to \vb{x}$, so $\vb{x}$ depends on the
+mask only through the embeddings --- and is therefore absorbed into the
+constant, leaving only the prior $p(c_k)$ and the Gated Gaussian term.
 
 Because the mask entry $c_k$ is binary, the factor $q_\phi^{\star}(c_k \mid
 \vb{x})$ is fully characterised by its log-odds: the sigmoid is the inverse of
-the logit transform\footnote{The logit transform is defined as $\on{logit}(u) =
-\log \frac{u}{1 - u}$.}, so
+the logit transform, so
 \begin{equation*}
     \begin{split}
         q_\phi^{\star}(c_k = 1 \mid \vb{x})
@@ -54,8 +50,9 @@ the logit transform\footnote{The logit transform is defined as $\on{logit}(u) =
         &= \on{sigmoid} \left(\log \frac{q_\phi^{\star}(c_k = 1 \mid \vb{x})}{q_\phi^{\star}(c_k = 0 \mid \vb{x})}\right),
     \end{split}
 \end{equation*}
-and the optimality condition above gives those log-odds as a prior term plus an
-expected likelihood ratio,
+and the optimality condition of \cref{eq:app:vaee:gating:optimality}
+gives those log-odds as a prior term plus an expected likelihood
+ratio,
 \begin{equation*}
     \log \frac{q_\phi^{\star}(c_k = 1 \mid \vb{x})}{q_\phi^{\star}(c_k = 0 \mid \vb{x})} =
     \underbrace{\log \frac{p(c_k = 1)}{p(c_k = 0)}}_{=\, \on{logit}(\pi)} +
@@ -63,14 +60,14 @@ expected likelihood ratio,
     \underbrace{\left[\log \frac{p(\vb{z}_k \mid c_k = 1)}{p(\vb{z}_k \mid c_k = 0)}\right]}_{\text{likelihood ratio}}.
 \end{equation*}
 The prior term is just the logit of the Bernoulli activation rate $\pi$ of
-\cref{eq:methods:proba:prior-c}, since
-$\on{logit}(\pi) = \log\left(\flatfrac{\pi}{(1-\pi)}\right)$. For the likelihood
-ratio we substitute the two branches of the Gated Gaussian prior,
-$\nbmath{p(\vb{z}_k \mid c_k = 1)} = \mathcal{N}\left(\vb{z}_k;\, \vb{h}_k,\, \sigma_0^2 \vb{I}\right)$
-and $\nbmath{p(\vb{z}_k \mid c_k = 0)} = \mathcal{N}\left(\vb{z}_k;\, \vb{0},\, \sigma_0^2 \vb{I}\right)$.
+\cref{eq:methods:proba:prior-c}, since $\on{logit}(\pi) =
+\log\left(\flatfrac{\pi}{(1-\pi)}\right)$. For the likelihood ratio we
+substitute the two branches of the Gated Gaussian prior,
+$\nbmath{p(\vb{z}_k \mid c_k = 1)} = \mathcal{N}\left(\vb{z}_k;\, \vb{h}_k,\, \sigma_0^2 \mathbb{I}\right)$
+and $\nbmath{p(\vb{z}_k \mid c_k = 0)} = \mathcal{N}\left(\vb{z}_k;\, \vb{0},\, \sigma_0^2 \mathbb{I}\right)$.
 The two share the same isotropic covariance, so their $(2\pi\sigma_0^2)^{-d/2}$
 normalising constants cancel inside the log-ratio, leaving only the
-exponents,
+exponentials,
 \begin{equation*}
     \begin{split}
         \log \frac{p(\vb{z}_k \mid c_k = 1)}{p(\vb{z}_k \mid c_k = 0)}
@@ -90,12 +87,12 @@ embedding,
 \end{equation*}
 Linearity is what makes the expectation tractable, and exactly so: with no term
 beyond first order in $\vb{z}_k$, the expectation over $\nbmath{q_\phi(\vb{z}_k
-\mid \vb{x})}$ amounts to replacing $\vb{z}_k$ with its mean $\vb*{\mu}_k(\vb{x})$
---- no approximation is involved. Adding the prior log-odds back in and
-converting through the sigmoid therefore yields the inner-product gate,
+\mid \vb{x})}$ amounts to replacing $\vb{z}_k$ with its mean
+$\vb{\mu}_k(\vb{x})$. Adding the prior log-odds back in and converting through
+the sigmoid therefore yields the inner-product gate,
 \begin{equation} \label{eq:app:vaee:alpha-exact}
     \alpha_k(\vb{x}) = \on{sigmoid}\left(
-    \frac{1}{\sigma_0^2}\left(\vb*{\mu}_k(\vb{x}) \cdot \vb{h}_k
+    \frac{1}{\sigma_0^2}\left(\vb{\mu}_k(\vb{x}) \cdot \vb{h}_k
     - \tfrac{1}{2}\norm{\vb{h}_k}^2\right) + \on{logit}(\pi)
     \right).
 \end{equation}
@@ -105,56 +102,45 @@ To recover the form used in practice
 $-\frac{1}{2\sigma_0^2}\norm{\vb{h}_k}^2 + \on{logit}(\pi)$ are dropped and the
 remaining scale $1/\sigma_0^2$ is folded into a single learnable inverse
 temperature $1/\tau$, so that the logit is parameterised as
-$(1/\tau)\,\vb*{\mu}_k(\vb{x}) \cdot \vb{h}_k$; the per-prototype bias is left
-to be absorbed implicitly into $\tau$ and into the optimisation of $\vb{h}_k$
-itself. Under the exact gate of \cref{eq:app:vaee:alpha-exact} the
-decision boundary $\alpha_k = \tfrac{1}{2}$ sits where
-$\vb*{\mu}_k \cdot \vb{h}_k = \tfrac{1}{2}\norm{\vb{h}_k}^2$,
-which is well calibrated only as long as
-$\norm{\vb*{\mu}_k} \approx \norm{\vb{h}_k}$; otherwise the model can inflate
-$\norm{\vb*{\mu}_k}$ to push the inner product up and force a concept active.
-The cosine-similarity variant of \cref{eq:methods:proba:sim} removes
-this magnitude coupling by construction, which is why it is the choice of
-similarity used in this thesis.
+$(1/\tau)\,\vb{\mu}_k(\vb{x}) \cdot \vb{h}_k$; the per-prototype bias is left to
+be absorbed implicitly into $\tau$ and into the optimisation of $\vb{h}_k$
+itself. Under the exact gate of \cref{eq:app:vaee:alpha-exact}
+the decision boundary $\alpha_k = \tfrac{1}{2}$ sits where
+$\vb{\mu}_k \cdot \vb{h}_k = \tfrac{1}{2}\norm{\vb{h}_k}^2$, which is well
+calibrated only as long as $\norm{\vb{\mu}_k} \approx \norm{\vb{h}_k}$;
+otherwise the model can inflate $\norm{\vb{\mu}_k}$ to push the inner product up
+and force a concept active. The cosine-similarity variant of
+\cref{eq:methods:proba:sim} removes this magnitude coupling by
+construction, which is why it is the choice of similarity used in this thesis.
 
 A final observation ties this back to the generative model. Since $\vb{x}$
-depends on the mask only through the embeddings in the
-generative flow $\vb{c} \to \vb{z} \to \vb{x}$, $c_k$ and $\vb{x}$ are
-conditionally independent given $\vb{z}_k$, so the true posterior factor
-satisfies $\nbmath{p(c_k \mid \vb{z}_k, \vb{x})} = p(c_k \mid \vb{z}_k)$ ---
-itself a sigmoid of the same linear log-odds in $\vb{z}_k$. The optimal
-mean-field gate $\alpha_k(\vb{x})$ is thus exactly that posterior factor
-evaluated at the embedding mean $\vb{z}_k = \vb*{\mu}_k(\vb{x})$: conditioning
-the mask on $\vb{x}$ through $\vb*{\mu}_k$ loses nothing relative to conditioning
-it on a sampled $\vb{z}_k$, which is why the model gates on the predicted mean
-directly.
+depends on the mask only through the embeddings in the generative flow $\vb{c}
+\to \vb{z} \to \vb{x}$, $c_k$ and $\vb{x}$ are conditionally independent given
+$\vb{z}_k$, so the true posterior factor satisfies $\nbmath{p(c_k \mid \vb{z}_k,
+\vb{x})} = p(c_k \mid \vb{z}_k)$ --- itself a sigmoid of the same linear
+log-odds in $\vb{z}_k$. The optimal mean-field gate $\alpha_k(\vb{x})$ is thus
+exactly that posterior factor evaluated at the embedding mean $\vb{z}_k =
+\vb{\mu}_k(\vb{x})$: conditioning the mask on $\vb{x}$ through $\vb{\mu}_k$
+loses nothing relative to conditioning it on a sampled $\vb{z}_k$, which is why
+the model gates on the predicted mean directly.
 
 \section{Explicit ELBO Derivation} \label{app:vaee:elbo}
 
-This section derives the \ac{ELBO} of \cref{eq:methods:loss:elbo} under the
-mean-field posterior
-$\nbmath{q_\phi(\vb{c}, \vb{z} \mid \vb{x}) = \prod_{k} q_\phi(\vb{z}_k \mid \vb{x})\, q_\phi(c_k \mid \vb{x})}$
-of \cref{sec:methods:model:loss}. This factorisation is the model's central
-variational approximation: the true posterior couples the mask and its embedding
-through the generative $\vb{c} \to \vb{z}$ edge, so that even given $\vb{x}$ the
-two remain dependent. Treating them as conditionally independent given
-$\vb{x}$ is what lets all three terms below close in form; it is the only
+This section derives the \ac{ELBO} of \cref{eq:methods:loss:elbo}
+under the mean-field posterior of
+\cref{eq:methods:proba:posterior}. This factorisation is the model's
+central variational approximation: the true posterior couples the mask and its
+embedding through the generative $\vb{c} \to \vb{z}$ edge, so that even given
+$\vb{x}$ the two remain dependent. Treating them as conditionally independent
+given $\vb{x}$ is what lets all three terms below close in form; it is the only
 approximation made, every step that follows being exact.
 
-The marginal likelihood requires marginalising over both latents,
-$\nbmath{\log p_\theta(\vb{x}) = \log \sum_{\vb{c}} \int p(\vb{x}, \vb{c}, \vb{z}) \dd{\vb{z}}}$,
-an integral over the continuous $\vb{z}$ and a sum over the $2^K$ configurations
-of $\vb{c}$ that is intractable. Introducing the approximate posterior and
-applying Jensen's inequality\footnote{$\varphi(\mathbb{E}[X]) \ge \mathbb{E}[\varphi(X)]$ for any $\varphi$ concave function.} to the concave logarithm bounds it from below,
-% \begin{equation*}
-%     \log p_\theta(\vb{x}) =
-%     \log \mathbb{E}_{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}\!\left[
-%     \frac{p(\vb{x}, \vb{c}, \vb{z})}{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}\right]
-%     \ge
-%     \mathbb{E}_{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}\!\left[
-%     \log \frac{p(\vb{x}, \vb{c}, \vb{z})}{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}\right]
-%     \equiv \mathrm{ELBO}.
-% \end{equation*}
+The marginal likelihood requires marginalising over both latents, an integral
+over the continuous $\vb{z}$ and a sum over the $2^K$ configurations of $\vb{c}$
+that is intractable. Introducing the approximate posterior and applying Jensen's
+inequality\footnote{Given $X$ an integrable real-valued random variable and
+$\varphi$ a concave function, $\varphi(\mathbb{E}[X]) \ge \mathbb{E}[\varphi(X)]$.}
+to the concave logarithm gives a lower bound:
 \begin{equation*}
     \begin{split}
         \log p_{\theta}(\vb{x})
@@ -168,58 +154,79 @@ The generative model factorises over concepts as
 $\nbmath{p(\vb{x}, \vb{c}, \vb{z})} = \nbmath{p_\theta(\vb{x} \mid \vb{z})} \prod_{k} p(c_k)\, \nbmath{p(\vb{z}_k \mid c_k)}$.
 Substituting this factorisation along with the mean-field posterior and
 splitting the logarithm of the resulting product gives
-\begin{equation*}
-    \mathrm{ELBO} = \mathbb{E}_{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}\left[
-    \log p_\theta(\vb{x} \mid \vb{z})
-    + \sum_{k=1}^{K} \log \frac{p(c_k)}{q_\phi(c_k \mid \vb{x})}
-    + \sum_{k=1}^{K} \log \frac{p(\vb{z}_k \mid c_k)}{q_\phi(\vb{z}_k \mid \vb{x})}
-    \right].
-\end{equation*}
 % \begin{equation*}
-%     \begin{split}
-%         \mathrm{ELBO} = \mathbb{E}_{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}\left[
-%         \log p_\theta(\vb{x} \mid \vb{z})
-%         &+ \sum_{k=1}^{K} \log \frac{p(c_k)}{q_\phi(c_k \mid \vb{x})} +\right.\\
-%         &+ \left.\sum_{k=1}^{K} \log \frac{p(\vb{z}_k \mid c_k)}{q_\phi(\vb{z}_k \mid \vb{x})}\right].
-%     \end{split}
+%     \mathrm{ELBO} = \mathbb{E}_{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}\left[
+%     \log p_\theta(\vb{x} \mid \vb{z})
+%     + \sum_{k=1}^{K} \log \frac{p(c_k)}{q_\phi(c_k \mid \vb{x})}
+%     + \sum_{k=1}^{K} \log \frac{p(\vb{z}_k \mid c_k)}{q_\phi(\vb{z}_k \mid \vb{x})}
+%     \right].
 % \end{equation*}
+\begin{equation*}
+    \begin{split}
+        \mathrm{ELBO} = \mathbb{E}_{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}\left[
+        \vphantom{\frac{1}{1}}
+        \log p_\theta(\vb{x} \mid \vb{z})\right.
+        &+ \sum_{k=1}^{K} \log \frac{p(c_k)}{q_\phi(c_k \mid \vb{x})}\\
+        &+ \left.\sum_{k=1}^{K} \log \frac{p(\vb{z}_k \mid c_k)}{q_\phi(\vb{z}_k \mid \vb{x})}\right].
+    \end{split}
+\end{equation*}
 Under the mean-field posterior the joint expectation factorises as
 $\nbmath{\mathbb{E}_{q_\phi(\vb{c}, \vb{z} \mid \vb{x})} = \mathbb{E}_{q_\phi(\vb{z} \mid \vb{x})}\mathbb{E}_{q_\phi(\vb{c} \mid \vb{x})}}$,
-and the three summands separate. The first carries no mask, so the expectation
-over $\vb{c}$ is trivial and it reduces to the reconstruction term
-$\nbmath{\mathbb{E}_{q_\phi(\vb{z} \mid \vb{x})}[\log p_\theta(\vb{x} \mid \vb{z})]}$.
+and the three summands separate.
+
+The first carries no mask, so the expectation over $\vb{c}$ is trivial and it
+reduces to the reconstruction term
+\begin{equation} \label{eq:app:vaee:elbo:recon}
+    \mathbb{E}_{q_\phi(\vb{z} \mid \vb{x})}[\log p_\theta(\vb{x} \mid \vb{z})].
+\end{equation}
 The second carries no embedding, so the expectation over $\vb{z}$ is trivial and
 the expectation over $\vb{c}$ collects into the negative \ac{KL} between the
 Bernoulli posterior and prior,
-\begin{equation*}
+\begin{equation} \label{eq:app:vaee:elbo:mask-prior-kl}
     \sum_{k=1}^{K} \mathbb{E}_{q_\phi(c_k \mid \vb{x})}\left[
     \log \frac{p(c_k)}{q_\phi(c_k \mid \vb{x})}\right] =
-    - \sum_{k=1}^{K} D_{\mathrm{KL}}\!\left(q_\phi(c_k \mid \vb{x}) \,\big\|\, p(c_k)\right).
-\end{equation*}
-% Because $q_\phi(c_k \mid \vb{x})$ does not depend on $\vb{z}_k$, this term carries
-% no expectation over the embedding --- the simplification the mean-field choice
-% buys over the structured posterior, which would leave it wrapped in
-% $\mathbb{E}_{q_\phi(\vb{z}_k \mid \vb{x})}$.
-This term, representing the mask-prior \ac{KL}, is the standard divergence
-between two Bernoullis,
+    - \sum_{k=1}^{K} D_{\mathrm{KL}} \left(q_\phi(c_k \mid \vb{x}) \,\big\|\, p(c_k)\right).
+\end{equation}
+and represents the mask-prior \ac{KL}.
+In the third summand the inner expectation over $\vb{z}_k$ is itself a \ac{KL},
 \begin{equation*}
-    D_{\mathrm{KL}}(q_\phi(c_k \mid \vb{x}) \,\big\|\, p(c_k))
-    = \alpha_k \log \frac{\alpha_k}{\pi}
-    + (1 - \alpha_k) \log \frac{(1 - \alpha_k)}{(1 - \pi)}.
+    \mathbb{E}_{q_\phi(\vb{z}_k \mid \vb{x})}\left[\log \frac{p(\vb{z}_k \mid c_k)}{q_\phi(\vb{z}_k \mid \vb{x})}\right]
+    = -D_{\mathrm{KL}}(q_\phi(\vb{z}_k \mid \vb{x}) \,\big\|\, p(\vb{z}_k \mid c_k)),
+\end{equation*}
+a function of the still-free $c_k$. The outer expectation gives then the
+conditional-embedding \ac{KL} term
+\begin{equation} \label{eq:app:vaee:elbo:conditional-kl}
+    \sum_{k=1}^{K} \mathbb{E}_{q_\phi(c_k \mid \vb{x})} \left[ D_{\mathrm{KL}}\left(q_\phi(\vb{z}_k \mid \vb{x}) \,\big\|\, p(\vb{z}_k \mid c_k)\right)\right].
+\end{equation}
+
+Collecting the three terms of
+\cref{eq:app:vaee:elbo:recon,eq:app:vaee:elbo:mask-prior-kl,eq:app:vaee:elbo:conditional-kl}
+gives the decomposition of
+\cref{eq:methods:loss:elbo}, reproduced below for convenience.
+The training objective then follows by negating the \ac{ELBO} and applying the
+design choices of
+\cref{sec:methods:model:loss}.
+\begin{equation*}
+    \begin{split}
+        \log p_{\theta}(\vb{x}) \ge
+        {}& \underbrace{\mathbb{E}_{q_{\phi}(\vb{z} \mid \vb{x})} \left[\log p_{\theta}(\vb{x} \mid \vb{z})\right]}_{\text{reconstruction}} +\\
+        &- \sum_{k=1}^{K} \underbrace{D_{\mathrm{KL}} \left(q_{\phi}(c_{k} \mid \vb{x}) \,\big\|\, p(c_{k})\right)}_{\text{mask-prior KL}} +\\
+        &- \sum_{k=1}^{K} \underbrace{\mathbb{E}_{q_{\phi}(c_{k} \mid \vb{x})} \left[D_{\mathrm{KL}} \left(q_{\phi}(\vb{z}_{k} \mid \vb{x}) \,\big\|\, p(\vb{z}_{k} \mid c_{k})\right)\right]}_{\text{conditional-embedding KL}}.
+    \end{split} \tag{\ref{eq:methods:loss:elbo} revisited}
 \end{equation*}
 
-In the third summand the inner expectation over $\vb{z}_k$ is itself a \ac{KL},
-$\nbmath{\mathbb{E}_{q_\phi(\vb{z}_k \mid \vb{x})}[\log \flatfrac{p(\vb{z}_k \mid c_k)}{q_\phi(\vb{z}_k \mid \vb{x})}] = -D_{\mathrm{KL}}(q_\phi(\vb{z}_k \mid \vb{x}) \,\big\|\, p(\vb{z}_k \mid c_k))}$,
-a function of the still-free $c_k$. The outer expectation over the Bernoulli
-$q_\phi(c_k \mid \vb{x})$ is then the convex combination of its two branches with
-weights $\alpha_k$ and $1 - \alpha_k$:
+
+\paragraph{Closed-form Conditional KL}
+% The term in \cref{eq:app:vaee:elbo:mask-prior-kl} is the standard
+% divergence between two Bernoullis,
 % \begin{equation*}
-%     \sum_{k=1}^{K} \mathbb{E}_{q_\phi(c_k \mid \vb{x})}\!\left[
-%     D_{\mathrm{KL}}\left(q_\phi(\vb{z}_k \mid \vb{x}) \,\big\|\, p(\vb{z}_k \mid c_k)\right)\right]
-%     = \sum_{k=1}^{K} \left[
-%     \alpha_k\, D_{\mathrm{KL}}^{(k,1)} + (1 - \alpha_k)\, D_{\mathrm{KL}}^{(k,0)}
-%     \right],
+%     D_{\mathrm{KL}}(q_\phi(c_k \mid \vb{x}) \,\big\|\, p(c_k))
+%     = \alpha_k \log \frac{\alpha_k}{\pi}
+%     + (1 - \alpha_k) \log \frac{(1 - \alpha_k)}{(1 - \pi)}.
 % \end{equation*}
+In \cref{eq:app:vaee:elbo:conditional-kl} the expectation over the
+Bernoulli $\mathbb{E}_{q_\phi(c_k \mid \vb{x})}$ is the convex combination of its two
+branches with weights $\alpha_k$ and $1 - \alpha_k$:
 \begin{equation*}
     \begin{split}
         \sum_{k=1}^{K} \mathbb{E}_{q_\phi(c_k \mid \vb{x})} &\left[ D_{\mathrm{KL}}\left(q_\phi(\vb{z}_k \mid \vb{x}) \,\big\|\, p(\vb{z}_k \mid c_k)\right)\right] =\\
@@ -227,46 +234,23 @@ weights $\alpha_k$ and $1 - \alpha_k$:
         \right],
     \end{split}
 \end{equation*}
-where $D_{\mathrm{KL}}^{(k,c)} = D_{\mathrm{KL}}(q_\phi(\vb{z}_k \mid \vb{x}) \,\big\|\, p(\vb{z}_k \mid c_k {=} c))$.
+where $D_{\mathrm{KL}}^{(k,c)} = D_{\mathrm{KL}}\left(q_\phi(\vb{z}_k \mid \vb{x}) \,\big\|\, p(\vb{z}_k \mid c_k {=} c)\right)$.
 Both branches are \aclp{KL} between Gaussians sharing the covariance
-$\sigma_0^2 \vb{I}$, for which the divergence reduces to the scaled squared
+$\sigma_0^2 \mathbb{I}$, for which the divergence reduces to the scaled squared
 distance between the means,
-$D_{\mathrm{KL}}(\mathcal{N}(\vb*{\mu}, \,\sigma_0^2 \vb{I}) \,\big\|\, \mathcal{N}(\vb*{\nu}, \,\sigma_0^2 \vb{I})) = \tfrac{1}{2 \sigma_0^2}{\norm{\vb*{\mu} - \vb*{\nu}}^2}$.
+\begin{equation*}
+    D_{\mathrm{KL}}\left(\mathcal{N}(\vb{\mu}, \,\sigma_0^2 \mathbb{I}) \,\big\|\, \mathcal{N}(\vb{\nu}, \,\sigma_0^2 \mathbb{I})\right)
+    = \frac{1}{2 \sigma_0^2}{\norm{\vb{\mu} - \vb{\nu}}^2}
+\end{equation*}
 With the prior means $c_k \vb{h}_k$ of \cref{eq:methods:proba:prior-z} --- the
 prototype $\vb{h}_k$ when active, the origin when inactive --- the
 conditional-embedding \ac{KL} takes its closed form,
-% \begin{equation} \label{eq:app:vaee:cond-kl}
-%     \sum_{k=1}^{K} \mathbb{E}_{q_\phi(c_k \mid \vb{x})}\!\left[
-%     D_{\mathrm{KL}}\!\left(q_\phi(\vb{z}_k \mid \vb{x}) \,\|\, p(\vb{z}_k \mid c_k)\right)\right]
-%     = \frac{1}{2\sigma_0^2} \sum_{k=1}^{K} \left[
-%     \alpha_k \norm{\vb*{\mu}_k - \vb{h}_k}^2 + (1 - \alpha_k) \norm{\vb*{\mu}_k}^2
-%     \right],
-% \end{equation}
-\begin{equation} \label{eq:app:vaee:cond-kl}
+\begin{equation*}
     \begin{split}
         \sum_{k=1}^{K} \mathbb{E}_{q_\phi(c_k \mid \vb{x})} &\left[D_{\mathrm{KL}}\left(q_\phi(\vb{z}_k \mid \vb{x}) \,\big\|\, p(\vb{z}_k \mid c_k)\right)\right] =\\
-        &= \frac{1}{2\sigma_0^2} \sum_{k=1}^{K} \left[ \alpha_k \norm{\vb*{\mu}_k - \vb{h}_k}^2 + (1 - \alpha_k) \norm{\vb*{\mu}_k}^2 \right],
+        &= \frac{1}{2\sigma_0^2} \sum_{k=1}^{K} \left[ \alpha_k \norm{\vb{\mu}_k - \vb{h}_k}^2 + (1 - \alpha_k) \norm{\vb{\mu}_k}^2 \right],
     \end{split}
-\end{equation}
+\end{equation*}
 which is the term substituted into the practical loss of
-\cref{eq:methods:loss:objective}.
-
-Collecting the three terms reproduces the decomposition of
-\cref{eq:methods:loss:elbo}, reproduced below for convenience.
-The training objective then follows by negating the \ac{ELBO} and applying the
-design choices of
-\cref{sec:methods:model:loss}. % Note
-% that \cref{eq:app:vaee:cond-kl} is already exact: the stop-gradient
-% $\on{sg}(\alpha)$ of \cref{eq:methods:loss:objective} is therefore not needed
-% to obtain the closed form --- as it would be under a structured posterior,
-% where $q(c_k \mid \vb{z}_k)$ depends on the sampled embedding --- but only to
-% stop the term being minimised by driving $\alpha_k \to 0$ irrespective of
-% reconstruction.
-\begin{equation}
-    \begin{split}
-        \log p_{\theta}(\vb{x}) \ge
-        {}& \underbrace{\mathbb{E}_{q_{\phi}(\vb{z} \mid \vb{x})} \left[\log p_{\theta}(\vb{x} \mid \vb{z})\right]}_{\text{reconstruction}} +\\
-        &- \sum_{k=1}^{K} \underbrace{D_{\mathrm{KL}} \left(q_{\phi}(c_{k} \mid \vb{x}) \,\big\|\, p(c_{k})\right)}_{\text{mask-prior KL}} +\\
-        &- \sum_{k=1}^{K} \underbrace{\mathbb{E}_{q_{\phi}(c_{k} \mid \vb{x})} \left[D_{\mathrm{KL}} \left(q_{\phi}(\vb{z}_{k} \mid \vb{x}) \,\big\|\, p(\vb{z}_{k} \mid c_{k})\right)\right]}_{\text{conditional-embedding KL}}.
-    \end{split} \tag{\ref{eq:methods:loss:elbo} revisited}
-\end{equation}
+\cref{eq:methods:loss:objective}, with the factor
+$\tfrac{1}{2 \sigma^{2}_{0}}$ being absorbed into the $\gamma$ hyperparameter.

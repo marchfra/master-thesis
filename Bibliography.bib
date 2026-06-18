@@ -146,7 +146,6 @@
   abstract = {Sparse Autoencoders (SAEs) have emerged as a promising approach for interpreting neural network representations by learning sparse, human-interpretable features from dense activations. We investigate whether incorporating variational methods into SAE architectures can improve feature organization and interpretability. We introduce the Variational Sparse Autoencoder (vSAE), which replaces deterministic ReLU gating with stochastic sampling from learned Gaussian posteriors and incorporates KL divergence regularization toward a standard normal prior. Our hypothesis is that this probabilistic sampling creates dispersive pressure, causing features to organize more coherently in the latent space while avoiding overlap. We evaluate a TopK vSAE against a standard TopK SAE on Pythia-70M transformer residual stream activations using comprehensive benchmarks including SAE Bench, individual feature interpretability analysis, and global latent space visualization through t-SNE. The vSAE underperforms standard SAE across core evaluation metrics, though excels at feature independence and ablation metrics. The KL divergence term creates excessive regularization pressure that substantially reduces the fraction of living features, leading to observed performance degradation. While vSAE features demonstrate improved robustness, they exhibit many more dead features than baseline. Our findings suggest that naive application of variational methods to SAEs does not improve feature organization or interpretability.},
   archiveprefix = {arXiv},
   keywords = {Computer Science - Machine Learning},
-  note = {Comment: 15 pages, 11 figures},
   file = {/Users/francescomarchisotti/Zotero/storage/QJGC6JBF/Baker and Li - 2025 - Analysis of Variational Sparse Autoencoders.pdf;/Users/francescomarchisotti/Zotero/storage/YZUED2JA/2509.html}
 }
 
@@ -282,7 +281,6 @@
   abstract = {Concept unlearning in diffusion models is hampered by feature splitting, where concepts are distributed across many latent features, making their removal challenging and computationally expensive. We introduce SAEmnesia, a supervised sparse autoencoder framework that overcomes this by enforcing one-to-one concept-neuron mappings. By systematically labeling concepts during training, our method achieves feature centralization, binding each concept to a single, interpretable neuron. This enables highly targeted and efficient concept erasure. Compared to the state-of-the-art sparse autoencoder-based unlearning approach, SAEmnesia reduces hyperparameter search by 96.67\% and achieves a 9.22\% improvement on the UnlearnCanvas benchmark for objects. Our method also shows superior scalability in sequential unlearning, improving accuracy by 28.4\% when removing nine objects, establishing a step forward for precise and controllable concept erasure. Moreover, SAEmnesia effectively suppresses nudity on the I2P benchmark and remains robust to adversarial attacks. Source code available at https://github.com/EIDOSLAB/SAEmnesia.},
   archiveprefix = {arXiv},
   keywords = {Computer Science - Artificial Intelligence,Computer Science - Computer Vision and Pattern Recognition},
-  note = {Comment: Accepted at ICML 2026},
   file = {/Users/francescomarchisotti/Zotero/storage/5P7PHSDE/Cassano et al. - 2026 - SAEmnesia Erasing Concepts in Diffusion Models with Supervised Sparse Autoencoders.pdf;/Users/francescomarchisotti/Zotero/storage/UJRCTTJK/2509.html}
 }
 
@@ -377,10 +375,7 @@
 }
 
 @misc{DeadNeuronDefinition,
-  title = {Dead Neuron Definition},
-  note = {``At the end of training, we defined ``dead'' features as those which were not active over a sample of 10\textasciicircum\textbraceleft 7\textbraceright{} tokens. The proportion of dead features was roughly 2\% for the 1M SAE, 35\% for the 4M SAE, and 65\% for the 34M SAE. We expect that improvements to the training procedure may be able to reduce the number of dead features in future experiments.'' (Templeton et al.)
-\par
-``Number of dead neurons (NDN) is a metric that measures how many neurons remain consistently inactive (zero in the SAE activations layer) across all inputs during training or evaluation, indicating the network's inability to fully utilize its capacity for learning semantic features.'' (Zaigrajew et al., 2025, p. 4)}
+  title = {Dead Neuron Definition}
 }
 
 @inproceedings{desantisBetterGeneralizationInterpretability2025,
@@ -615,10 +610,7 @@
   publisher = {The MIT Press},
   address = {Cambridge, Massachusetts},
   isbn = {978-0-262-03561-3 978-0-262-33737-3},
-  langid = {english},
-  note = {"Deep learning is a form of machine learning that enables computers to learn from experience and understand the world in terms of a hierarchy of concepts. Because the computer gathers knowledge from experience, there is no need for a human computer operator to formally specify all the knowledge that the computer needs. The hierarchy of concepts allows the computer to learn complicated concepts by building them out of simpler ones; a graph of these hierarchies would be many layers deep. This book introduces a broad range of topics in deep learning. The text offers mathematical and conceptual background, covering relevant concepts in linear algebra, probability theory and information theory, numerical computation, and machine learning. It describes deep learning techniques used by practitioners in industry, including deep feedforward networks, regularization, optimization algorithms, convolutional networks, sequence modeling, and practical methodology; and it surveys such applications as natural language processing, speech recognition, computer vision, online recommendation systems, bioinformatics, and video games. Finally, the book offers research perspectives, covering such theoretical topics as linear factor models, autoencoders, representation learning, structured probabilistic models, Monte Carlo methods, the partition function, approximate inference, and deep generative models. Deep Learning can be used by undergraduate or graduate students planning careers in either industry or research, and by software engineers who want to begin using deep learning in their products or platforms. A website offers supplementary material for both readers and instructors"--Publisher's description Introduction -- Applied math and machine learning basics. Linear algebra -- Probability and information theory -- Numerical computation -- Machine learning basics -- Deep networks: modern practices. Deep feedforward networks -- Regularization for deep learning -- Optimization for training deep models -- Convolutional networks -- Sequence modeling: recurrent and recursive nets -- Practical methodology -- Applications -- Deep learning research. Linear factor models -- Autoencoders -- Representation learning -- Structured probabilistic models for deep learning -- Monte Carlo methods -- Confronting the partition function -- Approximate inference -- Deep generative models
-\par
-Includes bibliographical references and index}
+  langid = {english}
 }
 
 @article{goodmanEuropeanUnionRegulations2017,
@@ -854,7 +846,6 @@ Includes bibliographical references and index}
   abstract = {How can we perform efficient inference and learning in directed probabilistic models, in the presence of continuous latent variables with intractable posterior distributions, and large datasets? We introduce a stochastic variational inference and learning algorithm that scales to large datasets and, under some mild differentiability conditions, even works in the intractable case. Our contributions are two-fold. First, we show that a reparameterization of the variational lower bound yields a lower bound estimator that can be straightforwardly optimized using standard stochastic gradient methods. Second, we show that for i.i.d. datasets with continuous latent variables per datapoint, posterior inference can be made especially efficient by fitting an approximate inference model (also called a recognition model) to the intractable posterior using the proposed lower bound estimator. Theoretical advantages are reflected in experimental results.},
   archiveprefix = {arXiv},
   keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
-  note = {Useful for the reparametrization trick (sec 2.4)},
   file = {/Users/francescomarchisotti/Zotero/storage/69K54E2X/Kingma and Welling - 2022 - Auto-Encoding Variational Bayes.pdf;/Users/francescomarchisotti/Zotero/storage/XSDA2KWM/1312.html}
 }
 
@@ -1191,7 +1182,6 @@ Includes bibliographical references and index}
   abstract = {Sparse autoencoders (SAEs) are a promising unsupervised approach for identifying causally relevant and interpretable linear features in a language model's (LM) activations. To be useful for downstream tasks, SAEs need to decompose LM activations faithfully; yet to be interpretable the decomposition must be sparse -- two objectives that are in tension. In this paper, we introduce JumpReLU SAEs, which achieve state-of-the-art reconstruction fidelity at a given sparsity level on Gemma 2 9B activations, compared to other recent advances such as Gated and TopK SAEs. We also show that this improvement does not come at the cost of interpretability through manual and automated interpretability studies. JumpReLU SAEs are a simple modification of vanilla (ReLU) SAEs -- where we replace the ReLU with a discontinuous JumpReLU activation function -- and are similarly efficient to train and run. By utilising straight-through-estimators (STEs) in a principled manner, we show how it is possible to train JumpReLU SAEs effectively despite the discontinuous JumpReLU function introduced in the SAE's forward pass. Similarly, we use STEs to directly train L0 to be sparse, instead of training on proxies such as L1, avoiding problems like shrinkage.},
   archiveprefix = {arXiv},
   keywords = {Computer Science - Machine Learning},
-  note = {Comment: v2: new appendix H comparing kernel functions \& bug-fixes to pseudo-code in Appendix J v3: further bug-fix to pseudo-code in Appendix J},
   file = {/Users/francescomarchisotti/Zotero/storage/J9LJFRL3/Rajamanoharan et al. - 2024 - Jumping Ahead Improving Reconstruction Fidelity with JumpReLU Sparse Autoencoders.pdf;/Users/francescomarchisotti/Zotero/storage/S5P9YMVG/2407.html}
 }
 

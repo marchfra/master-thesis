@@ -52,7 +52,9 @@
 \usepackage{lipsum}
 \usepackage{acro-commands}
 \usepackage{physics}
+\RenewDocumentCommand\vectorbold{ s m }{\IfBooleanTF{#1}{\mathbf{#2}}{\boldsymbol{#2}}}
 \usepackage{dsfont}
+\usepackage[multiple]{footmisc}
 \usepackage{microtype}
 \input{classicthesis-config}
 
