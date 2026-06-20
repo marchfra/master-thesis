@@ -84,7 +84,7 @@ set sparse.
 \section{Notation} \label{sec:methods:notation}
 
 The \ac{VAEE} operates on a single input vector $\vb{x} \in \R^{n}$ --- in
-the experiments of \cref{ch:experiments}, a residual
+the experiments of \cref{ch:exp}, a residual
 stream state of \iac{LLM}
 (\cref{sec:background:nlp:transformer}) ---
 and decomposes it into a dictionary of $K$ concepts. Where \iac{SAE} represents
@@ -141,15 +141,16 @@ $\vb{c} \to \vb{z} \to \vb{x}$,
     p(\vb{c}, \vb{z}, \vb{x}) = p(\vb{c})\, p(\vb{z} \mid \vb{c})\,
     p_\theta(\vb{x} \mid \vb{z}).
 \end{equation}
-Its three factors are specified in turn. First, a binary mask decides whether the
-concept is present: each $c_k$ is drawn independently from a Bernoulli with a
-fixed prior activation rate $\pi$, shared across concepts,
+Its three factors are specified in turn. First, a binary mask decides whether
+the concept is present: each $c_k$ is drawn independently from a Bernoulli with
+a fixed prior activation rate $\pi$, shared across concepts,
 \begin{equation} \label{eq:methods:proba:prior-c}
     p(c_k) = \on{Bern}\left(c_k;\, \pi\right).
 \end{equation}
-The mask then gates a \textit{Gated Gaussian} prior over the embedding: an
-inactive concept ($c_k = 0$) draws its embedding from a Gaussian at the origin,
-an active one ($c_k = 1$) from a Gaussian centred on the concept's prototype
+The mask then represents a \textit{Gated Gaussian} prior over the embedding
+$\vb{z}$: an inactive concept ($c_k = 0$) draws its embedding from a Gaussian at
+the origin, an active one ($c_k = 1$) from a Gaussian centred on the concept's
+prototype
 $\vb{h}_k$,
 \begin{equation} \label{eq:methods:proba:prior-z}
     p\left(\vb{z}_k \mid c_k\right) =
@@ -341,18 +342,12 @@ requires learning the radius offset $b$. Cosine similarity is used throughout
 unless stated otherwise.
 
 \subsection{Training Objective} \label{sec:methods:model:loss}
+
 The \ac{VAEE} is trained by maximising a lower bound on the marginal
 log-likelihood of the data, just as the \ac{VAE} of
 \cref{sec:background:ae:vae}.
-Because the latent now splits into a discrete mask and a set of continuous
-embeddings, the bound carries an extra divergence term. The true posterior
-couples the two latents --- the generative $\vb{c} \to \vb{z}$ edge makes a
-concept's mask and its embedding dependent even given $\vb{x}$ --- but the
-\ac{VAEE} approximates it with the mean-field factorisation of
-\cref{eq:methods:proba:posterior}, which treats them as independent given
-$\vb{x}$ in exchange for a tractable, closed-form bound. Under it the \ac{ELBO}
-decomposes into three analytic
-components --- a reconstruction term and one \ac{KL} term per latent,
+Under the mean-field approximation of \cref{eq:methods:proba:posterior}
+the \ac{ELBO} decomposes into three analytic components:
 \begin{equation} \label{eq:methods:loss:elbo}
     \begin{split}
         \log p_{\theta}(\vb{x}) \ge
@@ -361,12 +356,11 @@ components --- a reconstruction term and one \ac{KL} term per latent,
         &- \sum_{k=1}^{K} \underbrace{\mathbb{E}_{q_{\phi}(c_{k} \mid \vb{x})} \left[D_{\mathrm{KL}} \left(q_{\phi}(\vb{z}_{k} \mid \vb{x}) \,\big\|\, p(\vb{z}_{k} \mid c_{k})\right)\right]}_{\text{conditional-embedding KL}}.
     \end{split}
 \end{equation}
-The full \ac{ELBO} derivation is given in \cref{app:vaee:elbo}.
-% ; as in the standard \ac{VAE}, the bound uses the reverse \ac{KL} divergence
-% \nbmath{D_{\mathrm{KL}}(q \| p)}.
-The three terms read directly off the generative model. Under the Gaussian
-decoder of \cref{eq:methods:proba:likelihood} the
-reconstruction term reduces, up to an additive constant, to the \ac{MSE} of
+The full \ac{ELBO} derivation is given in
+\cref{app:vaee:elbo}. The three terms
+read directly off the generative model. Under the Gaussian decoder of
+\cref{eq:methods:proba:likelihood} the reconstruction term
+reduces, up to an additive constant, to the \ac{MSE} of
 \cref{eq:background:ae:recon-loss}; the mask-prior \ac{KL}
 pulls each concept's activation toward the Bernoulli prior rate $\pi$; and the
 conditional-embedding \ac{KL} keeps each embedding near its prototype when the
@@ -405,7 +399,8 @@ stability rather than mathematical necessity.
     rate rather than each sample's count therefore leaves the per-sample count
     free, letting the model spend many concepts on a complex input and few on a
     simple one, while still keeping any single concept from firing everywhere or
-    dying out across the dataset.
+    dying out across the dataset without the need of an auxiliary loss to revive
+    ded latents.
 
     \paragraph{Entropy binarisation} Batch-wise sparsity does not by itself
     force per-sample decisions to be sharp: activations clustered around $\pi$
@@ -430,6 +425,10 @@ stability rather than mathematical necessity.
     $\on{sg}(\cdot)$ operator on $\alpha$ inside this term removes that
     shortcut, so the activation is shaped only by the reconstruction and
     sparsity terms.
+
+    % TODO: mention that it was formulated but later dropped as the ablation
+    % study proved its effect was negligible.
+    \paragraph{Decoder orthogonality}
 
     \paragraph{Scale-invariant reductions} Each term is averaged over its
     dimensions --- the batch $B$, the concepts $K$, and the relevant vector
