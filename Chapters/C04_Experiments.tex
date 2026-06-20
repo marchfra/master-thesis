@@ -1,46 +1,326 @@
 %************************************************
-\chapter{Experiments} \label{ch:experiments}
+\chapter{Experiments} \label{ch:exp}
 %************************************************
 
-\section{Dataset}
+\Cref{ch:methods} derived the \ac{VAEE} as a probabilistic
+generative model but left its empirical behaviour open. This chapter puts the
+architecture's central claim to the test --- that representing a concept by a
+vector rather than a scalar relaxes the sparsity--reconstruction trade-off that
+bounds \acp{SAE} (\cref{sec:methods:aim}) --- on
+one application of it: the decomposition of \ac{LLM} activations.
 
-\section{Baselines}
+\Cref{sec:exp:setup} describes the activation
+dataset, drawn from the residual stream of a pretrained \ac{LLM}.
+\Cref{sec:exp:baselines} introduces the
+\ac{SAE} baseline against which the \ac{VAEE} is compared at matched parameter
+count. \Cref{sec:exp:metrics} sets
+out the evaluation metrics --- a measure of reconstruction fidelity and two of
+sparsity. \Cref{sec:exp:training} reports
+the training setup, and \cref{sec:exp:results}
+presents the quantitative, qualitative, and ablation
+results.\graffito{Review this paragraph after whole chapter is written.}
 
-\section{Evaluation Metrics} \label{sec:experiments:metrics}
+\section{Experiment setup} \label{sec:exp:setup}
 
-    \subsection{MSE} \label{sec:experiments:metrics:mse}
+The \ac{VAEE} operates on a single activation vector $\vb{x} \in \R^{n}$
+(\cref{sec:methods:notation}), so evaluating it on a
+language model requires a corpus of such vectors. These were extracted from the
+residual stream of \texttt{Mistral 7B v0.1} \citep{jiangMistral7B2023}, a
+pretrained decoder-only \ac{LLM}, run over SetFit's version\footnote{Available
+for download at \url{https://huggingface.co/datasets/SetFit/sst2}.} of the
+\ac{SST2} sentiment classification dataset
+\citep{socherRecursiveDeepModels2013}.
 
-    \subsection{$\ell_{0}$} \label{sec:experiments:metrics:l0}
+\ac{SST2} is a dataset of movie reviews, each with a label (positive/negative)
+attached. For the purposes of the experiments we were only interested in the
+reviews as a corpus of natural language, so the labels were discarded. \ac{SST2}
+is a small corpus: large enough to exercise reconstruction, but, in hindsight,
+probably too narrow for a large and varied concept dictionary to emerge, a
+limitation returned to when the results are interpreted
+(\cref{sec:exp:results}). This problem was
+exacerbated by the choice of SetFit's version instead of the original version of
+the dataset, since the former contains only $6\,920$ reviews in the training
+set, while the latter has $67\,300$ reviews in the training set. The total
+number of tokens in each set is shown in \cref{tab:exp:dataset}.
 
-    \subsection{Number active concepts}
+\begin{table}[tb]
+    \myfloatalign
+    \begin{tabular}{lll}
+        \toprule
+        \tableheadline{Set} & \tableheadline{No. reviews} & \tableheadline{No. tokens} \\
+        \midrule
+        Training & $6\,920$ & $179\,146$ \\
+        Validation & $872$ & $22\,887$ \\
+        \bottomrule
+    \end{tabular}
+    \caption[\texttt{SetFit/\acs{SST2}} dataset breakdown]{
+        The distribution of reviews and tokens across the training and
+        validation sets of \texttt{SetFit/\ac{SST2}}.
+    }
+    \label{tab:exp:dataset}
+\end{table}
 
-    % \subsection{Perplexity} \label{sec:experiments:metrics:perplexity}
+Each review was passed through the model and its residual-stream state was read
+off after the final transformer block, just before the classifier head. This
+yielded the residual-stream representation of every token in the sentence. The
+resulting activations have dimension $n = 4\,096$, \ie Mistral's residual-stream
+dimension.
+
+\section{Baselines} \label{sec:exp:baselines}
+
+The \ac{VAEE} is compared against a TopK \ac{SAE}
+(\cref{sec:background:ae:sae})
+\citep{gaoScalingEvaluatingSparse2024}, the state-of-the-art model for \ac{MI}.
+Its top-$k$ activation fixes the number of active features per sample directly
+through $k$, so the reconstruction error can be read against a sparsity level
+that is set rather than induced by a penalty weight.
+Sweeping $k$ traces the baseline's sparsity--reconstruction frontier, against
+which the \ac{VAEE}'s operating point is placed.
+
+The two models are matched on the size of their encoder and decoder rather than
+on dictionary size, so that any difference reflects how each represents a
+concept and not how much capacity it is given. Both map the activation through
+an encoder into a latent code and back through a decoder; that code has $m$
+entries for \iac{SAE} and $K \cdot d$ for \iac{VAEE} --- its $K$ concepts of
+embedding dimension $d$, written $K \times d$ --- and the encoder and decoder
+weight matrices are sized to match. Matching therefore sets $K \cdot d = m$: the
+$128 \times 64$ \ac{VAEE} is paired with the $m = 8\,192$ \ac{SAE}, $64
+\times 64$ with $m = 4\,096$, and $32 \times 64$ with $m =
+2\,048$.\footnote{This equalises the encoder and decoder weights, which dominate
+    the parameter count ($\approx 2 n \cdot K d$ for both models). Beyond them
+    the \ac{VAEE} carries a handful of parameters with no \ac{SAE} counterpart
+    --- its $K$ learnable prototypes, of dimension $d$, and the gate temperature
+    --- so exact matching of the total would pair the three \ac{VAEE} sizes with
+    \acp{SAE} of $m = 8\,194$, $4\,097$, and $2\,049$ rather than the powers of
+    two used here. The surplus is one or two dictionary atoms, under $0.05\%$ of
+the count, so the totals agree to well within a percent.} The \ac{SAE}'s
+dictionary is correspondingly far larger than the \ac{VAEE}'s concept count ---
+each \ac{VAEE} concept spends $d$ parameters where \iac{SAE} atom spends one.
+
+\section{Evaluation Metrics} \label{sec:exp:metrics}
+
+Two properties are measured: how faithfully a model reconstructs an activation,
+and how sparse the decomposition it uses to do so is. Reconstruction is reported
+as a single error metric; sparsity is reported in two ways, because the
+\ac{VAEE} and the \ac{SAE} do not count activity in the same unit.
+
+\subsection{Reconstruction} Reconstruction fidelity is measured by the \ac{MSE}
+between an activation and its reconstruction, averaged across the whole dataset.
+This is the same quantity defined in
+\cref{eq:background:ae:recon-loss}. It is the natural choice
+here: under the Gaussian decoder of \cref{eq:methods:proba:likelihood}
+the \ac{VAEE}'s reconstruction term reduces to exactly this
+error (\cref{sec:methods:model:loss}),
+and it is the standard reconstruction measure for \acp{SAE}, so the two models
+are scored on the objective each is trained to optimise.\footnote{The two
+reconstruction checks that are standard for \acp{SAE} spliced back into a
+language model --- the \ac{CE} loss and perplexity of the patched model --- are
+not reported for this comparison, as they were not run for the \ac{VAEE};
+\ac{MSE} is the only reconstruction metric on which both models are evaluated
+here.}
+
+Evaluating reconstruction is important, as a model that has low reconstruction
+error is a model that has learned \textit{representative} features of the input
+data, and concepts are representative features by definition.
+
+\subsection{Sparsity}
+
+    A low active-concept count is not the same as a sparse code. The \ac{VAEE}
+    targets the number of concepts active per sample, not the fraction of its
+    dictionary left idle, so at higher $\kappa$ it may fire a sizable share of
+    its concepts without contradicting its aim. Dictionary-fraction sparsity is
+    the \ac{SAE}'s design principle, not the \ac{VAEE}'s; the quantity that
+    bears on the comparison is the absolute number of active units, reported
+    below in two ways.
+
+    \paragraph{Number of active concepts $\kappa$} From an interpretability
+    standpoint, the central sparsity metric is the number of active concepts:
+    this is the number of units a human must understand in order to explain the
+    input instance. For a TopK \ac{SAE} this corresponds to its $k$
+    hyperparameter by
+    construction;\footnote{\label{fn:exp:metrics:topk}Technically, TopK selects
+        the $k$ largest activations, but it is possible that after the ReLU only
+        $k' < k$ activations are non-zero, so $\ell_{0} = \kappa = k' < k$. In
+        practice, this almost never happens, but the $\ell_{0}$ is recomputed
+    every time for maximum accuracy nonetheless.} for \iac{VAEE}, $\kappa =
+    \#\{k : \alpha_k(\vb{x}) \ge \flatfrac{1}{2}\}$, the count of concepts whose
+    posterior gate exceeds a threshold. Although the inference gate is
+    continuous
+    (\cref{sec:methods:model:proba:inference}),
+    the threshold introduces no real arbitrariness, because the learned
+    activations are strongly bimodal --- concentrated near $0$ and $1$, with
+    little mass in between, as quantified in \cref{sec:exp:results}
+    --- so the count is insensitive to the exact
+    cut-off, and $\flatfrac{1}{2}$ was chosen as a sensible threshold for an
+    activation probability.
+
+    \paragraph{$\ell_{0}$ count} The $\ell_{0}$ pseudo-norm represents the
+    amount of information the decoder has access to in order to reconstruct the
+    input. This amount corresponds to the number of non-zero scalars it can
+    reconstruct from. For a TopK \ac{SAE}, this number is its $k$ hyperparameter
+    by construction;\footnote{See
+    \cref{fn:exp:metrics:topk}.}
+    for \iac{VAEE} it is the number of active concepts $\kappa$ multiplied by
+    the embedding dimension of each concept $d$.
+
+    For a fair comparison it is important to consider both metrics, since
+    \iac{VAEE} that activates fewer \textit{concepts} than \iac{SAE} may still
+    activate more \textit{neurons} per sample. $\kappa$ is therefore the fair
+    unit for comparing the two models on interpretability, while $\ell_{0}$ is
+    the unit of choice for comparing decoder capacity.
+    \Cref{tab:exp:metrics}
+    recaps the formulas used to compute $\kappa$ and $\ell_{0}$ for both models.
+
+    \begin{table}[tb]
+        \myfloatalign
+        \begin{tabular}{lll}
+            \toprule
+            \tableheadline{Metric} & \tableheadline{SAE} & \tableheadline{VAEE} \\
+            \midrule
+            $\kappa$ (active concepts) & $\#\{k : z_{k}(\vb{x}) > 0\}$ & $\#\{k : \alpha_k(\vb{x}) \ge \flatfrac{1}{2}\}$ \\
+            $\ell_{0}$ (active neurons) & $\kappa$ & $\kappa \cdot d$ \\
+            \bottomrule
+        \end{tabular}
+        \caption[Sparsity metrics for \ac{SAE} and \ac{VAEE}]{
+            Sparsity metric formulations for \ac{SAE} and \ac{VAEE}.
+        }
+        \label{tab:exp:metrics}
+    \end{table}
+
+% \subsection{Perplexity} \label{sec:exp:metrics:perplexity}
+% This subsection is conditioned on an experiment completing successfully
+% If time allows: show how an SAE spliced in an LLM negatively impacts the
+% perplexity of generated text. Also show it for VAEE
+% Not very promising result (lower is better):
+% baseline (original model): 32.81
+% SAE: 168.58
+% VAEE: 212.74
 
 
-\section{Model Training} \label{sec:experiments:training}
+\section{Model Training} \label{sec:exp:training}
 
-\section{Results} \label{sec:experiments:results}
+Unless stated otherwise, the \ac{VAEE} uses the shallow configuration of
+\cref{sec:exp:results:ablation}: a single
+linear-plus-\acs{GELU} layer for the encoder $f_\phi$ and a linear decoder
+$g_\theta$, the stacked topology, and cosine similarity for the gate
+(\cref{eq:methods:proba:sim}). The embedding posterior
+variance is fixed at $\sigma_0 = 0.1$ during training; at inference time the
+sampling is dropped and the embedding $\vb{z}_{k}$ is set to its mean value
+$\vb{\mu}_{k}$. The Gumbel-Sigmoid relaxation
+(\cref{eq:methods:proba:gumbel}) uses temperature
+$\tau_g = 0.5$ during training; at inference the relaxation is dropped and the
+gate $c_{k}$ set to its posterior mean $\alpha_{k}$.
 
-\subsection{Quantitative results}
-% Plottone poco furbone e plottone furbone
+The \ac{VAEE} is trained to minimise the objective of
+\cref{eq:methods:loss:objective} --- reconstruction error,
+batch-wise sparsity \ac{KL}, entropy binarisation, and the conditional-embedding
+\ac{KL}. The loss weights are set to $\beta = 4$, $\lambda_{\mathrm{ent}} =
+\gamma = 1$. The Bernoulli prior rate $\pi$ is the \ac{VAEE}'s sparsity dial,
+swept to trace its frontier, but it controls sparsity only indirectly, and
+$\tilde{\kappa} = \pi K$ is a target the optimisation is biased toward, not a
+hard constraint. The final per-sample count $\kappa$ runs higher than the
+nominal $\tilde{\kappa}$, since reconstruction drives $\kappa$ towards higher
+values.
 
-% TODO (reminder from C03 sec:methods:model:loss): show the quantitative evidence
-% that the trained activations alpha_k are strongly bimodal / U-shaped on the val
-% set (values near {0,1} ~2-3 orders of magnitude more frequent than the middle).
-% This backs the C03 claim that the inference gate c_k = alpha_k is effectively
-% hard. Add the alpha-distribution histogram/plot here.
+The TopK \ac{SAE} baseline is trained with its standard objective ---
+reconstruction error under the top-$k$ activation plus auxiliary loss --- on the
+same activations.
 
-% Se hai tempo: fai vedere quanto un SAE spliced in un LLM influisce
-% negativamente la next-token prediction e perplexity. Pero' devi farlo vedere
-% anche per il VAEE
+Both models were trained using the \texttt{Adam} optimiser
+\cite{kingmaAdamMethodStochastic2017} with a learning rate of $10^{-4}$ for
+3\,000 epochs and an early stopping patience of 500 epochs.
 
-\subsection{Qualitative results}
-% Concept dictionaries a confronto
+\section{Results} \label{sec:exp:results}
 
-\subsection{Ablation study}
-% Varie architetture
+\subsection{Quantitative results} \label{sec:exp:results:quant}
 
-\section*{Conclusions}
+\Cref{fig:exp:kappa-frontier}
+plots validation \ac{MSE} against the number of active concepts $\kappa$,
+sweeping each model's sparsity dial. The models are matched on parameter count
+(\cref{sec:exp:baselines}). Across the swept range
+every \ac{VAEE} frontier lies below every \ac{SAE} frontier: at any given
+concept count it reconstructs more faithfully, it matches the best \ac{SAE}'s
+reconstruction using roughly an order of magnitude fewer active concepts, and at
+the dense end of its sweep it reaches a fidelity no \ac{SAE} attains, even at $k
+= 128$. A few vector-valued concepts carry reconstruction further than many more
+scalar atoms --- the relaxation of the sparsity--reconstruction trade-off the
+architecture was designed to deliver.
+
+% TODO: replace figure with updated data when rerun ends
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.95\linewidth]{gfx/kappa_vs_mse_frontier.png}
+    \caption[VAEE vs SAE frontier: active concepts]{
+        Sparsity--reconstruction frontier in active concepts $\kappa$, the
+        interpretability-relevant unit; each model sweeps its sparsity dial at
+        matched parameter count. The \ac{VAEE} frontiers lie below every
+        \ac{SAE} frontier --- it matches the best \ac{SAE}'s reconstruction at
+        far fewer active concepts.
+    }
+    \label{fig:exp:kappa-frontier}
+\end{figure}
+
+This advantage is specific to the concept axis. \Cref{fig:exp:l0-frontier}
+repeats the comparison in active \textit{neurons} $\ell_{0}$ --- the
+decoder-capacity unit
+(\cref{sec:exp:metrics}) --- where the two
+families do not even occupy the same range. Because each active \ac{VAEE}
+concept is a vector of width $d = 64$, every \ac{VAEE} operating point sits
+above $\ell_{0} \approx 300$, while the \acp{SAE}, with scalar atoms, never
+exceed $\ell_{0} = 128$; a head-to-head reading at matched $\ell_{0}$ is not
+available from these runs. The trend is nonetheless clear --- the \ac{SAE}
+reaches a given reconstruction error with fewer active neurons, since top-$k$
+selection targets exactly that scalar count --- and the \ac{VAEE} buys its low
+concept count by activating more neurons per sample. The trade-off is not eliminated but relocated, from the
+number of concepts a reader inspects to the number of scalars the decoder draws
+on. Which unit to privilege depends on the purpose: interpretation proceeds
+concept by concept, never coordinate by coordinate, so $\kappa$ is the axis on
+which the comparison bears --- and there the \ac{VAEE} wins.
+
+% TODO: replace figure with updated data when rerun ends
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.95\linewidth]{gfx/l0_vs_mse_frontier.png}
+    \caption[VAEE vs SAE frontier: active neurons]{
+        The same frontier in active neurons $\ell_{0}$, the decoder-capacity
+        unit. The families occupy disjoint ranges --- \acp{SAE} below
+        $\ell_{0} = 128$, \acp{VAEE} above $\ell_{0} \approx 300$ --- so no
+        matched-$\ell_{0}$ comparison is available; the \ac{SAE} reaches a given
+        error with fewer active neurons.
+    }
+    \label{fig:exp:l0-frontier}
+\end{figure}
+
+
+Both metrics presuppose that the active-concept count is well defined --- that
+the continuous inference gate behaves, in practice, as a hard one.
+\Cref{fig:exp:alpha-distribution}
+bears this out: the validation-set distribution of the gate values $\alpha_{k}$
+is sharply bimodal, almost all of its mass falling within $0.01$ of $0$ or $1$,
+the extremes one to two orders of magnitude more frequent than any intermediate
+value. The active-concept count is therefore insensitive to the exact cut-off,
+and $\flatfrac{1}{2}$ is a natural threshold for an activation probability.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.95\linewidth]{gfx/alpha_val_dist.png}
+    \caption[Distribution of VAEE gate activations]{
+        Validation-set distribution of the $128 \times 64$ \ac{VAEE} gate values
+        $\alpha_{k}$. The mass is sharply bimodal, concentrated within $0.01$ of
+        $0$ and $1$ (each bin spans $0.01$), the extreme bins one to two orders
+        of magnitude more frequent than the interior --- so the gate is
+        effectively hard at inference and the active-concept count is
+        insensitive to the $\flatfrac{1}{2}$ threshold.
+    }
+    \label{fig:exp:alpha-distribution}
+\end{figure}
+
+\subsection{Qualitative results} \label{sec:exp:results:qual}
+% Compare concept dictionaries
+
+\subsection{Ablation study} \label{sec:exp:results:ablation}
+% Show various architectures tested (MLP/Linear/Shallow encoder/decoder)
+% Additionally, show that ortho loss was empirically negligible
 
 
 %*****************************************
