@@ -319,7 +319,200 @@ and $\flatfrac{1}{2}$ is a natural threshold for an activation probability.
 \end{figure}
 
 \subsection{Qualitative results} \label{sec:exp:results:qual}
-% Compare concept dictionaries
+
+The frontier of \cref{sec:exp:results:quant}
+measures how much reconstruction each active concept buys, but not what those
+concepts are. A unit is useful for interpretability only if it is legible, so
+this section reads off each model's \textit{concept dictionary}: for every
+concept, a collection of tokens on which it activates most strongly, each shown
+inside the context it was drawn from with the activating token in bold
+\citep{brickenMonosemanticityDecomposingLanguage2023,
+billsLanguageModelsCan2023}. A concept is legible when those tokens share a
+discernible property --- a meaning, a grammatical class, an orthographic pattern
+--- and opaque when they do not.
+
+% Each dictionary is read two ways. The \textit{unique} view lists, per concept,
+% the distinct tokens of highest activation, exposing the range a concept can
+% respond to; the \textit{non-unique} view lists its most frequent activations,
+% exposing its typical input. Which of the two reveals coherence differs by
+% model, so both are used.
+A single operating point is inspected per model --- the parameter-matched pair
+of the $128 \times 64$ \ac{VAEE} at $\tilde{\kappa} = 8$ and the $m = 8\,192$
+TopK \ac{SAE} at $k = 8$ --- as concept quality was not measured along the
+frontier.
+
+\paragraph{Concepts the VAEE recovers} \Cref{tab:exp:qual:vaee}
+lists three. Some are genuinely semantic: concept C6 fires on a vocabulary of
+dread (\texttt{curse}, \texttt{tension}, \texttt{fear}, \texttt{creepy}) and C48
+on modifiers of magnitude (\texttt{substantial}, \texttt{considerable},
+\texttt{stunning}, \texttt{broad}). Many more are not: C123, one of a large
+family of its kind, fires on the final sub-token of a word irrespective of
+meaning (the \texttt{k} of \texttt{drek}, the \texttt{p} of \texttt{romp}, the
+\texttt{\'e} of \texttt{naivet\'e}) an orthographic regularity rather than a
+concept. The \ac{VAEE} dictionary is a mixture: a minority of legible concepts
+among a majority of uninterpretable units.
+
+\begin{table}[tb]
+    \myfloatalign
+    \footnotesize
+    \begin{tabularx}{\linewidth}{@{}>{\ttfamily}X@{}}
+        \toprule
+        {\normalfont\textbf{C6} --- fear / horror / suspense \hfill (firing rate~10.2\%)}\\
+        \cmidrule(){1-1}
+        \dots\ of nuclear holoca\textbf{ust} to generate cheap hol \dots\\
+        \dots\ superstitious\textbf{ curse} on chain letters and \dots\\
+        % \dots\ itious curse on\textbf{ chain} letters and actually applies \dots\\
+        \dots\ cheap hollywood\textbf{ tension} .\\
+        \dots\ its our substantial collective\textbf{ fear} of nuclear holoca \dots\\
+        an effectively\textbf{ creep}y , fear- \dots\\
+        \dots\ effectively creepy ,\textbf{ fear}-inducing \dots\\
+        % \dots\ creepy , fear\textbf{-}inducing - \dots\\
+        % at a\textbf{ time} when half the so \dots\\
+        % \dots\ fashion , with little\textbf{ humor} to lighten things \dots\\
+        \dots\ lrb- not\textbf{ fear}-reducing - \dots\\
+        % \dots\ pitiful insur\textbf{rection} .
+        % \dots\ als better than the\textbf{ pit}iful insurrection \dots\\
+        % \dots\ s conflict-powered\textbf{ plot} there is a decent \dots\\
+        % \dots\ film &#x27;s conflict\textbf{-}powered plot there is \dots\\
+        \addlinespace
+        {\normalfont\textbf{C48} --- magnitude / intensity modifiers \hfill (firing rate~9.1\%)}\\
+        \cmidrule(){1-1}
+        \dots\ video game is a\textbf{ lot} more fun than the \dots\\
+        \dots\ 9 exploits our\textbf{ substantial} collective fear of nuclear \dots\\
+        \dots\ game is a lot\textbf{ more} fun than the film \dots\\
+        % \dots\ still feels like an\textbf{ ugly} knot tightening \dots\\
+        % \dots\ is a refreshing\textbf{ly} serious look at young \dots\\
+        % \dots\ an ugly knot\textbf{ tight}ening in your stomach \dots\\
+        \dots\ yrical work of\textbf{ considerable} force and truth .\\
+        \dots\ it 's a\textbf{ stunning} lyrical work \dots\\
+        \dots\ , and feelings that\textbf{ profound}ly deepen them \dots\\
+        % a\textbf{ broad} , melodramatic \dots\\
+        % \dots\ ator of an extended\textbf{ cheap} shot across the m \dots\\
+        % \dots\ 's a bug\textbf{gy} drag .
+        % \dots\ n't offer\textbf{ much} besides glib sou \dots\\
+        % \dots\ to its quir\textbf{ky} sentiments but the \dots\\
+        % \dots\ words and with the\textbf{ complicated} emotions fueling terrorist \dots\\
+        \addlinespace
+        {\normalfont\textbf{C123} --- word-final subword fragments \hfill (firing rate~15.9\%)}\\
+        \cmidrule(){1-1}
+        \dots\ -trip dre\textbf{k} we 've seen \dots\\
+        % \dots\ about \$ 4\textbf{0} to see a film \dots\\
+        \dots\ enough for sham\textbf{u} the killer whale \dots\\
+        \dots\ fully amusing rom\textbf{p} that , if nothing \dots\\
+        \dots\ of naivet\textbf{é} , passion and talent \dots\\
+        \dots\ film seems thirst\textbf{y} for reflection , itself \dots\\
+        % \dots\ chamber drama is super\textbf{b}ly acted by the \dots\\
+        % \dots\ 197\textbf{8} but not released then \dots\\
+        % \dots\ buy and accors\textbf{i} .\\
+        % \dots\ 199\textbf{4} , except that it \dots\\
+        \dots\ fancy a real down\textbf{er} ?\\
+        % \dots\ postmodern conce\textbf{it} .\\
+        % \dots\ for bruce will\textbf{is} , is the perfect \dots\\
+        % \dots\ iddie pae\textbf{an} to pro basketball under \dots\\
+        % \dots\ to some script weakness\textbf{es} and the casting of \dots\\
+        \bottomrule
+    \end{tabularx}
+    \caption[VAEE concept dictionary]{
+        Three concepts from the $\kappa = 8$, $128 \times 64$ \ac{VAEE}
+        dictionary, each shown with a few of its strongest activations and the
+        activating token in bold. C6 and~C48 are semantically coherent; C123,
+        typical of a large share of the dictionary, is not really interpretable
+        and fires on the final sub-token of a word regardless of meaning. The
+        firing rate is the fraction of validation tokens on which the concept is
+        active.
+    }
+    \label{tab:exp:qual:vaee}
+\end{table}
+
+\paragraph{Features the SAE recovers} The \ac{SAE} dictionary
+(\cref{tab:exp:qual:sae}) is similar in kind. It too has clean entries ---
+feature C6703 on nouns of film and storytelling (\texttt{plot},
+\texttt{journey}, \texttt{movie}, \texttt{performance}) and C958 on possessive
+determiners (\texttt{my}, \texttt{your}, \texttt{our}) --- but its
+characteristic failure differs from the \ac{VAEE}'s. Capacity is lost not to
+orthography but to \textit{redundancy}: groups of features collapse onto
+near-identical token sets, three of which are shown in the lower block of
+\cref{tab:exp:qual:sae}. This feature-splitting is a known tendency of
+over-complete dictionaries \citep{brickenMonosemanticityDecomposingLanguage2023,
+templetonScalingMonosemanticityExtracting}, and an $m = 8\,192$ dictionary
+trained on such a small corpus has ample room for it.
+
+\begin{table}[tb]
+    \myfloatalign
+    \footnotesize
+    \begin{tabularx}{\linewidth}{@{}>{\ttfamily}X@{}}
+        \toprule
+        {\normalfont\textbf{C6703} --- film and storytelling nouns \hfill (firing rate~1.4\%)}\\
+        \cmidrule(){1-1}
+        % \dots\ odding to be\textbf{ funny} , and too cl \dots\\
+        % \dots\ ise like a jazz\textbf{man} .\\
+        \dots\ -channel kind of\textbf{ plot} and a lead actress \dots\\
+        % \dots\ fun at the democratic\textbf{ exercise} while also examining \dots\\
+        % \dots\ important and plod\textbf{ding} to be funny , \dots\\
+        % \dots\ his medium and his\textbf{ message} that he can impro \dots\\
+        \dots\ a much more emotional\textbf{ journey} than what shyam \dots\\
+        \dots\ cookie-cutter\textbf{ movie} , a cut- \dots\\
+        % \dots\ disappointingly superf\textbf{icial} -- a movie that \dots\\
+        \dots\ he is in this\textbf{ performance} .\\
+        \dots\ one of those baseball\textbf{ pictures} where the hero is \dots\\
+        % \dots\ watching a nightmare made\textbf{ flesh} .\\
+        % \dots\ of considerable force and\textbf{ truth} .\\
+        \dots\ lovely film with lovely\textbf{ performances} by buy and acc \dots\\
+        % \dots\ in his past two\textbf{ movies} , and gib \dots\\
+        \addlinespace
+        {\normalfont\textbf{C958} --- possessive determiners \hfill (firing rate~0.5\%)}\\
+        \cmidrule(){1-1}
+        \textbf{my} wife is an actress \dots\\
+        % \textbf{the} tale of tok - \dots\\
+        the lower\textbf{ your} expectations , the more \dots\\
+        \dots\ 't aim for\textbf{ our} sympathy , but rather \dots\\
+        % \dots\ umes and sets are\textbf{ grand} .\\
+        % \dots\ teary-eyed\textbf{ original} .\\
+        % \dots\ worthy of pucc\textbf{ini} than they are of \dots\\
+        % \dots\ end , the movie\textbf{ coll}apses on its \dots\\
+        % \dots\ -your-face\textbf{ wall}ow in the lower \dots\\
+        % \dots\ in the first few\textbf{ minutes} .\\
+        % \dots\ comparable to a card\textbf{board} cutout .\\
+        % \dots\ screen , not some\textbf{ series} of carefully structured plot \dots\\
+        % \dots\ ages to be decent\textbf{ instead} of dead brilliant .\\
+        % \dots\ ford movie -\textbf{ six} days , seven nights \dots\\
+        % the second\textbf{ coming} of harry pot \dots\\
+        \addlinespace
+        {\normalfont\textbf{C6649}, \textbf{C2491}, \textbf{C5296} --- three near-duplicate features \hfill (firing rate~3.8\% each)}\\
+        \cmidrule(){1-1}
+        C6649:\ \ deep, leave, coming, six, instead, series, board, \dots\\
+        C2491:\ \ deep, leave, coming, six, instead, series, board, \dots\\
+        C5296:\ \ deep, leave, coming, six, instead, series, board, \dots\\
+        \bottomrule
+    \end{tabularx}
+    \caption[SAE concept dictionary]{
+        Features from the $k = 8$, $m = 8\,192$ TopK \ac{SAE} dictionary. C6703
+        and~C958 are coherent; the lower block lists the highest-activating
+        tokens of three features that converge on a near-identical set --- one
+        instance of the redundancy that consumes much of the dictionary. Firing
+        rate as in \cref{tab:exp:qual:vaee}.
+    }
+    \label{tab:exp:qual:sae}
+\end{table}
+
+\paragraph{Neither dictionary is clearly more interpretable} Read side by side,
+the two are about equally legible. Each yields a handful of coherent units and a
+majority that don't have a clear label, and the per-concept reconstruction
+advantage of \cref{sec:exp:results:quant}
+does not show up as visibly cleaner concepts. The comparison is not wholly even,
+though: the \ac{VAEE}'s legible concepts come from a dictionary of $128$, the
+\ac{SAE}'s from one of $8\,192$, so a comparable number of usable units is
+recovered from far fewer of them. On this evidence the \ac{VAEE} neither clearly
+improves nor clearly degrades interpretability relative to the \ac{SAE}.
+
+Both dictionaries are best read as corpus-limited. \ac{SST2} is small and
+thematically narrow (\cref{sec:exp:setup}),
+with few of the repeated, varied contexts a large and clean concept vocabulary
+needs to form; orthographic \ac{VAEE} concepts and redundant \ac{SAE} features
+are the kind of degenerate solution a starved corpus is responsible for. Whether
+the \ac{VAEE}'s vector concepts afford richer interpretability than scalar
+features is therefore left open --- a question for a larger and more varied
+corpus. % taken up in \cref{sec:conclusions:future}.
 
 \subsection{Ablation study} \label{sec:exp:results:ablation}
 % Show various architectures tested (MLP/Linear/Shallow encoder/decoder)
