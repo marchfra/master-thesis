@@ -246,16 +246,17 @@ the dense end of its sweep it reaches a fidelity no \ac{SAE} attains, even at $k
 scalar atoms --- the relaxation of the sparsity--reconstruction trade-off the
 architecture was designed to deliver.
 
-% TODO: replace figure with updated data when rerun ends
 \begin{figure}[tb]
-    \centering
+    \myfloatalign
     \includegraphics[width=0.95\linewidth]{gfx/kappa_vs_mse_frontier.png}
     \caption[VAEE vs SAE frontier: active concepts]{
-        Sparsity--reconstruction frontier in active concepts $\kappa$, the
-        interpretability-relevant unit; each model sweeps its sparsity dial at
-        matched parameter count. The \ac{VAEE} frontiers lie below every
-        \ac{SAE} frontier --- it matches the best \ac{SAE}'s reconstruction at
-        far fewer active concepts.
+        Sparsity--reconstruction frontier in active concepts $\kappa$, the unit
+        relevant to interpretability; each model sweeps its sparsity dial at
+        matched parameter count --- the \ac{SAE} over $k \in \{8, 32, 128\}$ and
+        the \ac{VAEE} over $\tilde{\kappa} = \pi K \in \{4, 8, 32\}$. All
+        \ac{VAEE} frontiers lie below every \ac{SAE} frontier --- with the
+        \ac{VAEE} matching the best \ac{SAE}'s reconstruction at far fewer
+        active concepts.
     }
     \label{fig:exp:kappa-frontier}
 \end{figure}
@@ -268,31 +269,33 @@ families do not even occupy the same range. Because each active \ac{VAEE}
 concept is a vector of width $d = 64$, every \ac{VAEE} operating point sits
 above $\ell_{0} \approx 300$, while the \acp{SAE}, with scalar atoms, never
 exceed $\ell_{0} = 128$; a head-to-head reading at matched $\ell_{0}$ is not
-available from these runs. The trend is nonetheless clear --- the \ac{SAE}
-reaches a given reconstruction error with fewer active neurons, since top-$k$
-selection targets exactly that scalar count --- and the \ac{VAEE} buys its low
-concept count by activating more neurons per sample. The trade-off is not eliminated but relocated, from the
-number of concepts a reader inspects to the number of scalars the decoder draws
-on. Which unit to privilege depends on the purpose: interpretation proceeds
-concept by concept, never coordinate by coordinate, so $\kappa$ is the axis on
-which the comparison bears --- and there the \ac{VAEE} wins.
+available from these runs. The trend is nonetheless clear: the \ac{SAE} reaches
+a given reconstruction error with fewer active neurons, and the \ac{VAEE} buys
+its low concept count by activating more neurons per sample. The trade-off is
+not eliminated but relocated, from the number of concepts a reader inspects to
+the number of scalars the decoder draws on. Which unit to privilege depends on
+the purpose: interpretation proceeds concept by concept, never coordinate by
+coordinate, so $\kappa$ is the axis on which the comparison bears --- and there
+the \ac{VAEE} wins.
 
-% TODO: replace figure with updated data when rerun ends
 \begin{figure}[tb]
-    \centering
+    \myfloatalign
     \includegraphics[width=0.95\linewidth]{gfx/l0_vs_mse_frontier.png}
     \caption[VAEE vs SAE frontier: active neurons]{
-        The same frontier in active neurons $\ell_{0}$, the decoder-capacity
-        unit. The families occupy disjoint ranges --- \acp{SAE} below
-        $\ell_{0} = 128$, \acp{VAEE} above $\ell_{0} \approx 300$ --- so no
-        matched-$\ell_{0}$ comparison is available; the \ac{SAE} reaches a given
-        error with fewer active neurons.
+        The sparsity--reconstruction frontier in active neurons $\ell_{0}$, the
+        decoder-capacity unit, over the same sweeps as
+        \cref{fig:exp:kappa-frontier}
+        --- the \ac{SAE} over $k \in \{8, 32, 128\}$ and the \ac{VAEE} over
+        $\tilde{\kappa} = \pi K \in \{4, 8, 32\}$. The families occupy disjoint
+        ranges --- \acp{SAE} below $\ell_{0} = 128$, \acp{VAEE} above $\ell_{0}
+        \approx 300$ --- so no matched-$\ell_{0}$ comparison is available; the
+        \ac{SAE} reaches a given error with fewer active neurons.
     }
     \label{fig:exp:l0-frontier}
 \end{figure}
 
 
-Both metrics presuppose that the active-concept count is well defined --- that
+Both metrics presuppose that the active-concept count is well defined: that
 the continuous inference gate behaves, in practice, as a hard one.
 \Cref{fig:exp:alpha-distribution}
 bears this out: the validation-set distribution of the gate values $\alpha_{k}$
@@ -302,7 +305,7 @@ value. The active-concept count is therefore insensitive to the exact cut-off,
 and $\flatfrac{1}{2}$ is a natural threshold for an activation probability.
 
 \begin{figure}[tb]
-    \centering
+    \myfloatalign
     \includegraphics[width=0.95\linewidth]{gfx/alpha_val_dist.png}
     \caption[Distribution of VAEE gate activations]{
         Validation-set distribution of the $128 \times 64$ \ac{VAEE} gate values

@@ -29,9 +29,9 @@ The encoder maps an input to one vector embedding per concept; a learned
 prototype for each concept then decides, by similarity, which concepts are
 active, and the input is reconstructed from the stack of active embeddings. Its
 capabilities are demonstrated in one application, the decomposition of \acl{LLM}
-activations, where \iac{VAEE} with 8 active concepts matches the reconstruction
-of a parameter-matched TopK \ac{SAE} that requires 128 --- evidence that
-vector-valued concepts carry more information per unit of sparsity. The thesis
+activations, where \iac{VAEE} matches the reconstruction of a parameter-matched
+TopK \ac{SAE} using roughly an order of magnitude fewer active concepts ---
+evidence that vector-valued concepts carry more information per unit of sparsity. The thesis
 is deliberate about the limits of this evidence: reconstruction was assessed
 only by \acl{MSE}, each concept now spans several active neurons rather than
 one, and the recovered concepts were not found more interpretable than the
