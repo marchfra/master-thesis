@@ -418,9 +418,34 @@ stability rather than mathematical necessity.
     shortcut, so the activation is shaped only by the reconstruction and
     sparsity terms.
 
-    % TODO: mention that it was formulated but later dropped as the ablation
-    % study proved its effect was negligible.
-    \paragraph{Decoder orthogonality}
+    \paragraph{Decoder orthogonality} One further term was considered but left
+    out of the final objective. With a linear decoder the reconstruction reads
+    the concept embeddings block by block: partitioning the decoder weight
+    matrix as $W = [W_1, \dots, W_K]$, with $W_k \in \R^{n \times d}$ the block
+    acting on concept $k$, the gated decode of
+    \cref{eq:methods:proba:gate} becomes
+    \begin{equation*}
+        \hat{\vb{x}} = W \left(\vb{c} \odot \vb{z}\right) = \sum_{k=1}^{K} c_k\,
+        W_k \vb{z}_k,
+    \end{equation*}
+    so each $W_k$ is the reconstruction basis the decoder assigns to its
+    concept. To stop these bases from duplicating one another --- the
+    feature-splitting that wastes capacity in an over-complete dictionary
+    (\cref{sec:background:ae:sae}) ---
+    a Frobenius orthogonality penalty between the blocks can be added, averaged
+    over the $\binom{K}{2}$ pairs so that its scale is independent of $K$,
+    \begin{equation*}
+        \mathcal{L}_{\mathrm{ortho}} = \frac{\lambda_{\mathrm{ortho}}}{\binom{K}{2}}
+        \sum_{i < j} \frac{\norm{W_i^{\top} W_j}_F^2}{\norm{W_i}_F^2\,
+        \norm{W_j}_F^2}.
+    \end{equation*}
+    From a Bayesian standpoint this is a maximum-a-posteriori term: it
+    corresponds to a structural prior over the decoder parameters that favours
+    mutually orthogonal concept bases, penalising any pair that maps to
+    overlapping directions of the activation space. The term is omitted from the
+    objective of \cref{eq:methods:loss:objective}, its
+    contribution proven empirically negligible
+    (\cref{sec:exp:results:ablation}).
 
     \paragraph{Scale-invariant reductions} Each term is averaged over its
     dimensions --- the batch $B$, the concepts $K$, and the relevant vector
