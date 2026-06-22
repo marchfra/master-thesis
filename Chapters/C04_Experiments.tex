@@ -515,8 +515,119 @@ features is therefore left open --- a question for a larger and more varied
 corpus. % taken up in \cref{sec:conclusions:future}.
 
 \subsection{Ablation study} \label{sec:exp:results:ablation}
-% Show various architectures tested (MLP/Linear/Shallow encoder/decoder)
-% Additionally, show that ortho loss was empirically negligible
+
+The configuration used in the experiments above was not the only one available.
+It fixes a shallow encoder and decoder, an embedding width of $d = 64$, and the
+objective of \cref{eq:methods:loss:objective}
+without a decoder-orthogonality term. This section reports the ablations behind
+those choices.
+
+\paragraph{Embedding width} The embedding width $d$ is the \ac{VAEE}'s defining
+degree of freedom --- the dimension along which a concept becomes a vector
+rather than a scalar. \Cref{fig:exp:d-ablation}
+sweeps it, plotting validation \ac{MSE} against $d \in \{16, 32, 64, 128\}$ at a
+fixed $\tilde{\kappa} = \pi K$ for three dictionary sizes. Reconstruction
+improves monotonically with $d$, with diminishing returns: the gain from $16$ to
+$64$ is larger than from $64$ to $128$. This extra capacity is what a scalar
+atom cannot supply, but it is bought at a price: every active concept now
+contributes $d$ active neurons rather than one ($\ell_{0} = \kappa d$,
+\cref{sec:exp:metrics}). The $d = 64$ used in
+the other experiments already captures a good amount of the reconstruction gain
+while maintaining training feasible on limited resources, as increasing the
+value of $d$ while keeping all other parameters constants also increases the
+number of overall parameters by a factor of $2n$.
+
+\begin{figure}[tb]
+    \myfloatalign
+    \includegraphics[width=0.95\linewidth]{gfx/d_vs_mse.png}
+    \caption[Effect of the embedding width on VAEE reconstruction]{
+        Effect of the per-concept embedding width $d$ on \ac{VAEE}
+        reconstruction. Validation \ac{MSE} against $d \in \{16, 32, 64, 128\}$,
+        one curve per dictionary size $K \in \{32, 64, 128\}$, all at the fixed
+        sparsity target $\tilde{\kappa} = \pi K = 8$, so that only the embedding
+        width varies along each curve. Reconstruction improves with $d$ at a
+        % I cannot fix the active-concept count, only its approximate value
+        fixed active-concept count, with diminishing returns --- widening a
+        concept buys capacity that a scalar atom cannot, though at the cost of
+        more active neurons ($\ell_{0} = \kappa d$) and more parameters.
+    }
+    \label{fig:exp:d-ablation}
+\end{figure}
+
+\paragraph{Encoder and decoder depth} Throughout, the \ac{VAEE} uses a
+deliberately \textit{shallow} configuration: a single linear-plus-\acs{GELU}
+layer for the encoder $f_\phi$ and a purely linear decoder $g_\theta$. Several
+alternatives are available, and a multi-layer \ac{MLP} for either map, or
+dropping the encoder non-linearity for a plain linear projection were the ones
+explored. \Cref{fig:exp:arch-ablation}
+compares them at a fixed dictionary size and embedding width.\graffito{Not true,
+but final experiment can be rerun} The added depth
+buys little: an \ac{MLP} encoder or decoder reconstructs no better than the
+shallow pair, and the gap to the plain-linear encoder is small. The shallow
+configuration is used as the default for this reason --- it reconstructs as well
+as the deeper variants at lower complexity, and its linear decoder mirrors the
+dictionary decoder of the \ac{SAE} baseline
+(\cref{sec:exp:baselines}).\graffito{Rewrite paragraph
+against actual results.}
+
+\begin{figure}[tb]
+    \myfloatalign
+    % \includegraphics[width=0.95\linewidth]{gfx/arch_ablation.png}
+    \caption[Effect of encoder/decoder depth on VAEE reconstruction]{
+        Validation \ac{MSE} of the \ac{VAEE} under encoder and decoder
+        architectures of increasing depth --- a plain linear encoder, the
+        shallow linear-plus-\acs{GELU} encoder used throughout, and a multi-layer
+        \ac{MLP} --- at a fixed dictionary size $K$ and embedding width $d$.
+        Deeper maps do not reconstruct materially better than the shallow pair,
+        which is the configuration used in the other experiments.
+    }
+    \label{fig:exp:arch-ablation}
+\end{figure}
+
+\paragraph{Decoder orthogonality} The objective of
+\cref{eq:methods:loss:objective} omits a term that the model
+development leaves available
+(\cref{sec:methods:model:loss}): a
+penalty $\lambda_{\mathrm{ortho}}$ pushing the columns of the decoder --- the
+concept atoms --- toward mutual orthogonality, in the spirit of curbing the
+feature redundancy seen in the \ac{SAE} dictionary
+(\cref{sec:exp:results:qual}). In
+practice it makes no real difference. This term contributes so little to the
+training and validation losses (\cref{fig:exp:ortho-ablation}),
+that it is dropped from the final objective. The likely reason is geometric: the
+decoder's columns live in the $n = 4\,096$-dimensional activation space, and
+vectors drawn at random in so high a dimension are already almost mutually
+orthogonal \citep{vershyninHighDimensionalProbabilityIntroduction2018}, so the
+subspaces they span start near-orthogonal and the penalty has little left to
+enforce.\graffito{Add SAE comparison? This isn't true for the SAE, whose
+concepts are scalars, or 1-D vectors.}
+
+\begin{figure}[tb]
+    \myfloatalign
+    % \includegraphics[width=0.95\linewidth]{gfx/ortho_ablation.png}
+    \caption[Effect of the decoder-orthogonality penalty]{
+        % I think a better way to visualise this would be to show the loss
+        % breakdown of a model (recon, sparsity, cond-kl, entropy, ortho),
+        % highlighting the fact that ortho loss sits at < 10e-3 while all other
+        % terms are \approx 10e-2 or more
+        Train and validation loss breakdown of the \ac{VAEE} over training, with
+        and without the decoder-orthogonality penalty $\lambda_{\mathrm{ortho}}$.
+        The two are nearly indistinguishable --- the penalty leaves
+        reconstruction and the other loss terms essentially unchanged --- so it
+        is omitted from the objective of
+        \cref{eq:methods:loss:objective}.
+    }
+    \label{fig:exp:ortho-ablation}
+\end{figure}
+
+\paragraph{Design choices left open} One of the model's design choices was fixed
+rather than ablated: the gate measures embedding-to-prototype agreement by cosine
+similarity rather than the inner-product or negative-Euclidean alternatives of
+\cref{eq:methods:proba:sim}. Cosine is a reasonable default ---
+it decouples the gate from the embedding magnitude
+(\cref{sec:methods:model:proba:sim}) --- but it was not swept, so what the
+alternatives cost or buy in reconstruction and interpretability is left open for
+future work (\cref{sec:conclusions:future}).
 
 
 %*****************************************
