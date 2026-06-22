@@ -32,7 +32,7 @@ familiar from \acp{CEM}
 (\cref{sec:background:xai:c-xai}), which
 replace the scalar concept bottleneck of \iac{CBM} with per-concept embeddings
 and so recover the accuracy a narrow bottleneck gives up
-\citep{espinosazarlengaConceptEmbeddingModels2022}. \Acp{CEM}, however are
+\citep{espinosazarlengaConceptEmbeddingModels2022}. \Acp{CEM}, however, are
 supervised, trained against concept labels. The aim here is to carry the
 concepts-as-vectors idea into the \textit{unsupervised} setting of activation
 decomposition, and to do so from first principles, defining a probabilistic
@@ -58,16 +58,16 @@ variational inference
 (\cref{sec:background:ae:vae});
 and from \acp{VQVAE} it takes the idea of a discrete latent over a learned
 dictionary of vectors
-(\cref{sec:background:ae:vae:arch}). The two differ in what is made discrete:
-\iac{VQVAE} quantises each input to a single codebook entry, so its latent is a
-categorical index and the vector passed to the decoder is one of finitely many.
-The \ac{VAEE} instead keeps its embeddings continuous, its only discrete latent
-being the binary mask $\vb{c}$, which decides \textit{which} prototype-anchored
-concepts are active rather than what their embeddings are. It is in this sense a
-probabilistic, multilabel counterpart to vector quantisation: independent
-Bernoulli gates over continuous embeddings in place of a single hard codebook
-lookup, keeping the expressivity of a continuous latent while holding the active
-set sparse.
+(\cref{sec:background:ae:vae:arch}). The
+two differ in what is made discrete: \iac{VQVAE} quantises each input to a
+single codebook entry, so its latent is a categorical index and the vector
+passed to the decoder is one of finitely many. The \ac{VAEE} instead keeps its
+embeddings continuous, its only discrete latent being the binary mask $\vb{c}$,
+which decides \textit{which} prototype-anchored concepts are active rather than
+what their embeddings are. It is in this sense a probabilistic, multilabel
+counterpart to vector quantisation: independent Bernoulli gates over continuous
+embeddings in place of a single hard codebook lookup, keeping the expressivity
+of a continuous latent while holding the active set sparse.
 % Nothing in this construction is specific to language models --- the
 % vector-concept primitive applies wherever a scalar concept code trades
 % capacity for simplicity --- but this thesis develops and demonstrates it for
@@ -210,16 +210,16 @@ embeddings.
 \end{figure}
 
 \subsubsection{Inference} \label{sec:methods:model:proba:inference}
-Exact inference is intractable: it would require marginalizing over the
+Exact inference is intractable: it would require marginalising over the
 continuous embeddings $\vb{z}$ and summing over all $2^K$ possible discrete
-masks configurations for $\vb{c}$:
+mask configurations for $\vb{c}$:
 \begin{equation*}
     p(\vb{x}) = \sum_{\vb{c}} \int p(\vb{x}, \vb{c}, \vb{z}) \dd{\vb{z}}.
 \end{equation*}
 The \ac{VAEE} instead uses amortised variational inference
-(\cref{sec:background:ae:vae}), approximating the true posterior with a
-\textit{mean-field} family that factorises over both latents and across
-concepts,
+(\cref{sec:background:ae:vae}),
+approximating the true posterior with a \textit{mean-field} family that
+factorises over both latents and across concepts,
 \begin{equation} \label{eq:methods:proba:posterior}
     q_\phi(\vb{c}, \vb{z} \mid \vb{x}) = \prod_{k=1}^{K}
     q_\phi(\vb{z}_k \mid \vb{x})\, q_\phi(c_k \mid \vb{x}),
@@ -234,19 +234,10 @@ about this mean, with the posterior variance frozen to the prior's $\sigma_0^2$,
     \mathbb{I}\right),
 \end{equation}
 or, using the reparameterisation trick,
-\begin{equation*} \label{eq:methods:proba:reparam-z}
+\begin{equation*}
     \vb{z}_{k} = \vb{\mu}_{k}(\vb{x}) + \sigma_{0} \vb{\epsilon}, \qquad
     \vb{\epsilon} \sim \mathcal{N}(\vb{0}, \mathbb{I}).
 \end{equation*}
-% \begin{equation} \label{eq:methods:proba:posterior-z}
-%     q_\phi\left(\vb{z}_k \mid \vb{x}\right) =
-%     \mathcal{N}\left(\vb{z}_k;\, \vb{\mu}_k(\vb{x}),\,
-%     \sigma_0^2 \mathbb{I}\right), \quad
-%     \vb{z}_k = \vb{\mu}_k(\vb{x}) + \sigma_0 \vb{\epsilon},
-%     \quad \vb{\epsilon} \sim \mathcal{N}(\vb{0}, \mathbb{I}),
-% \end{equation}
-% so the encoder's only task is to predict the mean, and the sample is
-% reparameterisable.
 
 The activation probability is not predicted by a separate head but
 \textit{derived} from the predicted embedding location $\vb{\mu}_k(\vb{x})$: a
@@ -294,11 +285,12 @@ sigmoid tends to the indicator and $\tilde{c}_k$ recovers an exact $\{0, 1\}$
 Bernoulli sample, while a larger $\tau_g$ gives smoother values that keep the
 gradient well-behaved. At inference the stochastic draw is dropped and both
 latents are replaced by their posterior means --- the embedding $\vb{z}_{k}$ by
-$\vb{\mu}_k$ and the mask $c_{k}$ by its expectation $\alpha_k(\vb{x})$. The gate
-is then nominally soft, but in practice effectively hard: the binarisation
-pressure of the training objective (\cref{sec:methods:model:loss}) drives the
-learned activations to a strongly bimodal distribution concentrated near $0$ and
-$1$.
+$\vb{\mu}_k$ and the mask $c_{k}$ by its expectation $\alpha_k(\vb{x})$. The
+gate is then nominally soft, but in practice effectively hard: the binarisation
+pressure of the training objective
+(\cref{sec:methods:model:loss}) drives
+the learned activations to a strongly bimodal distribution concentrated near $0$
+and $1$.
 
 One subtlety remains. The embedding posterior of
 \cref{eq:methods:proba:posterior-z} does not depend on the
@@ -400,7 +392,7 @@ stability rather than mathematical necessity.
     free, letting the model spend many concepts on a complex input and few on a
     simple one, while still keeping any single concept from firing everywhere or
     dying out across the dataset without the need of an auxiliary loss to revive
-    ded latents.
+    dead latents.
 
     \paragraph{Entropy binarisation} Batch-wise sparsity does not by itself
     force per-sample decisions to be sharp: activations clustered around $\pi$

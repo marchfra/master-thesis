@@ -922,8 +922,9 @@ supports the applications described below.
     circuits \cite{dunefskyTranscodersFindInterpretable2024,
     ameisenCircuitTracingRevealing2025}.
 
-\subsubsection{Evaluation} \label{sec:background:ae:sae:evaluation} Assessing
-the quality of learned features is non-trivial, as interpretability is
+\subsubsection{Evaluation} \label{sec:background:ae:sae:evaluation}
+
+Assessing the quality of learned features is non-trivial, as interpretability is
 inherently subjective. Several proxy metrics are used in practice.
 \textit{Reconstruction quality} is judged by its effect on the model rather than
 by the raw reconstruction error: the \ac{SAE}'s output is substituted for the
@@ -963,11 +964,10 @@ interpretable decomposition only few --- and the architectures of
 work within it. \Acp{CEM} are the exception already met: by giving each concept
 a vector embedding rather than a scalar, they recover the capacity a scalar
 bottleneck gives up. \Cref{sec:methods:model}
-carries that idea into the unsupervised
-setting of activation decomposition --- combining the vector-valued concepts of
-\acp{CEM} with the variational inference and discrete latents developed in
-\cref{sec:background:ae} --- and derives the
-resulting model from first principles.
+carries that idea into the unsupervised setting of activation decomposition ---
+combining the vector-valued concepts of \acp{CEM} with the variational inference
+and discrete latents developed in \cref{sec:background:ae}
+--- and derives the resulting model from first principles.
 
 
 %*****************************************
