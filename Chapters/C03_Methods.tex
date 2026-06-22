@@ -307,7 +307,7 @@ embeddings derived in \cref{sec:methods:model:loss}
 is too weak to drive them to zero, because the reconstruction gradient keeps
 inflating them. It also exposes the mask $\vb{c}$ as a clean handle for
 concept-level interventions
-(\cref{sec:methods:model:arch}).
+(\cref{sec:methods:model:interventions}).
 
 \subsubsection{Similarity} \label{sec:methods:model:proba:sim}
 The gate of \cref{eq:methods:proba:alpha} is written for a
@@ -449,11 +449,53 @@ reconstruction error, the batch-wise sparsity \ac{KL}, the entropy binarisation
 penalty, and the conditional-embedding \ac{KL} (active concepts pulled to their
 prototype, inactive ones to the origin).
 
-\subsection{Architectures} \label{sec:methods:model:arch}
-% TODO: encoder/decoder instantiations (shallow/linear/MLP); stacked vs summed
-% topologies (stacked = headline); interventions (formulation supports them;
-% evaluation deferred to future work); decoder orthogonality (formulated then
-% dropped as empirically negligible).
+% \subsection{Architectures} \label{sec:methods:model:arch}
+%
+% The probabilistic formulation of \cref{sec:methods:model:proba}
+% and the objective of \cref{sec:methods:model:loss}
+% fix the \ac{VAEE} up to two choices left deliberately open: the functional form
+% of the encoder $f_\phi$ and decoder $g_\theta$, and the way the active
+% embeddings are arranged before the decoder reads them. This section sets out the
+% instantiations used, and closes on a capability the explicit gate makes
+% available --- concept-level intervention.
+%
+% \paragraph{Encoder and decoder} The encoder $f_\phi$ maps the input $\vb{x} \in
+% \R^{n}$ to the $K$ concept means, producing the stack $[\vb{\mu}_1(\vb{x}),
+% \dots, \vb{\mu}_K(\vb{x})] \in \R^{Kd}$ from which the embedding posteriors of
+% \cref{eq:methods:proba:posterior-z} and the gates of
+% \cref{eq:methods:proba:alpha} are formed; the decoder
+% $g_\theta$ maps the gated embeddings back to $\R^{n}$. Neither map is
+% constrained by the generative model, leaving their depth a free design choice.
+% The lightest instantiation --- a single linear layer followed by \iac{GELU}
+% nonlinearity for the encoder and a purely linear decoder --- is used throughout,
+% with deeper multi-layer alternatives for either map considered in the ablations
+% of \cref{sec:exp:results:ablation}. A linear
+% decoder is the natural default: it keeps the reconstruction a transparent linear
+% read-out of the concept embeddings, mirroring the dictionary decoder of
+% \iac{SAE}
+% (\cref{sec:background:ae:sae}) and
+% making each concept's contribution to the output a fixed set of directions in
+% activation space.
+
+% \paragraph{Latent topology} The gated decode of \cref{eq:methods:proba:gate}
+% leaves open how the $K$ gated embeddings $c_k \vb{z}_k$ are
+% arranged before the decoder. Two topologies are available. The \textit{stacked}
+% topology --- the form written in \cref{eq:methods:proba:gate}
+% --- concatenates them into a single vector $\vb{c} \odot
+% \vb{z} \in \R^{Kd}$, giving each concept its own coordinates: with a linear
+% decoder the weight matrix partitions block by block, $W = [W_1, \dots, W_K]$
+% (\cref{sec:methods:model:loss}), so the
+% concepts occupy disjoint output channels and cannot interfere. The
+% \textit{summed} topology instead collapses them into a single $d$-dimensional
+% vector $\sum_{k} c_k \vb{z}_k \in \R^{d}$, in which the concepts share one
+% coordinate system and the decoder sees their superposition
+% (\cref{sec:background:ae:sae}). Summing
+% scales representational capacity combinatorially in the active set, but at the
+% risk of destructive interference between overlapping embeddings, which the
+% decoder must then learn to un-mix. The \ac{VAEE} uses the stacked topology
+% throughout, trading that combinatorial capacity for the cleaner per-concept
+% structure; the summed alternative is not pursued here
+% (\cref{sec:exp:results:ablation}).
 
 \section*{Conclusions}
 % TODO: bridge to C04 (Experiments).

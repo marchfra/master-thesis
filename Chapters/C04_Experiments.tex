@@ -202,7 +202,7 @@ data, and concepts are representative features by definition.
 Unless stated otherwise, the \ac{VAEE} uses the shallow configuration of
 \cref{sec:exp:results:ablation}: a single
 linear-plus-\acs{GELU} layer for the encoder $f_\phi$ and a linear decoder
-$g_\theta$, the stacked topology, and cosine similarity for the gate
+$g_\theta$, with cosine similarity for the gate
 (\cref{eq:methods:proba:sim}). The embedding posterior
 variance is fixed at $\sigma_0 = 0.1$ during training; at inference time the
 sampling is dropped and the embedding $\vb{z}_{k}$ is set to its mean value
@@ -239,7 +239,7 @@ plots validation \ac{MSE} against the number of active concepts $\kappa$,
 sweeping each model's sparsity dial. The models are matched on parameter count
 (\cref{sec:exp:baselines}). Across the swept range
 every \ac{VAEE} frontier lies below every \ac{SAE} frontier: at any given
-concept count it reconstructs more faithfully, it matches the best \ac{SAE}'s
+concept count it reconstructs more faithfully, matching the best \ac{SAE}'s
 reconstruction using roughly an order of magnitude fewer active concepts, and at
 the dense end of its sweep it reaches a fidelity no \ac{SAE} attains, even at $k
 = 128$. A few vector-valued concepts carry reconstruction further than many more
