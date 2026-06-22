@@ -522,6 +522,37 @@ prototype, inactive ones to the origin).
 % structure; the summed alternative is not pursued here
 % (\cref{sec:exp:results:ablation}).
 
+\subsection{Concept Interventions} \label{sec:methods:model:interventions}
+
+Holding the embeddings in gated slots makes the mask
+$\vb{c}$ a direct handle on the decomposition, and so a means of intervening on
+it. Two operations follow immediately. \textit{Removal} sets $c_k \leftarrow 0$,
+forcing slot $k$ to contribute exactly nothing to the reconstruction regardless
+of its embedding. \textit{Insertion} sets $c_k \leftarrow 1$, which also
+requires a value for $\vb{z}_k$: the encoder's $\vb{\mu}_k(\vb{x})$ is
+unsuitable, since for a concept judged inactive the conditional-embedding term
+has pulled it toward the origin rather than the prototype
+(\cref{sec:methods:model:loss}). The
+value consistent with the generative model under $c_k = 1$ is a draw from the
+active prior $\vb{z}_k \sim \mathcal{N}(\vb{h}_k, \sigma_0^2 \mathbb{I})$, or,
+where a reproducible edit is needed, its mean $\vb{z}_k \leftarrow \vb{h}_k$.
+
+This is where a sparse, vector-valued code offers an advantage over a scalar
+dictionary. Editing \iac{SAE} reconstruction means adjusting the many features
+active on a token at once, and moving several scalar coefficients together risks
+pushing the reconstruction off the data manifold, the failure that motivates
+the architecture (\cref{sec:methods:aim}); the
+\ac{VAEE} instead edits one prototype-anchored concept at a time, an edit that
+is both localised and, because it targets a learned mode of the prior,
+in-distribution by construction. The intervention is approximate in one respect:
+the remaining slots $j \ne k$ keep their encoded means $\vb{\mu}_j(\vb{x})$
+rather than being recomputed under the edit, a simplification it shares with
+concept-bottleneck interventions \citep{kohConceptBottleneckModels2020}. The
+construction supports these operations, but evaluating them --- whether a
+single-concept edit produces a clean, predictable change in the decoded
+activation --- is left to future work
+(\cref{sec:conclusions:future}).
+
 \section*{Conclusions}
 % TODO: bridge to C04 (Experiments).
 
