@@ -32,7 +32,7 @@ familiar from \acp{CEM}
 (\cref{sec:background:xai:c-xai}), which
 replace the scalar concept bottleneck of \iac{CBM} with per-concept embeddings
 and so recover the accuracy a narrow bottleneck gives up
-\citep{espinosazarlengaConceptEmbeddingModels2022}. \Acp{CEM}, however are
+\citep{espinosazarlengaConceptEmbeddingModels2022}. \Acp{CEM}, however, are
 supervised, trained against concept labels. The aim here is to carry the
 concepts-as-vectors idea into the \textit{unsupervised} setting of activation
 decomposition, and to do so from first principles, defining a probabilistic
@@ -58,16 +58,16 @@ variational inference
 (\cref{sec:background:ae:vae});
 and from \acp{VQVAE} it takes the idea of a discrete latent over a learned
 dictionary of vectors
-(\cref{sec:background:ae:vae:arch}). The two differ in what is made discrete:
-\iac{VQVAE} quantises each input to a single codebook entry, so its latent is a
-categorical index and the vector passed to the decoder is one of finitely many.
-The \ac{VAEE} instead keeps its embeddings continuous, its only discrete latent
-being the binary mask $\vb{c}$, which decides \textit{which} prototype-anchored
-concepts are active rather than what their embeddings are. It is in this sense a
-probabilistic, multilabel counterpart to vector quantisation: independent
-Bernoulli gates over continuous embeddings in place of a single hard codebook
-lookup, keeping the expressivity of a continuous latent while holding the active
-set sparse.
+(\cref{sec:background:ae:vae:arch}). The
+two differ in what is made discrete: \iac{VQVAE} quantises each input to a
+single codebook entry, so its latent is a categorical index and the vector
+passed to the decoder is one of finitely many. The \ac{VAEE} instead keeps its
+embeddings continuous, its only discrete latent being the binary mask $\vb{c}$,
+which decides \textit{which} prototype-anchored concepts are active rather than
+what their embeddings are. It is in this sense a probabilistic, multilabel
+counterpart to vector quantisation: independent Bernoulli gates over continuous
+embeddings in place of a single hard codebook lookup, keeping the expressivity
+of a continuous latent while holding the active set sparse.
 % Nothing in this construction is specific to language models --- the
 % vector-concept primitive applies wherever a scalar concept code trades
 % capacity for simplicity --- but this thesis develops and demonstrates it for
@@ -210,16 +210,16 @@ embeddings.
 \end{figure}
 
 \subsubsection{Inference} \label{sec:methods:model:proba:inference}
-Exact inference is intractable: it would require marginalizing over the
+Exact inference is intractable: it would require marginalising over the
 continuous embeddings $\vb{z}$ and summing over all $2^K$ possible discrete
-masks configurations for $\vb{c}$:
+mask configurations for $\vb{c}$:
 \begin{equation*}
     p(\vb{x}) = \sum_{\vb{c}} \int p(\vb{x}, \vb{c}, \vb{z}) \dd{\vb{z}}.
 \end{equation*}
 The \ac{VAEE} instead uses amortised variational inference
-(\cref{sec:background:ae:vae}), approximating the true posterior with a
-\textit{mean-field} family that factorises over both latents and across
-concepts,
+(\cref{sec:background:ae:vae}),
+approximating the true posterior with a \textit{mean-field} family that
+factorises over both latents and across concepts,
 \begin{equation} \label{eq:methods:proba:posterior}
     q_\phi(\vb{c}, \vb{z} \mid \vb{x}) = \prod_{k=1}^{K}
     q_\phi(\vb{z}_k \mid \vb{x})\, q_\phi(c_k \mid \vb{x}),
@@ -234,19 +234,10 @@ about this mean, with the posterior variance frozen to the prior's $\sigma_0^2$,
     \mathbb{I}\right),
 \end{equation}
 or, using the reparameterisation trick,
-\begin{equation*} \label{eq:methods:proba:reparam-z}
+\begin{equation*}
     \vb{z}_{k} = \vb{\mu}_{k}(\vb{x}) + \sigma_{0} \vb{\epsilon}, \qquad
     \vb{\epsilon} \sim \mathcal{N}(\vb{0}, \mathbb{I}).
 \end{equation*}
-% \begin{equation} \label{eq:methods:proba:posterior-z}
-%     q_\phi\left(\vb{z}_k \mid \vb{x}\right) =
-%     \mathcal{N}\left(\vb{z}_k;\, \vb{\mu}_k(\vb{x}),\,
-%     \sigma_0^2 \mathbb{I}\right), \quad
-%     \vb{z}_k = \vb{\mu}_k(\vb{x}) + \sigma_0 \vb{\epsilon},
-%     \quad \vb{\epsilon} \sim \mathcal{N}(\vb{0}, \mathbb{I}),
-% \end{equation}
-% so the encoder's only task is to predict the mean, and the sample is
-% reparameterisable.
 
 The activation probability is not predicted by a separate head but
 \textit{derived} from the predicted embedding location $\vb{\mu}_k(\vb{x})$: a
@@ -294,11 +285,12 @@ sigmoid tends to the indicator and $\tilde{c}_k$ recovers an exact $\{0, 1\}$
 Bernoulli sample, while a larger $\tau_g$ gives smoother values that keep the
 gradient well-behaved. At inference the stochastic draw is dropped and both
 latents are replaced by their posterior means --- the embedding $\vb{z}_{k}$ by
-$\vb{\mu}_k$ and the mask $c_{k}$ by its expectation $\alpha_k(\vb{x})$. The gate
-is then nominally soft, but in practice effectively hard: the binarisation
-pressure of the training objective (\cref{sec:methods:model:loss}) drives the
-learned activations to a strongly bimodal distribution concentrated near $0$ and
-$1$.
+$\vb{\mu}_k$ and the mask $c_{k}$ by its expectation $\alpha_k(\vb{x})$. The
+gate is then nominally soft, but in practice effectively hard: the binarisation
+pressure of the training objective
+(\cref{sec:methods:model:loss}) drives
+the learned activations to a strongly bimodal distribution concentrated near $0$
+and $1$.
 
 One subtlety remains. The embedding posterior of
 \cref{eq:methods:proba:posterior-z} does not depend on the
@@ -315,7 +307,7 @@ embeddings derived in \cref{sec:methods:model:loss}
 is too weak to drive them to zero, because the reconstruction gradient keeps
 inflating them. It also exposes the mask $\vb{c}$ as a clean handle for
 concept-level interventions
-(\cref{sec:methods:model:arch}).
+(\cref{sec:methods:model:interventions}).
 
 \subsubsection{Similarity} \label{sec:methods:model:proba:sim}
 The gate of \cref{eq:methods:proba:alpha} is written for a
@@ -400,7 +392,7 @@ stability rather than mathematical necessity.
     free, letting the model spend many concepts on a complex input and few on a
     simple one, while still keeping any single concept from firing everywhere or
     dying out across the dataset without the need of an auxiliary loss to revive
-    ded latents.
+    dead latents.
 
     \paragraph{Entropy binarisation} Batch-wise sparsity does not by itself
     force per-sample decisions to be sharp: activations clustered around $\pi$
@@ -426,9 +418,34 @@ stability rather than mathematical necessity.
     shortcut, so the activation is shaped only by the reconstruction and
     sparsity terms.
 
-    % TODO: mention that it was formulated but later dropped as the ablation
-    % study proved its effect was negligible.
-    \paragraph{Decoder orthogonality}
+    \paragraph{Decoder orthogonality} One further term was considered but left
+    out of the final objective. With a linear decoder the reconstruction reads
+    the concept embeddings block by block: partitioning the decoder weight
+    matrix as $W = [W_1, \dots, W_K]$, with $W_k \in \R^{n \times d}$ the block
+    acting on concept $k$, the gated decode of
+    \cref{eq:methods:proba:gate} becomes
+    \begin{equation*}
+        \hat{\vb{x}} = W \left(\vb{c} \odot \vb{z}\right) = \sum_{k=1}^{K} c_k\,
+        W_k \vb{z}_k,
+    \end{equation*}
+    so each $W_k$ is the reconstruction basis the decoder assigns to its
+    concept. To stop these bases from duplicating one another --- the
+    feature-splitting that wastes capacity in an over-complete dictionary
+    (\cref{sec:background:ae:sae}) ---
+    a Frobenius orthogonality penalty between the blocks can be added, averaged
+    over the $\binom{K}{2}$ pairs so that its scale is independent of $K$,
+    \begin{equation*}
+        \mathcal{L}_{\mathrm{ortho}} = \frac{\lambda_{\mathrm{ortho}}}{\binom{K}{2}}
+        \sum_{i < j} \frac{\norm{W_i^{\top} W_j}_F^2}{\norm{W_i}_F^2\,
+        \norm{W_j}_F^2}.
+    \end{equation*}
+    From a Bayesian standpoint this is a maximum-a-posteriori term: it
+    corresponds to a structural prior over the decoder parameters that favours
+    mutually orthogonal concept bases, penalising any pair that maps to
+    overlapping directions of the activation space. The term is omitted from the
+    objective of \cref{eq:methods:loss:objective}, its
+    contribution proven empirically negligible
+    (\cref{sec:exp:results:ablation}).
 
     \paragraph{Scale-invariant reductions} Each term is averaged over its
     dimensions --- the batch $B$, the concepts $K$, and the relevant vector
@@ -457,11 +474,84 @@ reconstruction error, the batch-wise sparsity \ac{KL}, the entropy binarisation
 penalty, and the conditional-embedding \ac{KL} (active concepts pulled to their
 prototype, inactive ones to the origin).
 
-\subsection{Architectures} \label{sec:methods:model:arch}
-% TODO: encoder/decoder instantiations (shallow/linear/MLP); stacked vs summed
-% topologies (stacked = headline); interventions (formulation supports them;
-% evaluation deferred to future work); decoder orthogonality (formulated then
-% dropped as empirically negligible).
+% \subsection{Architectures} \label{sec:methods:model:arch}
+%
+% The probabilistic formulation of \cref{sec:methods:model:proba}
+% and the objective of \cref{sec:methods:model:loss}
+% fix the \ac{VAEE} up to two choices left deliberately open: the functional form
+% of the encoder $f_\phi$ and decoder $g_\theta$, and the way the active
+% embeddings are arranged before the decoder reads them. This section sets out the
+% instantiations used, and closes on a capability the explicit gate makes
+% available --- concept-level intervention.
+%
+% \paragraph{Encoder and decoder} The encoder $f_\phi$ maps the input $\vb{x} \in
+% \R^{n}$ to the $K$ concept means, producing the stack $[\vb{\mu}_1(\vb{x}),
+% \dots, \vb{\mu}_K(\vb{x})] \in \R^{Kd}$ from which the embedding posteriors of
+% \cref{eq:methods:proba:posterior-z} and the gates of
+% \cref{eq:methods:proba:alpha} are formed; the decoder
+% $g_\theta$ maps the gated embeddings back to $\R^{n}$. Neither map is
+% constrained by the generative model, leaving their depth a free design choice.
+% The lightest instantiation --- a single linear layer followed by \iac{GELU}
+% nonlinearity for the encoder and a purely linear decoder --- is used throughout,
+% with deeper multi-layer alternatives for either map considered in the ablations
+% of \cref{sec:exp:results:ablation}. A linear
+% decoder is the natural default: it keeps the reconstruction a transparent linear
+% read-out of the concept embeddings, mirroring the dictionary decoder of
+% \iac{SAE}
+% (\cref{sec:background:ae:sae}) and
+% making each concept's contribution to the output a fixed set of directions in
+% activation space.
+
+% \paragraph{Latent topology} The gated decode of \cref{eq:methods:proba:gate}
+% leaves open how the $K$ gated embeddings $c_k \vb{z}_k$ are
+% arranged before the decoder. Two topologies are available. The \textit{stacked}
+% topology --- the form written in \cref{eq:methods:proba:gate}
+% --- concatenates them into a single vector $\vb{c} \odot
+% \vb{z} \in \R^{Kd}$, giving each concept its own coordinates: with a linear
+% decoder the weight matrix partitions block by block, $W = [W_1, \dots, W_K]$
+% (\cref{sec:methods:model:loss}), so the
+% concepts occupy disjoint output channels and cannot interfere. The
+% \textit{summed} topology instead collapses them into a single $d$-dimensional
+% vector $\sum_{k} c_k \vb{z}_k \in \R^{d}$, in which the concepts share one
+% coordinate system and the decoder sees their superposition
+% (\cref{sec:background:ae:sae}). Summing
+% scales representational capacity combinatorially in the active set, but at the
+% risk of destructive interference between overlapping embeddings, which the
+% decoder must then learn to un-mix. The \ac{VAEE} uses the stacked topology
+% throughout, trading that combinatorial capacity for the cleaner per-concept
+% structure; the summed alternative is not pursued here
+% (\cref{sec:exp:results:ablation}).
+
+\subsection{Concept Interventions} \label{sec:methods:model:interventions}
+
+Holding the embeddings in gated slots makes the mask
+$\vb{c}$ a direct handle on the decomposition, and so a means of intervening on
+it. Two operations follow immediately. \textit{Removal} sets $c_k \leftarrow 0$,
+forcing slot $k$ to contribute exactly nothing to the reconstruction regardless
+of its embedding. \textit{Insertion} sets $c_k \leftarrow 1$, which also
+requires a value for $\vb{z}_k$: the encoder's $\vb{\mu}_k(\vb{x})$ is
+unsuitable, since for a concept judged inactive the conditional-embedding term
+has pulled it toward the origin rather than the prototype
+(\cref{sec:methods:model:loss}). The
+value consistent with the generative model under $c_k = 1$ is a draw from the
+active prior $\vb{z}_k \sim \mathcal{N}(\vb{h}_k, \sigma_0^2 \mathbb{I})$, or,
+where a reproducible edit is needed, its mean $\vb{z}_k \leftarrow \vb{h}_k$.
+
+This is where a sparse, vector-valued code offers an advantage over a scalar
+dictionary. Editing \iac{SAE} reconstruction means adjusting the many features
+active on a token at once, and moving several scalar coefficients together risks
+pushing the reconstruction off the data manifold, the failure that motivates
+the architecture (\cref{sec:methods:aim}); the
+\ac{VAEE} instead edits one prototype-anchored concept at a time, an edit that
+is both localised and, because it targets a learned mode of the prior,
+in-distribution by construction. The intervention is approximate in one respect:
+the remaining slots $j \ne k$ keep their encoded means $\vb{\mu}_j(\vb{x})$
+rather than being recomputed under the edit, a simplification it shares with
+concept-bottleneck interventions \citep{kohConceptBottleneckModels2020}. The
+construction supports these operations, but evaluating them --- whether a
+single-concept edit produces a clean, predictable change in the decoded
+activation --- is left to future work
+(\cref{sec:conclusions:future}).
 
 \section*{Conclusions}
 % TODO: bridge to C04 (Experiments).
