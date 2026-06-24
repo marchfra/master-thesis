@@ -119,9 +119,12 @@ model --- the \ac{CE} loss and perplexity of the patched model --- are not
 reported for this comparison; \ac{MSE} is the only reconstruction metric on
 which both models are evaluated here.}
 
-Evaluating reconstruction is important, as a model that has low reconstruction
-error is a model that has learned \textit{representative} features of the input
-data, and concepts are representative features by definition.
+Reconstruction fidelity matters because it measures how much of the activation
+the concept code actually captures: a decomposition that reconstructs its input
+poorly has discarded part of the signal it was meant to explain, so any concept
+read off it describes the model only in part. Low reconstruction error is a
+necessary --- if not sufficient --- condition for the recovered concepts to be
+faithful to the representation they decompose.
 
 \subsection{Sparsity}
 
@@ -414,7 +417,7 @@ minority of legible concepts among a majority of uninterpretable units.
         \bottomrule
     \end{tabularx}
     \caption[VAEE concept dictionary]{
-        Three concepts from the $\kappa = 8$, $128 \times 64$ \ac{VAEE}
+        Three concepts from the $\tilde{\kappa} = 8$, $128 \times 64$ \ac{VAEE}
         dictionary, each shown with a few of its strongest activations and the
         activating token in bold. C6 and C48 are semantically coherent; C123,
         typical of a large share of the dictionary, is not really interpretable
@@ -505,7 +508,8 @@ perfectly even: the \ac{VAEE}'s meaningful concepts come from a dictionary of
 $128$, the \ac{SAE}'s from one of $8\,192$, so a comparable number of usable
 units is recovered from far fewer of them. On this evidence the \ac{VAEE}
 neither clearly improves nor clearly degrades interpretability relative to the
-\ac{SAE}.
+\ac{SAE}. A larger, uncurated sample of both dictionaries --- 25 concepts each,
+drawn at random --- is reproduced in \cref{ch:app:concept-dict}.
 
 Whether the \ac{VAEE}'s vector concepts convey richer interpretability than
 scalar features is therefore left open --- a question for a larger and more
@@ -650,7 +654,7 @@ small and thematically narrow \ac{SST2} offers too little variety for a rich
 concept vocabulary to form. The ablations
 (\cref{sec:exp:results:ablation}) identify
 the embedding width $d$ as the architecture's decisive degree of freedom and
-show that the shallow configuration outperform all explored variants. Whether
+show that the shallow configuration outperforms all explored variants. Whether
 vector concepts afford richer interpretability than scalar features is a
 question a larger corpus and a dedicated evaluation must settle --- taken up as
 future work in \cref{sec:conclusions:future}.

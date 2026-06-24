@@ -3,11 +3,69 @@
 %************************************************
 
 \section{Motivation} \label{sec:intro:motivation}
-% \lipsum[1-3]
+
+\Acp{LLM} are remarkably capable, yet how they arrive at their
+outputs remains largely opaque: their behaviour emerges from billions of
+parameters and high-dimensional activations that resist direct inspection.
+\acl{MI} sets out to make this computation legible
+by reading it off the network's internal activations rather than treating the
+model as a black box \citep{olahZoomIntroductionCircuits2020,
+elhageMathematicalFrameworkTransformer2021}. A central difficulty is that these
+activations are dense and polysemantic --- a single direction in activation
+space takes part in many unrelated computations --- so the first task is to
+decompose them into units a person can reason about.
+
+Concept-based methods take up this task by describing a model's computation in
+terms of human-meaningful \textit{concepts}. In \iacl{CBM} the network is forced
+through a bottleneck whose units stand for named concepts
+\citep{kohConceptBottleneckModels2020}; in \iac{SAE} an overcomplete dictionary
+is learned so that each activation becomes a sparse combination of concept atoms
+\citep{brickenMonosemanticityDecomposingLanguage2023,
+templetonScalingMonosemanticityExtracting}. What these methods share is also
+their central limitation: each concept is encoded as a single scalar coefficient
+and can vary only in magnitude. A scalar carries little information, so
+reconstructing an activation faithfully tends to require many concepts active at
+once --- the sparsity--reconstruction trade-off that runs through the \ac{SAE}
+literature, where a faithful reconstruction needs many active concepts but an
+interpretable decomposition only a few.
+
+This thesis introduces the \ac{VAEE}, a model that lifts this restriction by
+representing each concept as a learned vector embedding rather than a scalar. The
+encoder maps an input to one embedding per concept; a learned prototype for each
+concept decides, by similarity, which concepts are active; and the input is
+reconstructed from the stack of the active embeddings. Giving a concept a vector
+rather than a scalar restores the representational capacity a scalar bottleneck
+gives up --- the move that \aclp{CEM} make in the supervised setting
+\citep{espinosazarlengaConceptEmbeddingModels2022} --- and the \ac{VAEE} carries
+it into the unsupervised decomposition of activations, combining it with the
+variational inference of \acp{VAE} and the discrete latents of \acp{VQVAE}. The
+model is derived from first principles rather than assembled by analogy, and that
+derivation is the contribution of this thesis.
+
+The architecture is demonstrated on one application, the decomposition of
+\ac{LLM} activations, where it is compared against a TopK \ac{SAE} on the same
+representations. The interpretability of the concepts it recovers, their use for
+steering model behaviour, and its wider application to representation learning
+are not settled here; they are the frontier the architecture opens up, treated
+as directions for future work rather than claims this thesis makes.
 
 \section{Thesis Structure} \label{sec:intro:structure}
-% \lipsum[1]
 
+The remainder of this thesis is organised as follows. \Cref{ch:background}
+assembles the background the
+contribution builds on: the transformer and the residual-stream view of
+\acp{LLM}, the development of explainability from attribution to concepts, and
+the autoencoder family from \acp{VAE} and \acp{VQVAE} to \acp{SAE}.
+\Cref{ch:methods} develops the \ac{VAEE}, deriving it from
+first principles as a probabilistic generative model and presenting its training
+objective and concept interventions. \Cref{ch:exp}
+evaluates the model on the decomposition of \ac{LLM}
+activations against a parameter-matched TopK \ac{SAE}, reporting reconstruction,
+sparsity, the recovered concept dictionaries, and a set of ablations.
+\Cref{ch:conclusions} draws together the contributions
+and lays out the open directions.
+
+\acresetall
 
 %*****************************************
 %*****************************************

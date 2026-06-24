@@ -2,3 +2,462 @@
 \chapter{Concept Dictionaries} \label{ch:app:concept-dict}
 %************************************************
 
+The three concepts shown per model in \cref{sec:exp:results:qual}
+are curated to illustrate each dictionary's typical successes and failures. This
+appendix instead reproduces a \textit{random}, uncurated sample of 25 concepts
+from each of the same two models --- the $\tilde{\kappa} = 8$, $128 \times 64$
+\ac{VAEE} and the $k = 8$, $m = 8\,192$ TopK \ac{SAE} --- so that the population
+claims of \cref{sec:exp:results:qual}
+can be checked directly rather than taken on the strength of a hand-picked few.
+Each concept is shown with a few of its strongest activations and the activating
+token in bold; the firing rate is the fraction of validation tokens on which the
+concept is active.
+
+% NOTE (view convention — keep consistent with C04 tab:exp:qual): VAEE rows are
+% transcribed from the NON-UNIQUE concept-dictionary view
+% (VAEE-128x64_val_cd_non_unique.html), SAE rows from the UNIQUE view
+% (TopK-8-SAE-8192_val_cd_unique.html). The unique/non-unique distinction is
+% deliberately NOT named in the prose (the main text never introduced it); rows
+% are just "strongest activations". See .claude memory cd-view-per-model-unnamed.
+% Concepts are a random (seed 42), uncurated sample excluding the ones already
+% shown in C04. Fill the blank \dots rows by hand from the HTML, bolding the
+% activating token as \textbf{ word} (leading space inside braces, as in C04);
+% add a short label between --- and \hfill for coherent concepts, leave blank
+% for opaque ones (the blanks are the evidence for the population claims).
+
+% Concept numbers to fill (source HTML → rows):
+%   - VAEE (VAEE-128x64_val_cd_non_unique.html): C3, C9, C18, C21, C25, C26,
+%       C29, C31, C33, C49, C71, C72, C75, C76, C81, C83, C88, C97, C98, C101,
+%       C102, C108, C113, C117, C120
+%   - SAE (TopK-8-SAE-8192_val_cd_unique.html): C68, C678, C1006, C1514, C2082,
+%       C2115, C2840, C3393, C3716, C3915, C4164, C4173, C4526, C4527, C4551,
+%       C4679, C5613, C5811, C6249, C6331, C6369, C6817, C7079, C7134, C7728
+%
+%   When filling: transcribe token‑view rows as \dots\ context\textbf{ word}
+%   context \dots\\ (leading space inside \textbf as in C04); put a short label
+%   between --- and \hfill for coherent concepts, leave it blank for opaque ones
+%   (the blanks are the evidence).
+
+\section{VAEE concept dictionary}
+
+\footnotesize
+% uv run experiments/concept_training/generate_cd_table.py experiments/concept_training/outputs/thesis/frontier/VAEE-128x64-20260620_045340/VAEE-128x64_val_cd_non_unique.html -n 5 -c "3,9,18,21,25,26,29,31,33,49,71,72,75,76,81,83,88,97,98,101,102,108,113,117,120" | pbcopy
+
+\begin{longtable}{@{}>{\ttfamily}p{\linewidth}@{}}
+    \toprule
+    \endhead
+    {\normalfont\textbf{C3} \hfill (firing rate 10.0\%)}\\
+    \cmidrule(){1-1}
+    \dots\ generate cheap holly\textbf{wood} tension .\\
+    \dots\ superstitious\textbf{ curse} on chain letters and \dots\\
+    \dots\ cheap hollywood\textbf{ tension} .\\
+    \dots\ substantial collective fear of\textbf{ nuclear} holocaust to \dots\\
+    \dots\ its our substantial collective\textbf{ fear} of nuclear holoca \dots\\
+    \addlinespace
+    {\normalfont\textbf{C9} \hfill (firing rate 9.1\%)}\\
+    \cmidrule(){1-1}
+    harrison\textbf{ '}s flowers puts its \dots\\
+    \textbf{k}-19 explo \dots\\
+    k\textbf{-}19 exploits \dots\\
+    \textbf{one} long string of cl \dots\\
+    k-\textbf{1}9 exploits our \dots\\
+    \addlinespace
+    {\normalfont\textbf{C18} \hfill (firing rate 9.5\%)}\\
+    \cmidrule(){1-1}
+    \dots\ ust to generate cheap\textbf{ hol}lywood tension .\\
+    \dots\ ering clear of knee\textbf{-}jerk reactions and \dots\\
+    \dots\ steering clear of\textbf{ knee}-jerk reactions \dots\\
+    \textbf{sel}dom has a movie \dots\\
+    \dots\ funny , but\textbf{ down}right repellent \dots\\
+    \addlinespace
+    {\normalfont\textbf{C21} \hfill (firing rate 10.4\%)}\\
+    \cmidrule(){1-1}
+    \dots\ istic performance speaks volumes\textbf{ more} truth than any ` \dots\\
+    an\textbf{ effectively} creepy , fear \dots\\
+    \dots\ an effectively creepy\textbf{ ,} fear-induc \dots\\
+    \dots\ s played in the\textbf{ most} straight-faced fashion \dots\\
+    \dots\ -lrb-\textbf{ not} fear-reducing \dots\\
+    \addlinespace
+    {\normalfont\textbf{C25} \hfill (firing rate 10.2\%)}\\
+    \cmidrule(){1-1}
+    \dots\ comedy about all there\textbf{ is} to love -- and \dots\\
+    \dots\ strangers actually shows may\textbf{ put} you off the idea \dots\\
+    \dots\ generate cheap holly\textbf{wood} tension .\\
+    \dots\ chain letters and actually\textbf{ applies} it .\\
+    \dots\ hudlin can\textbf{ make} it more than fit \dots\\
+    \addlinespace
+    {\normalfont\textbf{C26} \hfill (firing rate 9.8\%)}\\
+    \cmidrule(){1-1}
+    it\textbf{ '}s played in the \dots\\
+    \textbf{like} leon , it \dots\\
+    \dots\ get his shot at\textbf{ the} big time .\\
+    \dots\ his shot at the\textbf{ big} time .\\
+    \dots\ ' attempts to get\textbf{ his} shot at the big \dots\\
+    \addlinespace
+    {\normalfont\textbf{C29} \hfill (firing rate 9.2\%)}\\
+    \cmidrule(){1-1}
+    \dots\ -19 explo\textbf{its} our substantial collective fear \dots\\
+    \dots\ annabe comic ad\textbf{ams} ' attempts to get \dots\\
+    \dots\ about a guy who\textbf{ is} utterly unlikeable , \dots\\
+    \dots\ s three lead actress\textbf{es} .\\
+    it '\textbf{s} like every bad idea \dots\\
+    \addlinespace
+    {\normalfont\textbf{C31} \hfill (firing rate 9.3\%)}\\
+    \cmidrule(){1-1}
+    \dots\ fanciful touches\textbf{ ,} the film is a \dots\\
+    \dots\ ' entertaining film chron\textbf{icles} seinfeld 's \dots\\
+    \dots\ feld 's return\textbf{ to} stand-up comedy \dots\\
+    char\textbf{les} ' entertaining film chron \dots\\
+    \dots\ ific performances from them\textbf{ all} .\\
+    \addlinespace
+    {\normalfont\textbf{C33} \hfill (firing rate 9.6\%)}\\
+    \cmidrule(){1-1}
+    \dots\ iche so lacking in\textbf{ original}ity that if you \dots\\
+    \dots\ if you stripped away\textbf{ its} inspirations there would \dots\\
+    \dots\ ile long on am\textbf{iable} monkeys and worthy \dots\\
+    \dots\ keys and worthy environmental\textbf{ism} , jane good \dots\\
+    \dots\ monkeys and worthy\textbf{ environmental}ism , jane \dots\\
+    \addlinespace
+    {\normalfont\textbf{C49} \hfill (firing rate 10.0\%)}\\
+    \cmidrule(){1-1}
+    \dots\ for horror movie fan\textbf{at}ics .\\
+    \dots\ ese director hideo\textbf{ n}akata , who \dots\\
+    \dots\ japanese director\textbf{ h}ideo nakata \dots\\
+    \dots\ in grand , un\textbf{com}plicated fashion .\\
+    \dots\ in an unn\textbf{erv}ing way .\\
+    \addlinespace
+    {\normalfont\textbf{C71} \hfill (firing rate 10.9\%)}\\
+    \cmidrule(){1-1}
+    it\textbf{ '}s played in the \dots\\
+    \dots\ the superstit\textbf{ious} curse on chain letters \dots\\
+    \dots\ film from japan\textbf{ese} director hideo n \dots\\
+    \dots\ ocaust to generate\textbf{ cheap} hollywood tension \dots\\
+    an effectively creep\textbf{y} , fear-ind \dots\\
+    \addlinespace
+    {\normalfont\textbf{C72} \hfill (firing rate 9.6\%)}\\
+    \cmidrule(){1-1}
+    \dots\ s heart and following\textbf{ the} demands of tradition .\\
+    \dots\ n't smell\textbf{ this} turkey rotting \dots\\
+    involves\textbf{ two} mysteries -- one \dots\\
+    \dots\ british court '\textbf{s} extradition che \dots\\
+    \dots\ and the regime '\textbf{s} talking-head survivors \dots\\
+    \addlinespace
+    {\normalfont\textbf{C75} \hfill (firing rate 9.2\%)}\\
+    \cmidrule(){1-1}
+    it 's\textbf{ a} beautiful madness .\\
+    \textbf{one} long string of cl \dots\\
+    \textbf{part}way through watching this \dots\\
+    \textbf{you} really have to wonder \dots\\
+    part\textbf{way} through watching this sac \dots\\
+    \addlinespace
+    {\normalfont\textbf{C76} \hfill (firing rate 13.5\%)}\\
+    \cmidrule(){1-1}
+    \dots\ long string of cl\textbf{iches} .\\
+    \dots\ ever entertained the\textbf{ notion} of doing what the \dots\\
+    \dots\ heartstring untug\textbf{ged} and no liberal cause \dots\\
+    \dots\ cause unplund\textbf{ered} .\\
+    \dots\ vs. them ''\textbf{ opera} that leaves no heart \dots\\
+    \addlinespace
+    {\normalfont\textbf{C81} \hfill (firing rate 13.5\%)}\\
+    \cmidrule(){1-1}
+    \dots\ k-19\textbf{ explo}its our substantial collective \dots\\
+    \dots\ who takes the super\textbf{st}itious curse on \dots\\
+    \dots\ collective fear of nuclear\textbf{ hol}ocaust to generate \dots\\
+    \dots\ takes the superst\textbf{it}ious curse on chain \dots\\
+    \dots\ fear of nuclear hol\textbf{oca}ust to generate cheap \dots\\
+    \addlinespace
+    {\normalfont\textbf{C83} \hfill (firing rate 9.5\%)}\\
+    \cmidrule(){1-1}
+    a\textbf{ tender} , witty , \dots\\
+    \dots\ wannabe comic\textbf{ ad}ams ' attempts to \dots\\
+    \dots\ his shot at the\textbf{ big} time .\\
+    \dots\ itious curse on\textbf{ chain} letters and actually applies \dots\\
+    my big fat\textbf{ g}reek wedding uses stere \dots\\
+    \addlinespace
+    {\normalfont\textbf{C88} \hfill (firing rate 11.1\%)}\\
+    \cmidrule(){1-1}
+    \dots\ attempts to get his\textbf{ shot} at the big time \dots\\
+    \dots\ akata , who\textbf{ takes} the superstit \dots\\
+    \dots\ of nuclear holoca\textbf{ust} to generate cheap hol \dots\\
+    \dots\ its our substantial collective\textbf{ fear} of nuclear holoca \dots\\
+    \dots\ letters and actually applies\textbf{ it} .\\
+    \addlinespace
+    {\normalfont\textbf{C97} \hfill (firing rate 9.1\%)}\\
+    \cmidrule(){1-1}
+    \dots\ hollywood tension\textbf{ .} \\
+    \dots\ to get his shot\textbf{ at} the big time .\\
+    \dots\ get his shot at\textbf{ the} big time .\\
+    \dots\ i found myself confused\textbf{ when} it came time to \dots\\
+    \dots\ get to the heart\textbf{ of} the movie .\\
+    \addlinespace
+    {\normalfont\textbf{C98} \hfill (firing rate 9.9\%)}\\
+    \cmidrule(){1-1}
+    \dots\ 19 exploits\textbf{ our} substantial collective fear of \dots\\
+    \dots\ the superstit\textbf{ious} curse on chain letters \dots\\
+    \dots\ our substantial collective fear\textbf{ of} nuclear holocaust \dots\\
+    \dots\ 've ever entert\textbf{ained} the notion of doing \dots\\
+    one long string\textbf{ of} cliches .\\
+    \addlinespace
+    {\normalfont\textbf{C101} \hfill (firing rate 11.0\%)}\\
+    \cmidrule(){1-1}
+    \dots\ laced with humor\textbf{ and} a few fanc \dots\\
+    \dots\ chain letters and actually\textbf{ applies} it .\\
+    \dots\ ata , who takes\textbf{ the} superstitious \dots\\
+    \dots\ aced with humor and\textbf{ a} few fanciful \dots\\
+    \dots\ astounding given\textbf{ the} production 's a \dots\\
+    \addlinespace
+    {\normalfont\textbf{C102} \hfill (firing rate 10.9\%)}\\
+    \cmidrule(){1-1}
+    \dots\ one long string of\textbf{ cl}iches .\\
+    \dots\ k-19\textbf{ explo}its our substantial collective \dots\\
+    \dots\ who takes the super\textbf{st}itious curse on \dots\\
+    \dots\ that are all under\textbf{st}ated and touching .\\
+    \dots\ tedious sex\textbf{ far}ce .\\
+    \addlinespace
+    {\normalfont\textbf{C108} \hfill (firing rate 9.2\%)}\\
+    \cmidrule(){1-1}
+    \textbf{\textless bos\textgreater} k-19 \dots\\
+    \textbf{\textless bos\textgreater} it 's played \dots\\
+    \textbf{there} are simply too many \dots\\
+    \textbf{\textless bos\textgreater} there are simply too \dots\\
+    \textbf{one} long string of cl \dots\\
+    \addlinespace
+    {\normalfont\textbf{C113} \hfill (firing rate 13.3\%)}\\
+    \cmidrule(){1-1}
+    \dots\ entertaining film chronicles\textbf{ sein}feld 's return \dots\\
+    \dots\ k-19\textbf{ explo}its our substantial collective \dots\\
+    \dots\ collective fear of nuclear\textbf{ hol}ocaust to generate \dots\\
+    \dots\ wannabe comic\textbf{ ad}ams ' attempts to \dots\\
+    \dots\ who takes the super\textbf{st}itious curse on \dots\\
+    \addlinespace
+    {\normalfont\textbf{C117} \hfill (firing rate 9.1\%)}\\
+    \cmidrule(){1-1}
+    \dots\ in the theater at\textbf{ all} ?\\
+    \dots\ 's three lead\textbf{ actress}es .\\
+    \dots\ augh 's three\textbf{ lead} actresses .\\
+    \dots\ could young women of\textbf{ any} size receive ?\\
+    \dots\ ' could young women\textbf{ of} any size receive ?\\
+    \addlinespace
+    {\normalfont\textbf{C120} \hfill (firing rate 9.2\%)}\\
+    \cmidrule(){1-1}
+    ch\textbf{ab}rol has taken promising \dots\\
+    \textbf{k}-19 explo \dots\\
+    k\textbf{-}19 exploits \dots\\
+    \dots\ wonder why enough was\textbf{ n}'t just a \dots\\
+    \dots\ rather than a full\textbf{-}length movie .\\
+    \bottomrule
+\end{longtable}
+
+\normalsize
+
+\section{SAE concept dictionary}
+
+\footnotesize
+% uv run experiments/concept_training/generate_cd_table.py experiments/concept_training/outputs/thesis/frontier/TopK-8-SAE-8192-20260512_081348/TopK-8-SAE-8192_val_cd_unique.html -n 5 -c "68,678,1006,1514,2082,2115,2840,3393,3716,3915,4164,4173,4526,4527,4551,4679,5613,5811,6249,6331,6369,6817,7079,7134,7728" | pbcopy
+
+\begin{longtable}{@{}>{\ttfamily}p{\linewidth}@{}}
+    \toprule
+    \endhead
+    {\normalfont\textbf{C68} \hfill (firing rate 3.8\%)}\\
+    \cmidrule(){1-1}
+    \textbf{\textless bos\textgreater} one long string of \dots\\
+    \dots\ feelings that profoundly\textbf{ deep}en them .\\
+    \dots\ much more when you\textbf{ leave} .\\
+    the second\textbf{ coming} of harry pot \dots\\
+    \dots\ ford movie -\textbf{ six} days , seven nights \dots\\
+    \addlinespace
+    {\normalfont\textbf{C678} \hfill (firing rate 0.4\%)}\\
+    \cmidrule(){1-1}
+    \dots\ -lrb-\textbf{ grant} 's -rr \dots\\
+    \textbf{it} 's played in \dots\\
+    \dots\ lrb- grant\textbf{ '}s -rrb \dots\\
+    \dots\ s -rrb\textbf{-} bumbling magic takes \dots\\
+    \textbf{minority} report is exactly what \dots\\
+    \addlinespace
+    {\normalfont\textbf{C1006} \hfill (firing rate 0.4\%)}\\
+    \cmidrule(){1-1}
+    \dots\ thought they could achieve\textbf{ an} air of frantic \dots\\
+    \dots\ seems to be under\textbf{ the} illusion that he ' \dots\\
+    \dots\ umes and sets are\textbf{ grand} .\\
+    \dots\ teary-eyed\textbf{ original} .\\
+    \dots\ worthy of pucc\textbf{ini} than they are of \dots\\
+    \addlinespace
+    {\normalfont\textbf{C1514} \hfill (firing rate 3.8\%)}\\
+    \cmidrule(){1-1}
+    \textbf{\textless bos\textgreater} one long string of \dots\\
+    \dots\ feelings that profoundly\textbf{ deep}en them .\\
+    \dots\ much more when you\textbf{ leave} .\\
+    the second\textbf{ coming} of harry pot \dots\\
+    \dots\ ford movie -\textbf{ six} days , seven nights \dots\\
+    \addlinespace
+    {\normalfont\textbf{C2082} \hfill (firing rate 3.8\%)}\\
+    \cmidrule(){1-1}
+    \textbf{\textless bos\textgreater} one long string of \dots\\
+    \dots\ feelings that profoundly\textbf{ deep}en them .\\
+    \dots\ much more when you\textbf{ leave} .\\
+    the second\textbf{ coming} of harry pot \dots\\
+    \dots\ ford movie -\textbf{ six} days , seven nights \dots\\
+    \addlinespace
+    {\normalfont\textbf{C2115} \hfill (firing rate 3.8\%)}\\
+    \cmidrule(){1-1}
+    \textbf{\textless bos\textgreater} one long string of \dots\\
+    \dots\ feelings that profoundly\textbf{ deep}en them .\\
+    \dots\ much more when you\textbf{ leave} .\\
+    the second\textbf{ coming} of harry pot \dots\\
+    \dots\ ford movie -\textbf{ six} days , seven nights \dots\\
+    \addlinespace
+    {\normalfont\textbf{C2840} \hfill (firing rate 0.2\%)}\\
+    \cmidrule(){1-1}
+    \dots\ with resonance by\textbf{\textless bos\textgreater} ilya chaiken \dots\\
+    \dots\ mull over in\textbf{ terms} of love , loyalty \dots\\
+    \dots\ can relate to the\textbf{ search} for inner peace by \dots\\
+    \dots\ in the first few\textbf{ minutes} .\\
+    \dots\ umes and sets are\textbf{ grand} .\\
+    \addlinespace
+    {\normalfont\textbf{C3393} \hfill (firing rate 0.5\%)}\\
+    \cmidrule(){1-1}
+    \textbf{the} jabs it em \dots\\
+    \dots\ fiercely at\textbf{he}istic hero .\\
+    \dots\ a rosily\textbf{ my}opic view of life \dots\\
+    \dots\ make a playground\textbf{ out} of the refuse of \dots\\
+    \dots\ it remains depressingly\textbf{ pro}saic and dull \dots\\
+    \addlinespace
+    {\normalfont\textbf{C3716} \hfill (firing rate 0.5\%)}\\
+    \cmidrule(){1-1}
+    \dots\ lighthearted ,\textbf{ it} offends by just \dots\\
+    \dots\ xenophob\textbf{ic} pedagogy that \dots\\
+    \dots\ ovie franchise game ,\textbf{ i} spy makes its big \dots\\
+    \dots\ quality of a lesser\textbf{ h}arrison ford \dots\\
+    \dots\ opening scenes , it\textbf{ '}s clear that all \dots\\
+    \addlinespace
+    {\normalfont\textbf{C3915} \hfill (firing rate 0.6\%)}\\
+    \cmidrule(){1-1}
+    \dots\ sporting a bree\textbf{zy} spontaneity and \dots\\
+    \dots\ s effort has tons\textbf{ of} charm and the wh \dots\\
+    \dots\ ity and realistically\textbf{ drawn} characterizations , develop \dots\\
+    \dots\ of the leads keep\textbf{ the} film grounded and \dots\\
+    \dots\ film , sporting\textbf{ a} breezy spontane \dots\\
+    \addlinespace
+    {\normalfont\textbf{C4164} \hfill (firing rate 3.9\%)}\\
+    \cmidrule(){1-1}
+    \dots\ ahhhh ...\textbf{ revenge} is sweet !\\
+    \dots\ hhhh ... revenge\textbf{ is} sweet !\\
+    \dots\ superstitious\textbf{ curse} on chain letters and \dots\\
+    \dots\ this film , unlike\textbf{ other} dumas adapt \dots\\
+    \dots\ likened to a\textbf{ treasure} than a lengthy \dots\\
+    \addlinespace
+    {\normalfont\textbf{C4173} \hfill (firing rate 0.9\%)}\\
+    \cmidrule(){1-1}
+    \dots\ operatic grandeur\textbf{ .} \\
+    \dots\ ` picture shows .\textbf{ '} \\
+    \dots\ status as a film\textbf{ maker} who artfully b \dots\\
+    \dots\ b- hile\textbf{ long} on amiable mon \dots\\
+    \dots\ richness of its\textbf{ performances} .\\
+    \addlinespace
+    {\normalfont\textbf{C4526} \hfill (firing rate 0.7\%)}\\
+    \cmidrule(){1-1}
+    \dots\ hidden it from everyone\textbf{ .} \\
+    \dots\ loser is the\textbf{ audience} .\\
+    \dots\ ious to be engaging\textbf{ ...} the isle def \dots\\
+    \dots\ an actual feature movie\textbf{ ,} the kind that charges \dots\\
+    \dots\ tell it to us\textbf{ ?} \\
+    \addlinespace
+    {\normalfont\textbf{C4527} \hfill (firing rate 0.4\%)}\\
+    \cmidrule(){1-1}
+    \dots\ ful , intelligent film\textbf{ that} stays within the conf \dots\\
+    \dots\ intriguing documentary\textbf{ which} is emotionally dilut \dots\\
+    \dots\ turn thriller that\textbf{ certainly} should n't \dots\\
+    \dots\ dom has a movie\textbf{ so} closely matched the spirit \dots\\
+    \dots\ as a film maker\textbf{ who} artfully bends \dots\\
+    \addlinespace
+    {\normalfont\textbf{C4551} \hfill (firing rate 0.4\%)}\\
+    \cmidrule(){1-1}
+    \textbf{conf}irms the nag \dots\\
+    \textbf{a} very well-made \dots\\
+    \textbf{scores} no points for original \dots\\
+    \textbf{people} cinema at its finest \dots\\
+    \textbf{part} low rent godfather \dots\\
+    \addlinespace
+    {\normalfont\textbf{C4679} \hfill (firing rate 0.4\%)}\\
+    \cmidrule(){1-1}
+    \textbf{a} very well-made \dots\\
+    \dots\ can relate to the\textbf{ search} for inner peace by \dots\\
+    \dots\ in the first few\textbf{ minutes} .\\
+    \dots\ umes and sets are\textbf{ grand} .\\
+    \dots\ teary-eyed\textbf{ original} .\\
+    \addlinespace
+    {\normalfont\textbf{C5613} \hfill (firing rate 0.5\%)}\\
+    \cmidrule(){1-1}
+    \dots\ adillo 's\textbf{ dark} and jolting \dots\\
+    \textbf{the} jabs it em \dots\\
+    \dots\ johnny d\textbf{ank}worth 's best \dots\\
+    \dots\ can relate to the\textbf{ search} for inner peace by \dots\\
+    \dots\ umes and sets are\textbf{ grand} .\\
+    \addlinespace
+    {\normalfont\textbf{C5811} \hfill (firing rate 0.7\%)}\\
+    \cmidrule(){1-1}
+    \dots\ is n't\textbf{ any} funnier than bad \dots\\
+    \dots\ n't funny\textbf{ some} of the time -- \dots\\
+    \dots\ is n't\textbf{ even} all that dumb .\\
+    \dots\ n't even\textbf{ all} that dumb .\\
+    \dots\ do n't\textbf{ enable} them to discern \dots\\
+    \addlinespace
+    {\normalfont\textbf{C6249} \hfill (firing rate 0.3\%)}\\
+    \cmidrule(){1-1}
+    it '\textbf{s} played in the most \dots\\
+    man\textbf{ages} to transcend the \dots\\
+    in\textbf{ the} end , we are \dots\\
+    \dots\ in the first few\textbf{ minutes} .\\
+    \dots\ umes and sets are\textbf{ grand} .\\
+    \addlinespace
+    {\normalfont\textbf{C6331} \hfill (firing rate 0.4\%)}\\
+    \cmidrule(){1-1}
+    \textbf{it} 's played in \dots\\
+    \dots\ feelings that profoundly\textbf{ deep}en them .\\
+    \dots\ much more when you\textbf{ leave} .\\
+    the second\textbf{ coming} of harry pot \dots\\
+    \dots\ ford movie -\textbf{ six} days , seven nights \dots\\
+    \addlinespace
+    {\normalfont\textbf{C6369} \hfill (firing rate 0.2\%)}\\
+    \cmidrule(){1-1}
+    \dots\ big screen moments -\textbf{l}rb- including one \dots\\
+    \dots\ amura 's\textbf{ l}ively and enjoyable cultural \dots\\
+    \dots\ tv-to-\textbf{m}ovie franchise game , \dots\\
+    the\textbf{ heavy}-handed film is \dots\\
+    \dots\ in the first few\textbf{ minutes} .\\
+    \addlinespace
+    {\normalfont\textbf{C6817} \hfill (firing rate 0.4\%)}\\
+    \cmidrule(){1-1}
+    \textbf{it} 's played in \dots\\
+    `\textbf{ de} niro ... is \dots\\
+    \dots\ umes and sets are\textbf{ grand} .\\
+    \dots\ teary-eyed\textbf{ original} .\\
+    \dots\ worthy of pucc\textbf{ini} than they are of \dots\\
+    \addlinespace
+    {\normalfont\textbf{C7079} \hfill (firing rate 0.2\%)}\\
+    \cmidrule(){1-1}
+    it '\textbf{s} played in the most \dots\\
+    \dots\ mull over in\textbf{ terms} of love , loyalty \dots\\
+    \dots\ can relate to the\textbf{ search} for inner peace by \dots\\
+    \dots\ in the first few\textbf{ minutes} .\\
+    \dots\ umes and sets are\textbf{ grand} .\\
+    \addlinespace
+    {\normalfont\textbf{C7134} \hfill (firing rate 0.7\%)}\\
+    \cmidrule(){1-1}
+    \dots\ know the plot '\textbf{s} a little crazy , \dots\\
+    \dots\ rrb- r\textbf{aps} between the stars .\\
+    \dots\ first time he '\textbf{ll} probably appeal more to \dots\\
+    \dots\ and when you '\textbf{re} talking about a sl \dots\\
+    nothing 's\textbf{ at} stake , just a \dots\\
+    \addlinespace
+    {\normalfont\textbf{C7728} \hfill (firing rate 0.7\%)}\\
+    \cmidrule(){1-1}
+    \dots\ skate\textbackslash{}/sur\textbf{f} culture , the l \dots\\
+    \dots\ and funny\textbackslash{}/gr\textbf{itty} fable of the \dots\\
+    \dots\ mystery\textbackslash{}/thr\textbf{iller} , a romance or \dots\\
+    \dots\ one woman at the\textbf{ hands} of the unseen \dots\\
+    \dots\ riller , a\textbf{ romance} or a comedy .\\
+    \bottomrule
+\end{longtable}
+
+\normalsize

@@ -18,8 +18,8 @@ The gate of \cref{eq:methods:proba:alpha} ties a concept's
 activation probability to the similarity between its predicted embedding and its
 prototype. This section shows that this is not an arbitrary heuristic but the
 \textit{optimal} mask factor of the mean-field posterior
-(\cref{eq:methods:proba:posterior}), dictated by the Gated Gaussian
-prior of \cref{eq:methods:proba:prior-z}.
+(\cref{eq:methods:proba:posterior}), dictated by the Gated
+Gaussian prior of \cref{eq:methods:proba:prior-z}.
 
 For a mean-field family, the factor that maximises the \ac{ELBO} while the
 remaining factors are held fixed has a closed form: its logarithm equals the
@@ -77,8 +77,8 @@ exponentials,
 Expanding the squared distance,
 $\norm{\vb{z}_k - \vb{h}_k}^2 = \norm{\vb{z}_k}^2 - 2\,\vb{z}_k \cdot \vb{h}_k + \norm{\vb{h}_k}^2$,
 makes the $\norm{\vb{z}_k}^2$ terms cancel exactly, so the likelihood ratio
-collapses to an inner product against the prototype that is \textit{linear} in the
-embedding,
+collapses to an inner product against the prototype that is \textit{linear} in
+the embedding,
 \begin{equation*}
     \log \frac{p(\vb{z}_k \mid c_k = 1)}{p(\vb{z}_k \mid c_k = 0)} =
     \frac{1}{\sigma_0^2}\left(\vb{z}_k \cdot \vb{h}_k
@@ -109,9 +109,19 @@ $\vb{\mu}_k \cdot \vb{h}_k = \tfrac{1}{2}\norm{\vb{h}_k}^2$, which is well
 calibrated only as long as $\norm{\vb{\mu}_k} \approx \norm{\vb{h}_k}$;
 otherwise the model can inflate $\norm{\vb{\mu}_k}$ to push the inner product up
 and force a concept active. The cosine-similarity variant of
-\cref{eq:methods:proba:sim} removes this magnitude coupling by
-construction, which is why it is the choice of similarity used in this thesis.
-\graffito{Cos sim is just scaled inner prod, and I have a learnable scale anyway}
+\cref{eq:methods:proba:sim} removes this coupling by
+construction, normalising by $\norm{\vb{\mu}_k}\,\norm{\vb{h}_k}$ so that the
+gate depends only on the angle between embedding and prototype, leaving the
+magnitude free to carry information to the decoder. This decoupling of the gate
+from the embedding magnitude is why cosine similarity is the choice of
+similarity used in this thesis.\footnote{Normalising the similarity does make
+    the temperature essential rather than optional: a cosine is bounded to
+    $\interval{-1}{1}$, so at $\flatfrac{1}{\tau} = 1$ the gate could only range
+    over $\on{sigmoid}(\interval{-1}{1}) \approx \interval{0.27}{0.73}$ and
+    never approach a hard decision. The learnable $\flatfrac{1}{\tau}$ ---
+    initialised at $10$ (\cref{eq:methods:proba:alpha}) ---
+    stretches the bounded cosine onto a range over which the sigmoid can
+saturate.}
 
 A final observation ties this back to the generative model. Since $\vb{x}$
 depends on the mask only through the embeddings in the generative flow $\vb{c}
@@ -128,12 +138,12 @@ the model gates on the predicted mean directly.
 
 This section derives the \ac{ELBO} of \cref{eq:methods:loss:elbo}
 under the mean-field posterior of
-\cref{eq:methods:proba:posterior}. This factorisation is the model's
-central variational approximation: the true posterior couples the mask and its
-embedding through the generative $\vb{c} \to \vb{z}$ edge, so that even given
-$\vb{x}$ the two remain dependent. Treating them as conditionally independent
-given $\vb{x}$ is what lets all three terms below close in form; it is the only
-approximation made, every step that follows being exact.
+\cref{eq:methods:proba:posterior}. This factorisation is the
+model's central variational approximation: the true posterior couples the mask
+and its embedding through the generative $\vb{c} \to \vb{z}$ edge, so that even
+given $\vb{x}$ the two remain dependent. Treating them as conditionally
+independent given $\vb{x}$ is what lets all three terms below close in form; it
+is the only approximation made, every step that follows being exact.
 
 The marginal likelihood requires marginalising over both latents, an integral
 over the continuous $\vb{z}$ and a sum over the $2^K$ configurations of $\vb{c}$
@@ -207,16 +217,9 @@ design choices of
 
 
 \paragraph{Closed-form Conditional KL}
-% The term in \cref{eq:app:vaee:elbo:mask-prior-kl} is the standard
-% divergence between two Bernoullis,
-% \begin{equation*}
-%     D_{\mathrm{KL}}(q_\phi(c_k \mid \vb{x}) \,\big\|\, p(c_k))
-%     = \alpha_k \log \frac{\alpha_k}{\pi}
-%     + (1 - \alpha_k) \log \frac{(1 - \alpha_k)}{(1 - \pi)}.
-% \end{equation*}
-In \cref{eq:app:vaee:elbo:conditional-kl} the expectation over the
-Bernoulli $\mathbb{E}_{q_\phi(c_k \mid \vb{x})}$ is the convex combination of its two
-branches with weights $\alpha_k$ and $1 - \alpha_k$:
+In \cref{eq:app:vaee:elbo:conditional-kl} the expectation over
+the Bernoulli $\mathbb{E}_{q_\phi(c_k \mid \vb{x})}$ is the convex combination
+of its two branches with weights $\alpha_k$ and $1 - \alpha_k$:
 \begin{multline*}
     \sum_{k=1}^{K} \E[q_\phi(c_k \mid \vb{x})]{ \KL{q_\phi(\vb{z}_k \mid \vb{x})}{p(\vb{z}_k \mid c_k)}} =\\
     = \sum_{k=1}^{K} \left[ \alpha_k\, D_{\mathrm{KL}}^{(k,1)} + (1 - \alpha_k)\, D_{\mathrm{KL}}^{(k,0)}
@@ -230,8 +233,8 @@ distance between the means,
     \KL{\mathcal{N}(\vb{\mu}, \,\sigma_0^2 \mathbb{I})}{\mathcal{N}(\vb{\nu}, \,\sigma_0^2 \mathbb{I})}
     = \frac{1}{2 \sigma_0^2}{\norm{\vb{\mu} - \vb{\nu}}^2}
 \end{equation*}
-With the prior means $c_k \vb{h}_k$ of \cref{eq:methods:proba:prior-z} --- the
-prototype $\vb{h}_k$ when active, the origin when inactive --- the
+With the prior means $c_k \vb{h}_k$ of \cref{eq:methods:proba:prior-z}
+--- the prototype $\vb{h}_k$ when active, the origin when inactive --- the
 conditional-embedding \ac{KL} takes its closed form,
 \begin{multline*}
     \sum_{k=1}^{K} \E[q_\phi(c_k \mid \vb{x})]{\KL{q_\phi(\vb{z}_k \mid \vb{x})}{p(\vb{z}_k \mid c_k)}} =\\
