@@ -127,6 +127,14 @@ instead of living in the input space they live in latent space. % unrelated:
 
 \section{Model Development} \label{sec:methods:model}
 
+% TODO (paused 2026-06-23): supervisor wants the appendix derivations folded into
+% this section (Option 2, derive-in-place) — A.1 gating -> Inference subsubsection,
+% A.2 ELBO -> Training Objective opener. Full plan in
+% .claude/plans/fine-you-convinced-me-hidden-starfish.md. NB the appendix C0A
+% include is commented out in thesis.tex, so the four \cref{app:vaee:*} below
+% (Inference + Training Objective) currently dangle until the move is done (or C0A
+% is temporarily re-included).
+
 \subsection{Probabilistic Formulation} \label{sec:methods:model:proba}
 
 The \ac{VAEE} is defined as a probabilistic generative model of an
@@ -343,9 +351,9 @@ the \ac{ELBO} decomposes into three analytic components:
 \begin{equation} \label{eq:methods:loss:elbo}
     \begin{split}
         \log p_{\theta}(\vb{x}) \ge
-        {}& \underbrace{\mathbb{E}_{q_{\phi}(\vb{z} \mid \vb{x})} \left[\log p_{\theta}(\vb{x} \mid \vb{z})\right]}_{\text{reconstruction}} +\\
-        &- \sum_{k=1}^{K} \underbrace{D_{\mathrm{KL}} \left(q_{\phi}(c_{k} \mid \vb{x}) \,\big\|\, p(c_{k})\right)}_{\text{mask-prior KL}} +\\
-        &- \sum_{k=1}^{K} \underbrace{\mathbb{E}_{q_{\phi}(c_{k} \mid \vb{x})} \left[D_{\mathrm{KL}} \left(q_{\phi}(\vb{z}_{k} \mid \vb{x}) \,\big\|\, p(\vb{z}_{k} \mid c_{k})\right)\right]}_{\text{conditional-embedding KL}}.
+        {}& \underbrace{\E[q_{\phi}(\vb{z} \mid \vb{x})]{\log p_{\theta}(\vb{x} \mid \vb{z})}}_{\text{reconstruction}} +\\
+        &- \sum_{k=1}^{K} \underbrace{\KL{q_{\phi}(c_{k} \mid \vb{x})}{p(c_{k})}}_{\text{mask-prior KL}} +\\
+        &- \sum_{k=1}^{K} \underbrace{\E[q_{\phi}(c_{k} \mid \vb{x})]{\KL{q_{\phi}(\vb{z}_{k} \mid \vb{x})}{p(\vb{z}_{k} \mid c_{k})}}}_{\text{conditional-embedding KL}}.
     \end{split}
 \end{equation}
 The full \ac{ELBO} derivation is given in
@@ -377,8 +385,9 @@ stability rather than mathematical necessity.
     $\bar{\alpha}_k = \frac{1}{B} \sum_{i} \alpha_k(\vb{x}_i)$ to the prior
     rate,
     \begin{equation*}
-        \beta \sum_{k=1}^{K} D_{\mathrm{KL}}\left(\bar{\alpha}_k \,\big\|\,
-        \pi\right),
+        % \beta \sum_{k=1}^{K} \KL{\bar{\alpha}_k}{\pi},
+        \beta \sum_{k=1}^{K} \KL{\on{Bern}(\bar{\alpha}_{k})}{\on{Bern}(\pi)} \equiv 
+        \beta \sum_{k=1}^{K} \KL{\bar{\alpha}_{k}}{\pi},
     \end{equation*}
     with $B$ the batch size and $\beta$ the term's weight; matching
     $\bar{\alpha}_k$ to $\pi$ lets concept $k$ fire on about a $\pi$ fraction of
@@ -418,34 +427,34 @@ stability rather than mathematical necessity.
     shortcut, so the activation is shaped only by the reconstruction and
     sparsity terms.
 
-    \paragraph{Decoder orthogonality} One further term was considered but left
-    out of the final objective. With a linear decoder the reconstruction reads
-    the concept embeddings block by block: partitioning the decoder weight
-    matrix as $W = [W_1, \dots, W_K]$, with $W_k \in \R^{n \times d}$ the block
-    acting on concept $k$, the gated decode of
-    \cref{eq:methods:proba:gate} becomes
-    \begin{equation*}
-        \hat{\vb{x}} = W \left(\vb{c} \odot \vb{z}\right) = \sum_{k=1}^{K} c_k\,
-        W_k \vb{z}_k,
-    \end{equation*}
-    so each $W_k$ is the reconstruction basis the decoder assigns to its
-    concept. To stop these bases from duplicating one another --- the
-    feature-splitting that wastes capacity in an over-complete dictionary
-    (\cref{sec:background:ae:sae}) ---
-    a Frobenius orthogonality penalty between the blocks can be added, averaged
-    over the $\binom{K}{2}$ pairs so that its scale is independent of $K$,
-    \begin{equation*}
-        \mathcal{L}_{\mathrm{ortho}} = \frac{\lambda_{\mathrm{ortho}}}{\binom{K}{2}}
-        \sum_{i < j} \frac{\norm{W_i^{\top} W_j}_F^2}{\norm{W_i}_F^2\,
-        \norm{W_j}_F^2}.
-    \end{equation*}
-    From a Bayesian standpoint this is a maximum-a-posteriori term: it
-    corresponds to a structural prior over the decoder parameters that favours
-    mutually orthogonal concept bases, penalising any pair that maps to
-    overlapping directions of the activation space. The term is omitted from the
-    objective of \cref{eq:methods:loss:objective}, its
-    contribution proven empirically negligible
-    (\cref{sec:exp:results:ablation}).
+    % \paragraph{Decoder orthogonality} One further term was considered but left
+    % out of the final objective. With a linear decoder the reconstruction reads
+    % the concept embeddings block by block: partitioning the decoder weight
+    % matrix as $W = [W_1, \dots, W_K]$, with $W_k \in \R^{n \times d}$ the block
+    % acting on concept $k$, the gated decode of
+    % \cref{eq:methods:proba:gate} becomes
+    % \begin{equation*}
+    %     \hat{\vb{x}} = W \left(\vb{c} \odot \vb{z}\right) = \sum_{k=1}^{K} c_k\,
+    %     W_k \vb{z}_k,
+    % \end{equation*}
+    % so each $W_k$ is the reconstruction basis the decoder assigns to its
+    % concept. To stop these bases from duplicating one another --- the
+    % feature-splitting that wastes capacity in an over-complete dictionary
+    % (\cref{sec:background:ae:sae}) ---
+    % a Frobenius orthogonality penalty between the blocks can be added, averaged
+    % over the $\binom{K}{2}$ pairs so that its scale is independent of $K$,
+    % \begin{equation*}
+    %     \mathcal{L}_{\mathrm{ortho}} = \frac{\lambda_{\mathrm{ortho}}}{\binom{K}{2}}
+    %     \sum_{i < j} \frac{\norm{W_i^{\top} W_j}_F^2}{\norm{W_i}_F^2\,
+    %     \norm{W_j}_F^2}.
+    % \end{equation*}
+    % From a Bayesian standpoint this is a maximum-a-posteriori term: it
+    % corresponds to a structural prior over the decoder parameters that favours
+    % mutually orthogonal concept bases, penalising any pair that maps to
+    % overlapping directions of the activation space. The term is omitted from the
+    % objective of \cref{eq:methods:loss:objective}, its
+    % contribution proven empirically negligible
+    % (\cref{sec:exp:results:ablation}).
 
     \paragraph{Scale-invariant reductions} Each term is averaged over its
     dimensions --- the batch $B$, the concepts $K$, and the relevant vector
@@ -461,7 +470,7 @@ the objective minimised in training,
     \begin{split}
         \mathcal{L} =
         {}& \frac{1}{Bn} \sum_{i=1}^{B} \norm{\vb{x}_{i} - \hat{\vb{x}}_{i}}^{2}_{2}
-        + \frac{\beta}{K} \sum_{k=1}^{K} D_{\mathrm{KL}} \left(\bar{\alpha}_{k} \,\big\|\, \pi\right)
+        + \frac{\beta}{K} \sum_{k=1}^{K} \KL{\bar{\alpha}_{k}}{\pi}
         + \frac{\lambda_{\mathrm{ent}}}{BK} \sum_{i=1}^{B} \sum_{k=1}^{K} \mathcal{H}(\alpha_{i,k})\\
         &+ \frac{\gamma}{BKd} \sum_{i=1}^{B} \sum_{k=1}^{K} \left(\on{sg}(\alpha_{i,k}) \norm{\vb{\mu}_{i,k} - \vb{h}_{k}}^{2}_{2}
             + \left(1 - \on{sg}(\alpha_{i,k})\right)\norm{\vb{\mu}_{i,k}}^{2}_{2}\right),
