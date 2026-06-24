@@ -851,18 +851,18 @@ architectures that try to improve on it.
     The key advantage of this parameterisation is that it provides a dedicated,
     per-feature learnable threshold, which allows the $\ell_{0}$
     norm\footnote{The $\ell_{0}$ norm is a pseudo-norm defined as the number of
-    non-zero vector components: $\ell_{0}(\vb{x}) = \sum_{i} \mathds{1}[x_{i} >
-    0]$.} of the feature activations --- $\sum_{i} H(\pi_{i} - \theta_{i})$,
-    where $\pi_{i}$ are the encoder pre-activations and $H(x)$ is the Heaviside
-    step function --- to be trained directly via a straight-through estimator
-    applied to the threshold parameter $\theta_{i}$. Because each threshold can
-    be positioned near the actual boundary between active and inactive
-    pre-activations for its feature, the gradient signal is stable and
-    controllable, making $\ell_{0}$ training practical in a way that would not
-    be possible with a fixed threshold. Training with $\ell_{0}$ rather than
-    $\ell_{1}$ eliminates shrinkage entirely, since $\ell_{0}$ penalises only
-    the number of active features and not their intensity. JumpReLU \acp{SAE}
-    achieve comparable performance to TopK \acp{SAE}.
+    non-zero vector components: $\ell_{0}(\vb{x}) = \sum_{i} \mathds{1}[x_{i}
+    \neq 0]$.} of the feature activations --- $\sum_{i} H(\pi_{i} -
+    \theta_{i})$, where $\pi_{i}$ are the encoder pre-activations and $H(x)$ is
+    the Heaviside step function --- to be trained directly via a
+    straight-through estimator applied to the threshold parameter $\theta_{i}$.
+    Because each threshold can be positioned near the actual boundary between
+    active and inactive pre-activations for its feature, the gradient signal is
+    stable and controllable, making $\ell_{0}$ training practical in a way that
+    would not be possible with a fixed threshold. Training with $\ell_{0}$
+    rather than $\ell_{1}$ eliminates shrinkage entirely, since $\ell_{0}$
+    penalises only the number of active features and not their intensity.
+    JumpReLU \acp{SAE} achieve comparable performance to TopK \acp{SAE}.
 
 
 % TODO: if including sections about AE and VAE applications, remove "to MechInt"

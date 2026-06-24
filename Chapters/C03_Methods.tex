@@ -262,8 +262,8 @@ the similarity between the predicted embedding and the prototype,
     \right),
 \end{equation}
 scaled by an inverse temperature $1/\tau$ --- a single learnable scalar,
-initialised to $\tau = 0.1$, in the manner of the CLIP logit scale. This
-activation probability parameterises the Bernoulli posterior over the mask,
+initialised to $\tau = 0.1$. This activation probability parameterises the
+Bernoulli posterior over the mask,
 \begin{equation} \label{eq:methods:proba:c_k}
     q_\phi\left(c_k \mid \vb{x}\right) = \on{Bern}\left(c_k; \,
     \alpha_k(\vb{x})\right).
@@ -351,8 +351,8 @@ the \ac{ELBO} decomposes into three analytic components:
 \begin{equation} \label{eq:methods:loss:elbo}
     \begin{split}
         \log p_{\theta}(\vb{x}) \ge
-        {}& \underbrace{\E[q_{\phi}(\vb{z} \mid \vb{x})]{\log p_{\theta}(\vb{x} \mid \vb{z})}}_{\text{reconstruction}} +\\
-        &- \sum_{k=1}^{K} \underbrace{\KL{q_{\phi}(c_{k} \mid \vb{x})}{p(c_{k})}}_{\text{mask-prior KL}} +\\
+        {}& \underbrace{\E[q_{\phi}(\vb{z} \mid \vb{x})]{\log p_{\theta}(\vb{x} \mid \vb{z})}}_{\text{reconstruction}}\\
+        &- \sum_{k=1}^{K} \underbrace{\KL{q_{\phi}(c_{k} \mid \vb{x})}{p(c_{k})}}_{\text{mask-prior KL}}\\
         &- \sum_{k=1}^{K} \underbrace{\E[q_{\phi}(c_{k} \mid \vb{x})]{\KL{q_{\phi}(\vb{z}_{k} \mid \vb{x})}{p(\vb{z}_{k} \mid c_{k})}}}_{\text{conditional-embedding KL}}.
     \end{split}
 \end{equation}

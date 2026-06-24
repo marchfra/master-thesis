@@ -27,15 +27,15 @@ from first principles that represents each concept as a learned vector embedding
 instead, drawing together ideas from \aclp{CEM}, \aclp{VAE}, and \aclp{VQVAE}.
 The encoder maps an input to one vector embedding per concept; a learned
 prototype for each concept then decides, by similarity, which concepts are
-active, and the input is reconstructed from the stack of active embeddings. Its
+active; finally, the input is reconstructed from the stack of active embeddings. Its
 capabilities are demonstrated in one application, the decomposition of \acl{LLM}
-activations, where \iac{VAEE} matches the reconstruction of a parameter-matched
+activations, where the \ac{VAEE} matches the reconstruction of a parameter-matched
 TopK \ac{SAE} using roughly an order of magnitude fewer active concepts ---
 evidence that vector-valued concepts carry more information per unit of sparsity. The thesis
 is deliberate about the limits of this evidence: reconstruction was assessed
 only by \acl{MSE}, each concept now spans several active neurons rather than
 one, and the recovered concepts were not found more interpretable than the
-SAE's. Its contribution, then, lies in this added representational capacity; the
+\ac{SAE}'s. Its contribution, then, lies in this added representational capacity; the
 interpretability of its concepts, their use for steering, and its application to
 representation learning more broadly are left for future work.
 
