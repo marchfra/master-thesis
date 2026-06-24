@@ -2,11 +2,83 @@
 \chapter{Conclusions} \label{ch:conclusions}
 %************************************************
 
+Concept-based methods describe a model's computation in human-meaningful terms,
+but they encode each concept as a single scalar --- a unit in the bottleneck of
+\iac{CBM}, or an atom in the dictionary of \iac{SAE} --- and so trade
+representational capacity for simplicity. This thesis set out to lift that
+restriction. It introduced the \ac{VAEE}
+(\cref{sec:methods:model}), a model that
+represents each concept as a learned vector embedding rather than a scalar, and
+demonstrated its viability on the decomposition of \ac{LLM} activations. This
+chapter draws together what the work contributes
+(\cref{sec:conclusions:contrib}) and the
+directions it leaves open
+(\cref{sec:conclusions:future}).
+
 \section{Contributions} \label{sec:conclusions:contrib}
-% \lipsum[1-3]
+
+The central contribution is the \ac{VAEE} itself. The encoder maps an input to
+one vector embedding per concept; a learned prototype for each concept then
+decides, by similarity, which concepts are active; and the input is
+reconstructed from the stack of those active embeddings. Giving each concept a
+vector rather than a scalar recovers the representational capacity a scalar
+bottleneck gives up, carrying the vector-valued concepts of \acp{CEM} into the
+unsupervised setting of activation decomposition and combining them with the
+variational inference and discrete latents of \acp{VAE} and \acp{VQVAE}. Rather
+than assemble these ingredients by analogy, \cref{ch:methods}
+derives the model from first principles: a generative model with a
+gated-Gaussian prior, an \ac{ELBO} that separates reconstruction from a mask
+prior and a conditional-embedding term, and a gating rule that follows as the
+optimal mask posterior. The derivation, not only the architecture, is part of
+what the thesis offers.
+
+The model's capabilities were demonstrated on one application, the decomposition
+of \iac{LLM}'s residual-stream activations. Against a parameter-matched TopK
+\ac{SAE}, the \ac{VAEE} matches the reconstruction error using roughly an order
+of magnitude fewer active concepts
+(\cref{sec:exp:results:quant}) ---
+evidence that vector-valued concepts carry more information per unit of
+sparsity. A qualitative comparison of the recovered concept dictionaries
+(\cref{sec:exp:results:qual}) and a set
+of ablations over embedding width and encoder--decoder depth
+(\cref{sec:exp:results:ablation}) round out
+the picture of how the architecture behaves.
+
+The thesis is equally deliberate about the limits of this evidence.
+Reconstruction was assessed only by \acl{MSE}; each \ac{VAEE} concept now spans
+several active neurons rather than one, so fewer active \textit{concepts} need
+not mean fewer active \textit{neurons}; and the recovered concepts were not
+found more interpretable than the \ac{SAE}'s. The contribution, then, is the
+added representational capacity of vector-valued concepts and the principled
+model that delivers it --- not a claim about the interpretability of what it
+recovers.
 
 \section{Future Work} \label{sec:conclusions:future}
-% \lipsum[1-3]
+
+The clearest open question is interpretability. The \ac{VAEE} matches the
+\ac{SAE} on reconstruction with far fewer active concepts, but its dictionaries
+were not found to be more comprehensible, and both were limited by the small
+evaluation corpus
+(\cref{sec:exp:results:qual}). Whether
+vector-valued concepts are more interpretable than scalar ones is therefore left
+open, and answering it would need a larger and more varied dataset. Moreover,
+additional tests of reconstruction quality beyond \acl{MSE} should be performed,
+such as those standard in \ac{SAE} evaluation (\acl{CE} or perplexity of the
+spliced model), which this thesis did not run for the comparison.
+
+A second direction is the use of the recovered concepts to steer model
+behaviour. \Cref{sec:methods:model:interventions}
+formulates concept removal and insertion directly from the gated mask, with
+single-concept edits that stay in distribution, but the thesis stops at the
+formulation: the effect of such interventions on \iac{LLM}'s output was not
+measured, and quantifying it is a natural next step.
+
+Finally, activation decomposition is only one use of the architecture. The
+\ac{VAEE} is a general representation-learning model, and how its vector-valued
+concepts compare with the latents of \acp{VAE} and \acp{VQVAE} on
+disentanglement and downstream tasks remains to be explored. % Taken together,
+% these are the frontier the architecture opens up, not gaps in the claims it
+% makes.
 
 
 %*****************************************
