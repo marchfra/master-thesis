@@ -18,7 +18,7 @@ out the evaluation metrics --- a measure of reconstruction fidelity and two of
 sparsity. \Cref{sec:exp:training} reports
 the training setup, and \cref{sec:exp:results}
 presents the quantitative, qualitative, and ablation
-results.\graffito{Review this paragraph after whole chapter is written.}
+results.
 
 \section{Experiment setup} \label{sec:exp:setup}
 
@@ -32,16 +32,17 @@ for download at \url{https://huggingface.co/datasets/SetFit/sst2}.} of the
 \citep{socherRecursiveDeepModels2013}.
 
 \ac{SST2} is a dataset of movie reviews, each with a label (positive/negative)
-attached. For the purposes of the experiments we were only interested in the
-reviews as a corpus of natural language, so the labels were discarded. \ac{SST2}
-is a small corpus: large enough to exercise reconstruction, but, in hindsight,
-probably too narrow for a large and varied concept dictionary to emerge, a
-limitation returned to when the results are interpreted
-(\cref{sec:exp:results}). This problem was
-exacerbated by the choice of SetFit's version instead of the original version of
-the dataset, since the former contains only $6\,920$ reviews in the training
-set, while the latter has $67\,300$ reviews in the training set. The total
-number of tokens in each set is shown in \cref{tab:exp:dataset}.
+attached. Only the reviews were of interest here, as a corpus of natural
+language, so the labels were discarded. \ac{SST2} is a small corpus: large
+enough to exercise reconstruction, but, in hindsight, probably too narrow for a
+large and varied concept dictionary to emerge, a limitation returned to when the
+results are interpreted (\cref{sec:exp:results}). This
+problem was exacerbated by the use of SetFit's version of the dataset rather
+than the original --- a choice made to follow the \ac{CBLLM} of
+\citet{sunConceptBottleneckLarge2025a}, which uses the same version --- since
+SetFit's training set contains only $6\,920$ reviews against the original's
+$67\,300$. The total number of tokens in each set is shown in
+\cref{tab:exp:dataset}.
 
 \begin{table}[tb]
     \myfloatalign
@@ -60,17 +61,17 @@ number of tokens in each set is shown in \cref{tab:exp:dataset}.
     \label{tab:exp:dataset}
 \end{table}
 
-Each review was passed through the model and its residual-stream state was read
-off after the final transformer block, just before the classifier head. This
-yielded the residual-stream representation of every token in the sentence. The
-resulting activations have dimension $n = 4\,096$, \ie Mistral's residual-stream
-dimension.
+Each review was passed through the model and its residual-stream state was
+extracted after the final transformer block, just before the classifier head.
+This yielded the residual-stream representation of every token in the sentence.
+The resulting activations have dimension $n = 4\,096$, \ie Mistral's
+residual-stream dimension.
 
 \section{Baselines} \label{sec:exp:baselines}
 
 The \ac{VAEE} is compared against a TopK \ac{SAE}
 (\cref{sec:background:ae:sae})
-\citep{gaoScalingEvaluatingSparse2024}, the state-of-the-art model for \ac{MI}.
+\citep{gaoScalingEvaluatingSparse2024}, a standard model for \ac{MI}.
 Its top-$k$ activation fixes the number of active features per sample directly
 through $k$, so the reconstruction error can be read against a sparsity level
 that is set rather than induced by a penalty weight.
@@ -99,8 +100,8 @@ each \ac{VAEE} concept spends $d$ parameters where \iac{SAE} atom spends one.
 
 \section{Evaluation Metrics} \label{sec:exp:metrics}
 
-Two properties are measured: how faithfully a model reconstructs an activation,
-and how sparse the decomposition it uses to do so is. Reconstruction is reported
+Two properties are measured: the faithfulness of the model's reconstruction, and
+the sparsity of its learned concept representation. Reconstruction is reported
 as a single error metric; sparsity is reported in two ways, because the
 \ac{VAEE} and the \ac{SAE} do not count activity in the same unit.
 
@@ -113,11 +114,10 @@ the \ac{VAEE}'s reconstruction term reduces to exactly this
 error (\cref{sec:methods:model:loss}),
 and it is the standard reconstruction measure for \acp{SAE}, so the two models
 are scored on the objective each is trained to optimise.\footnote{The two
-reconstruction checks that are standard for \acp{SAE} spliced back into a
-language model --- the \ac{CE} loss and perplexity of the patched model --- are
-not reported for this comparison, as they were not run for the \ac{VAEE};
-\ac{MSE} is the only reconstruction metric on which both models are evaluated
-here.}
+reconstruction checks that are standard for \acp{SAE} spliced into a language
+model --- the \ac{CE} loss and perplexity of the patched model --- are not
+reported for this comparison; \ac{MSE} is the only reconstruction metric on
+which both models are evaluated here.}
 
 Evaluating reconstruction is important, as a model that has low reconstruction
 error is a model that has learned \textit{representative} features of the input
@@ -131,21 +131,22 @@ data, and concepts are representative features by definition.
     its concepts without contradicting its aim. Dictionary-fraction sparsity is
     the \ac{SAE}'s design principle, not the \ac{VAEE}'s; the quantity that
     bears on the comparison is the absolute number of active units, reported
-    below in two ways.
+    below in two ways. Both are per-sample counts, and the figures reported are
+    their averages over the $N$ activation vectors in the evaluation set.
 
     \paragraph{Number of active concepts $\kappa$} From an interpretability
     standpoint, the central sparsity metric is the number of active concepts:
     this is the number of units a human must understand in order to explain the
     input instance. For a TopK \ac{SAE} this corresponds to its $k$
     hyperparameter by
-    construction;\footnote{\label{fn:exp:metrics:topk}Technically, TopK selects
-        the $k$ largest activations, but it is possible that after the ReLU only
-        $k' < k$ activations are non-zero, so $\ell_{0} = \kappa = k' < k$. In
-        practice, this almost never happens, but the $\ell_{0}$ is recomputed
-    every time for maximum accuracy nonetheless.} for \iac{VAEE}, $\kappa =
-    \#\{k : \alpha_k(\vb{x}) \ge \flatfrac{1}{2}\}$, the count of concepts whose
-    posterior gate exceeds a threshold. Although the inference gate is
-    continuous
+    construction;\footnote{\label{fn:exp:metrics:topk}Technically,
+        TopK selects the $k$ largest activations, but it is possible that after
+        the ReLU only $k' < k$ activations are non-zero, so $\ell_{0} = \kappa =
+        k' < k$. In practice, this almost never happens, but the $\ell_{0}$ is
+    recomputed every time for maximum accuracy nonetheless.} for \iac{VAEE},
+    $\kappa = \#\{k : \alpha_k(\vb{x}) \ge \flatfrac{1}{2}\}$, the count of
+    concepts whose posterior gate exceeds a threshold. Although the inference
+    gate is continuous
     (\cref{sec:methods:model:proba:inference}),
     the threshold introduces no real arbitrariness, because the learned
     activations are strongly bimodal --- concentrated near $0$ and $1$, with
@@ -156,9 +157,9 @@ data, and concepts are representative features by definition.
 
     \paragraph{$\ell_{0}$ count} The $\ell_{0}$ pseudo-norm represents the
     amount of information the decoder has access to in order to reconstruct the
-    input. This amount corresponds to the number of non-zero scalars it can
-    reconstruct from. For a TopK \ac{SAE}, this number is its $k$ hyperparameter
-    by construction;\footnote{See
+    input. This amount corresponds to the number of non-zero scalars from which
+    the model can reconstruct. For a TopK \ac{SAE}, this number is its $k$
+    hyperparameter by construction;\footnote{See
     \cref{fn:exp:metrics:topk}.}
     for \iac{VAEE} it is the number of active concepts $\kappa$ multiplied by
     the embedding dimension of each concept $d$.
@@ -216,11 +217,11 @@ The \ac{VAEE} is trained to minimise the objective of
 batch-wise sparsity \ac{KL}, entropy binarisation, and the conditional-embedding
 \ac{KL}. The loss weights are set to $\beta = 4$, $\lambda_{\mathrm{ent}} =
 \gamma = 1$. The Bernoulli prior rate $\pi$ is the \ac{VAEE}'s sparsity dial,
-swept to trace its frontier, but it controls sparsity only indirectly, and
-$\tilde{\kappa} = \pi K$ is a target the optimisation is biased toward, not a
-hard constraint. The final per-sample count $\kappa$ runs higher than the
-nominal $\tilde{\kappa}$, since reconstruction drives $\kappa$ towards higher
-values.
+swept to trace its frontier. It controls each concept's activation rate across a
+batch, so the product $\tilde{\kappa} = \pi K$ estimates the number of concepts
+active per sample; $\pi$ was chosen using this estimate as a target. The final
+per-sample count $\kappa$ exceeds the nominal $\tilde{\kappa}$,
+since reconstruction drives $\kappa$ towards higher values.
 
 The TopK \ac{SAE} baseline is trained with its standard objective ---
 reconstruction error under the top-$k$ activation plus auxiliary loss --- on the
@@ -228,7 +229,7 @@ same activations.
 
 Both models were trained using the \texttt{Adam} optimiser
 \cite{kingmaAdamMethodStochastic2017} with a learning rate of $10^{-4}$ for
-3\,000 epochs and an early stopping patience of 500 epochs.
+$3\,000$ epochs and an early stopping patience of $500$ epochs.
 
 \section{Results} \label{sec:exp:results}
 
@@ -265,18 +266,19 @@ This advantage is specific to the concept axis. \Cref{fig:exp:l0-frontier}
 repeats the comparison in active \textit{neurons} $\ell_{0}$ --- the
 decoder-capacity unit
 (\cref{sec:exp:metrics}) --- where the two
-families do not even occupy the same range. Because each active \ac{VAEE}
-concept is a vector of width $d = 64$, every \ac{VAEE} operating point sits
-above $\ell_{0} \approx 300$, while the \acp{SAE}, with scalar atoms, never
-exceed $\ell_{0} = 128$; a head-to-head reading at matched $\ell_{0}$ is not
-available from these runs. The trend is nonetheless clear: the \ac{SAE} reaches
-a given reconstruction error with fewer active neurons, and the \ac{VAEE} buys
-its low concept count by activating more neurons per sample. The trade-off is
-not eliminated but relocated, from the number of concepts a reader inspects to
-the number of scalars the decoder draws on. Which unit to privilege depends on
-the purpose: interpretation proceeds concept by concept, never coordinate by
-coordinate, so $\kappa$ is the axis on which the comparison bears --- and there
-the \ac{VAEE} wins.
+families do not occupy the same range. Because each active \ac{VAEE} concept is
+a vector of width $d = 64$, every \ac{VAEE} operating point sits above $\ell_{0}
+\approx 300$, while the \acp{SAE}, with scalar atoms, never exceed $\ell_{0} =
+128$; a head-to-head reading at matched $\ell_{0}$ is not available from these
+runs. The trend is nonetheless clear: the \ac{SAE} reaches a given
+reconstruction error with fewer active neurons, and the \ac{VAEE} attains its
+low concept count by activating more neurons per sample.
+
+The \ac{VAEE}'s local interpretability may be simpler, as it requires inspecting
+fewer vector-valued concepts rather than a larger number of scalars. Moreover,
+since the \ac{VAEE}'s dictionary is smaller than a parameter-matched \ac{SAE}'s,
+fewer dictionary entries need labelling ($128$ vs $8\,192$), potentially easing
+its global interpretation as well.
 
 \begin{figure}[tb]
     \myfloatalign
@@ -294,13 +296,12 @@ the \ac{VAEE} wins.
     \label{fig:exp:l0-frontier}
 \end{figure}
 
-
-Both metrics presuppose that the active-concept count is well defined: that
+Both metrics presuppose that the active-concept count is well defined, \ie that
 the continuous inference gate behaves, in practice, as a hard one.
 \Cref{fig:exp:alpha-distribution}
-bears this out: the validation-set distribution of the gate values $\alpha_{k}$
-is sharply bimodal, almost all of its mass falling within $0.01$ of $0$ or $1$,
-the extremes one to two orders of magnitude more frequent than any intermediate
+shows that the validation-set distribution of the gate values $\alpha_{k}$ is
+sharply bimodal, almost all of its mass falling within $0.01$ of $0$ or $1$, the
+extremes one to two orders of magnitude more frequent than any intermediate
 value. The active-concept count is therefore insensitive to the exact cut-off,
 and $\flatfrac{1}{2}$ is a natural threshold for an activation probability.
 
@@ -321,15 +322,15 @@ and $\flatfrac{1}{2}$ is a natural threshold for an activation probability.
 \subsection{Qualitative results} \label{sec:exp:results:qual}
 
 The frontier of \cref{sec:exp:results:quant}
-measures how much reconstruction each active concept buys, but not what those
-concepts are. A unit is useful for interpretability only if it is legible, so
-this section reads off each model's \textit{concept dictionary}: for every
-concept, a collection of tokens on which it activates most strongly, each shown
-inside the context it was drawn from with the activating token in bold
-\citep{brickenMonosemanticityDecomposingLanguage2023,
-billsLanguageModelsCan2023}. A concept is legible when those tokens share a
-discernible property --- a meaning, a grammatical class, an orthographic pattern
---- and opaque when they do not.
+measures how much reconstruction each active concept accounts for, but not what
+those concepts are. A unit is useful for interpretability only if it is
+human-comprehensible, so this section reads off each model's \textit{concept
+dictionary}: for every concept, a collection of tokens on which it activates
+most strongly, each shown inside the context it was drawn from with the
+activating token in bold \citep{brickenMonosemanticityDecomposingLanguage2023,
+billsLanguageModelsCan2023}. A concept is comprehensible when those tokens share
+a discernible property --- a meaning, a grammatical class, an orthographic
+pattern --- and opaque when they do not.
 
 % Each dictionary is read two ways. The \textit{unique} view lists, per concept,
 % the distinct tokens of highest activation, exposing the range a concept can
@@ -341,23 +342,23 @@ of the $128 \times 64$ \ac{VAEE} at $\tilde{\kappa} = 8$ and the $m = 8\,192$
 TopK \ac{SAE} at $k = 8$ --- as concept quality was not measured along the
 frontier.
 
-\paragraph{Concepts the VAEE recovers} \Cref{tab:exp:qual:vaee}
-lists three. Some are genuinely semantic: concept C6 fires on a vocabulary of
-dread (\texttt{curse}, \texttt{tension}, \texttt{fear}, \texttt{creepy}) and C48
-on modifiers of magnitude (\texttt{substantial}, \texttt{considerable},
-\texttt{stunning}, \texttt{broad}). Many more are not: C123, one of a large
-family of its kind, fires on the final sub-token of a word irrespective of
-meaning (the \texttt{k} of \texttt{drek}, the \texttt{p} of \texttt{romp}, the
-\texttt{\'e} of \texttt{naivet\'e}) an orthographic regularity rather than a
-concept. The \ac{VAEE} dictionary is a mixture: a minority of legible concepts
-among a majority of uninterpretable units.
+\paragraph{The VAEE concept dictionary} \Cref{tab:exp:qual:vaee}
+shows three of its concepts. Some are genuinely semantic: concept C6
+fires on a vocabulary of dread (\texttt{curse}, \texttt{tension}, \texttt{fear},
+\texttt{creepy}) and C48 on modifiers of magnitude (\texttt{substantial},
+\texttt{considerable}, \texttt{stunning}, \texttt{broad}). Many more are not:
+C123, one of a large family of its kind, fires on the final sub-token of a word
+irrespective of meaning (the \texttt{k} of \texttt{drek}, the \texttt{p} of
+\texttt{romp}, the \texttt{\'e} of \texttt{naivet\'e}) --- an orthographic
+regularity rather than a concept. The \ac{VAEE} dictionary is a mixture: a
+minority of legible concepts among a majority of uninterpretable units.
 
 \begin{table}[tb]
     \myfloatalign
     \footnotesize
     \begin{tabularx}{\linewidth}{@{}>{\ttfamily}X@{}}
         \toprule
-        {\normalfont\textbf{C6} --- fear / horror / suspense \hfill (firing rate~10.2\%)}\\
+        {\normalfont\textbf{C6} --- fear / horror / suspense \hfill (firing rate 10.2\%)}\\
         \cmidrule(){1-1}
         \dots\ of nuclear holoca\textbf{ust} to generate cheap hol \dots\\
         \dots\ superstitious\textbf{ curse} on chain letters and \dots\\
@@ -375,7 +376,7 @@ among a majority of uninterpretable units.
         % \dots\ s conflict-powered\textbf{ plot} there is a decent \dots\\
         % \dots\ film &#x27;s conflict\textbf{-}powered plot there is \dots\\
         \addlinespace
-        {\normalfont\textbf{C48} --- magnitude / intensity modifiers \hfill (firing rate~9.1\%)}\\
+        {\normalfont\textbf{C48} --- magnitude / intensity modifiers \hfill (firing rate 9.1\%)}\\
         \cmidrule(){1-1}
         \dots\ video game is a\textbf{ lot} more fun than the \dots\\
         \dots\ 9 exploits our\textbf{ substantial} collective fear of nuclear \dots\\
@@ -393,7 +394,7 @@ among a majority of uninterpretable units.
         % \dots\ to its quir\textbf{ky} sentiments but the \dots\\
         % \dots\ words and with the\textbf{ complicated} emotions fueling terrorist \dots\\
         \addlinespace
-        {\normalfont\textbf{C123} --- word-final subword fragments \hfill (firing rate~15.9\%)}\\
+        {\normalfont\textbf{C123} --- word-final subword fragments \hfill (firing rate 15.9\%)}\\
         \cmidrule(){1-1}
         \dots\ -trip dre\textbf{k} we 've seen \dots\\
         % \dots\ about \$ 4\textbf{0} to see a film \dots\\
@@ -415,7 +416,7 @@ among a majority of uninterpretable units.
     \caption[VAEE concept dictionary]{
         Three concepts from the $\kappa = 8$, $128 \times 64$ \ac{VAEE}
         dictionary, each shown with a few of its strongest activations and the
-        activating token in bold. C6 and~C48 are semantically coherent; C123,
+        activating token in bold. C6 and C48 are semantically coherent; C123,
         typical of a large share of the dictionary, is not really interpretable
         and fires on the final sub-token of a word regardless of meaning. The
         firing rate is the fraction of validation tokens on which the concept is
@@ -424,7 +425,7 @@ among a majority of uninterpretable units.
     \label{tab:exp:qual:vaee}
 \end{table}
 
-\paragraph{Features the SAE recovers} The \ac{SAE} dictionary
+\paragraph{The SAE concept dictionary} The \ac{SAE} dictionary
 (\cref{tab:exp:qual:sae}) is similar in kind. It too has clean entries ---
 feature C6703 on nouns of film and storytelling (\texttt{plot},
 \texttt{journey}, \texttt{movie}, \texttt{performance}) and C958 on possessive
@@ -442,7 +443,7 @@ trained on such a small corpus has ample room for it.
     \footnotesize
     \begin{tabularx}{\linewidth}{@{}>{\ttfamily}X@{}}
         \toprule
-        {\normalfont\textbf{C6703} --- film and storytelling nouns \hfill (firing rate~1.4\%)}\\
+        {\normalfont\textbf{C6703} --- film and storytelling nouns \hfill (firing rate 1.4\%)}\\
         \cmidrule(){1-1}
         % \dots\ odding to be\textbf{ funny} , and too cl \dots\\
         % \dots\ ise like a jazz\textbf{man} .\\
@@ -460,7 +461,7 @@ trained on such a small corpus has ample room for it.
         \dots\ lovely film with lovely\textbf{ performances} by buy and acc \dots\\
         % \dots\ in his past two\textbf{ movies} , and gib \dots\\
         \addlinespace
-        {\normalfont\textbf{C958} --- possessive determiners \hfill (firing rate~0.5\%)}\\
+        {\normalfont\textbf{C958} --- possessive determiners \hfill (firing rate 0.5\%)}\\
         \cmidrule(){1-1}
         \textbf{my} wife is an actress \dots\\
         % \textbf{the} tale of tok - \dots\\
@@ -478,7 +479,7 @@ trained on such a small corpus has ample room for it.
         % \dots\ ford movie -\textbf{ six} days , seven nights \dots\\
         % the second\textbf{ coming} of harry pot \dots\\
         \addlinespace
-        {\normalfont\textbf{C6649}, \textbf{C2491}, \textbf{C5296} --- three near-duplicate features \hfill (firing rate~3.8\% each)}\\
+        {\normalfont\textbf{C6649}, \textbf{C2491}, \textbf{C5296} --- three near-duplicate features \hfill (firing rate 3.8\% each)}\\
         \cmidrule(){1-1}
         C6649:\ \ deep, leave, coming, six, instead, series, board, \dots\\
         C2491:\ \ deep, leave, coming, six, instead, series, board, \dots\\
@@ -487,7 +488,7 @@ trained on such a small corpus has ample room for it.
     \end{tabularx}
     \caption[SAE concept dictionary]{
         Features from the $k = 8$, $m = 8\,192$ TopK \ac{SAE} dictionary. C6703
-        and~C958 are coherent; the lower block lists the highest-activating
+        and C958 are coherent; the lower block lists the highest-activating
         tokens of three features that converge on a near-identical set --- one
         instance of the redundancy that consumes much of the dictionary. Firing
         rate as in \cref{tab:exp:qual:vaee}.
@@ -496,46 +497,43 @@ trained on such a small corpus has ample room for it.
 \end{table}
 
 \paragraph{Neither dictionary is clearly more interpretable} Read side by side,
-the two are about equally legible. Each yields a handful of coherent units and a
-majority that don't have a clear label, and the per-concept reconstruction
-advantage of \cref{sec:exp:results:quant}
-does not show up as visibly cleaner concepts. The comparison is not wholly even,
-though: the \ac{VAEE}'s legible concepts come from a dictionary of $128$, the
-\ac{SAE}'s from one of $8\,192$, so a comparable number of usable units is
-recovered from far fewer of them. On this evidence the \ac{VAEE} neither clearly
-improves nor clearly degrades interpretability relative to the \ac{SAE}.
+the two are about equally comprehensible. Each yields a handful of coherent
+units and a majority that don't have a clear label, and the per-concept
+reconstruction advantage of \cref{sec:exp:results:quant}
+does not show up as visibly cleaner concepts. Furthermore, the comparison is not
+perfectly even: the \ac{VAEE}'s meaningful concepts come from a dictionary of
+$128$, the \ac{SAE}'s from one of $8\,192$, so a comparable number of usable
+units is recovered from far fewer of them. On this evidence the \ac{VAEE}
+neither clearly improves nor clearly degrades interpretability relative to the
+\ac{SAE}.
 
-Both dictionaries are best read as corpus-limited. \ac{SST2} is small and
-thematically narrow (\cref{sec:exp:setup}),
-with few of the repeated, varied contexts a large and clean concept vocabulary
-needs to form; orthographic \ac{VAEE} concepts and redundant \ac{SAE} features
-are the kind of degenerate solution a starved corpus is responsible for. Whether
-the \ac{VAEE}'s vector concepts afford richer interpretability than scalar
-features is therefore left open --- a question for a larger and more varied
-corpus. % taken up in \cref{sec:conclusions:future}.
+Whether the \ac{VAEE}'s vector concepts convey richer interpretability than
+scalar features is therefore left open --- a question for a larger and more
+varied corpus.
 
 \subsection{Ablation study} \label{sec:exp:results:ablation}
 
 The configuration used in the experiments above was not the only one available.
-It fixes a shallow encoder and decoder, an embedding width of $d = 64$, and the
-objective of \cref{eq:methods:loss:objective}
-without a decoder-orthogonality term. This section reports the ablations behind
-those choices.
+It fixes an embedding width of $d = 64$ and a linear-plus-\ac{GELU} encoder with
+a linear decoder. % and the objective of \cref{eq:methods:loss:objective}
+% without a decoder-orthogonality term.
+This section reports the ablations behind those choices.
 
 \paragraph{Embedding width} The embedding width $d$ is the \ac{VAEE}'s defining
 degree of freedom --- the dimension along which a concept becomes a vector
 rather than a scalar. \Cref{fig:exp:d-ablation}
-sweeps it, plotting validation \ac{MSE} against $d \in \{16, 32, 64, 128\}$ at a
-fixed $\tilde{\kappa} = \pi K$ for three dictionary sizes. Reconstruction
-improves monotonically with $d$, with diminishing returns: the gain from $16$ to
-$64$ is larger than from $64$ to $128$. This extra capacity is what a scalar
-atom cannot supply, but it is bought at a price: every active concept now
-contributes $d$ active neurons rather than one ($\ell_{0} = \kappa d$,
+sweeps it, plotting validation \ac{MSE} against $d \in \{16,\, 32,\, 64,\,
+128\}$ at a fixed $\tilde{\kappa} = \pi K$ for three dictionary sizes.
+Reconstruction improves monotonically with $d$, with diminishing returns: the
+gain from $16$ to $64$ is larger than from $64$ to $128$. This extra capacity is
+what a scalar atom cannot supply, but it comes at a price: every active concept
+now contributes $d$ active neurons rather than one ($\ell_{0} = \kappa d$,
 \cref{sec:exp:metrics}). The $d = 64$ used in
-the other experiments already captures a good amount of the reconstruction gain
-while maintaining training feasible on limited resources, as increasing the
-value of $d$ while keeping all other parameters constants also increases the
-number of overall parameters by a factor of $2n$.
+the other experiments already captures much of the reconstruction gain while
+keeping training feasible on limited resources, since increasing $d$ with all
+other dimensions fixed raises the parameter count in proportion --- the encoder
+and decoder weights scale as $2nKd$
+(\cref{sec:exp:baselines}).
 
 \begin{figure}[tb]
     \myfloatalign
@@ -545,89 +543,117 @@ number of overall parameters by a factor of $2n$.
         reconstruction. Validation \ac{MSE} against $d \in \{16, 32, 64, 128\}$,
         one curve per dictionary size $K \in \{32, 64, 128\}$, all at the fixed
         sparsity target $\tilde{\kappa} = \pi K = 8$, so that only the embedding
-        width varies along each curve. Reconstruction improves with $d$ at a
-        % I cannot fix the active-concept count, only its approximate value
-        fixed active-concept count, with diminishing returns --- widening a
-        concept buys capacity that a scalar atom cannot, though at the cost of
-        more active neurons ($\ell_{0} = \kappa d$) and more parameters.
+        width varies along each curve. Reconstruction improves with $d$, with
+        diminishing returns --- widening a concept adds capacity that a scalar
+        atom cannot, though at the cost of more active neurons ($\ell_{0} =
+        \kappa d$) and more parameters.
     }
     \label{fig:exp:d-ablation}
 \end{figure}
 
 \paragraph{Encoder and decoder depth} Throughout, the \ac{VAEE} uses a
-deliberately \textit{shallow} configuration: a single linear-plus-\acs{GELU}
-layer for the encoder $f_\phi$ and a purely linear decoder $g_\theta$. Several
-alternatives are available, and a multi-layer \ac{MLP} for either map, or
-dropping the encoder non-linearity for a plain linear projection were the ones
-explored. \Cref{fig:exp:arch-ablation}
-compares them at a fixed dictionary size and embedding width.\graffito{Not true,
-but final experiment can be rerun} The added depth
-buys little: an \ac{MLP} encoder or decoder reconstructs no better than the
-shallow pair, and the gap to the plain-linear encoder is small. The shallow
-configuration is used as the default for this reason --- it reconstructs as well
-as the deeper variants at lower complexity, and its linear decoder mirrors the
-dictionary decoder of the \ac{SAE} baseline
-(\cref{sec:exp:baselines}).\graffito{Rewrite paragraph
-against actual results.}
+\textit{shallow} configuration: a single linear-plus-\acs{GELU} layer for the
+encoder $f_\phi$ and a purely linear decoder $g_\theta$. Two alternatives were
+explored: a multi-layer \ac{MLP} for either map, and a plain linear encoder and
+decoder. \Cref{fig:exp:arch-ablation}
+compares them at a fixed dictionary size and embedding width. The added depth
+does not translate into better performance: the shallow configuration
+reconstructs better, and at a lower active-concept count, than either
+alternative. The \ac{MLP}'s larger parameter count does not significantly
+improve reconstruction over the plain-linear configuration either, despite
+activating slightly more concepts.
 
 \begin{figure}[tb]
     \myfloatalign
-    % \includegraphics[width=0.95\linewidth]{gfx/arch_ablation.png}
+    \includegraphics[width=0.95\linewidth]{gfx/arch_ablation.png}
     \caption[Effect of encoder/decoder depth on VAEE reconstruction]{
         Validation \ac{MSE} of the \ac{VAEE} under encoder and decoder
         architectures of increasing depth --- a plain linear encoder, the
-        shallow linear-plus-\acs{GELU} encoder used throughout, and a multi-layer
-        \ac{MLP} --- at a fixed dictionary size $K$ and embedding width $d$.
-        Deeper maps do not reconstruct materially better than the shallow pair,
-        which is the configuration used in the other experiments.
+        shallow linear-plus-\acs{GELU} encoder used throughout, and \iac{MLP}
+        with a hidden layer $256$ neurons wide --- at a fixed dictionary size $K
+        = 50$ and embedding width $d = 8$. The shallow configuration achieves
+        better reconstruction at a lower $\kappa$ than both the linear and
+        \ac{MLP} configurations.
     }
     \label{fig:exp:arch-ablation}
 \end{figure}
 
-\paragraph{Decoder orthogonality} The objective of
-\cref{eq:methods:loss:objective} omits a term that the model
-development leaves available
-(\cref{sec:methods:model:loss}): a
-penalty $\lambda_{\mathrm{ortho}}$ pushing the columns of the decoder --- the
-concept atoms --- toward mutual orthogonality, in the spirit of curbing the
-feature redundancy seen in the \ac{SAE} dictionary
-(\cref{sec:exp:results:qual}). In
-practice it makes no real difference. This term contributes so little to the
-training and validation losses (\cref{fig:exp:ortho-ablation}),
-that it is dropped from the final objective. The likely reason is geometric: the
-decoder's columns live in the $n = 4\,096$-dimensional activation space, and
-vectors drawn at random in so high a dimension are already almost mutually
-orthogonal \citep{vershyninHighDimensionalProbabilityIntroduction2018}, so the
-subspaces they span start near-orthogonal and the penalty has little left to
-enforce.\graffito{Add SAE comparison? This isn't true for the SAE, whose
-concepts are scalars, or 1-D vectors.}
+% \paragraph{Decoder orthogonality} The objective of
+% \cref{eq:methods:loss:objective} omits a term that the model
+% development leaves available
+% (\cref{sec:methods:model:loss}): a
+% penalty $\lambda_{\mathrm{ortho}}$ pushing the columns of the decoder --- the
+% concept atoms --- toward mutual orthogonality, in the spirit of curbing the
+% feature redundancy seen in the \ac{SAE} dictionary
+% (\cref{sec:exp:results:qual}). In
+% practice it makes no real difference. This term contributes so little to the
+% training and validation losses (\cref{fig:exp:ortho-ablation}),
+% that it is dropped from the final objective. The likely reason is geometric: the
+% decoder's columns live in the $n = 4\,096$-dimensional activation space, and
+% vectors drawn at random in so high a dimension are already almost mutually
+% orthogonal \citep{vershyninHighDimensionalProbabilityIntroduction2018}, so the
+% subspaces they span start near-orthogonal and the penalty has little left to
+% enforce.\graffito{Add SAE comparison? This isn't true for the SAE, whose
+% concepts are scalars, or 1-D vectors.}
+%
+% \begin{figure}[tb]
+%     \myfloatalign
+%     % \includegraphics[width=0.95\linewidth]{gfx/ortho_ablation.png}
+%     \caption[Effect of the decoder-orthogonality penalty]{
+%         % I think a better way to visualise this would be to show the loss
+%         % breakdown of a model (recon, sparsity, cond-kl, entropy, ortho),
+%         % highlighting the fact that ortho loss sits at < 10e-3 while all other
+%         % terms are \approx 10e-2 or more
+%         Train and validation loss breakdown of the \ac{VAEE} over training, with
+%         and without the decoder-orthogonality penalty $\lambda_{\mathrm{ortho}}$.
+%         The two are nearly indistinguishable --- the penalty leaves
+%         reconstruction and the other loss terms essentially unchanged --- so it
+%         is omitted from the objective of
+%         \cref{eq:methods:loss:objective}.
+%     }
+%     \label{fig:exp:ortho-ablation}
+% \end{figure}
 
-\begin{figure}[tb]
-    \myfloatalign
-    % \includegraphics[width=0.95\linewidth]{gfx/ortho_ablation.png}
-    \caption[Effect of the decoder-orthogonality penalty]{
-        % I think a better way to visualise this would be to show the loss
-        % breakdown of a model (recon, sparsity, cond-kl, entropy, ortho),
-        % highlighting the fact that ortho loss sits at < 10e-3 while all other
-        % terms are \approx 10e-2 or more
-        Train and validation loss breakdown of the \ac{VAEE} over training, with
-        and without the decoder-orthogonality penalty $\lambda_{\mathrm{ortho}}$.
-        The two are nearly indistinguishable --- the penalty leaves
-        reconstruction and the other loss terms essentially unchanged --- so it
-        is omitted from the objective of
-        \cref{eq:methods:loss:objective}.
-    }
-    \label{fig:exp:ortho-ablation}
-\end{figure}
+\paragraph{Design choices left open} Two parts of the setup were fixed rather
+than ablated. First, the gate measures embedding-to-prototype agreement by
+cosine similarity rather than the inner-product or negative-Euclidean
+alternatives of \cref{eq:methods:proba:sim}; cosine is a
+reasonable default --- it decouples the gate from the embedding magnitude
+(\cref{sec:methods:model:proba:sim}) ---
+but the alternatives were not swept. Second, the embedding-posterior standard
+deviation $\sigma_{0}$ was held fixed throughout. How either choice affects
+reconstruction and interpretability is left to future work
+(\cref{sec:conclusions:future}).
 
-\paragraph{Design choices left open} One of the model's design choices was fixed
-rather than ablated: the gate measures embedding-to-prototype agreement by cosine
-similarity rather than the inner-product or negative-Euclidean alternatives of
-\cref{eq:methods:proba:sim}. Cosine is a reasonable default ---
-it decouples the gate from the embedding magnitude
-(\cref{sec:methods:model:proba:sim}) --- but it was not swept, so what the
-alternatives cost or buy in reconstruction and interpretability is left open for
-future work (\cref{sec:conclusions:future}).
+\section*{Conclusions}
+
+This chapter tested the \ac{VAEE}'s central claim on the decomposition of
+\ac{LLM} activations, against a parameter-matched TopK \ac{SAE} on the residual
+stream of Mistral 7B (\cref{sec:exp:setup}). On
+the axis that matters for interpretability --- the number of active concepts
+$\kappa$ --- the result is clear: every \ac{VAEE} frontier lies below every
+\ac{SAE} frontier, matching the best \ac{SAE}'s reconstruction with roughly an
+order of magnitude fewer active concepts
+(\cref{sec:exp:results:quant}). The
+relaxation of the sparsity--reconstruction trade-off the architecture was
+designed for does show up, but on this axis alone: measured in active
+\textit{neurons} $\ell_{0}$, the trade-off is not removed but relocated, the
+\ac{SAE} reaching a given error with fewer active scalars.
+
+The interpretability of the recovered concepts is a more equivocal story. Read
+side by side, neither dictionary is clearly more interpretable than the other
+(\cref{sec:exp:results:qual}): each
+yields a handful of coherent units among a majority that lack a clear
+interpretation, and the per-concept reconstruction advantage does not translate
+into visibly cleaner concepts. Both likely reflect the limits of the data: the
+small and thematically narrow \ac{SST2} offers too little variety for a rich
+concept vocabulary to form. The ablations
+(\cref{sec:exp:results:ablation}) identify
+the embedding width $d$ as the architecture's decisive degree of freedom and
+show that the shallow configuration outperform all explored variants. Whether
+vector concepts afford richer interpretability than scalar features is a
+question a larger corpus and a dedicated evaluation must settle --- taken up as
+future work in \cref{sec:conclusions:future}.
 
 
 %*****************************************
