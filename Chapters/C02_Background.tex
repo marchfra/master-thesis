@@ -781,10 +781,11 @@ architectures that try to improve on it.
     \citet{hubenSparseAutoencodersFind2023}. It uses an $\ell_{1}$
     penalty\footnote{The $\ell_{p}$ norm is defined as $\ell_{p}(\vb{x}) =
     \norm{\vb{x}}_{p} = \left(\sum_{i}
-    \abs{x_{i}}^{p}\right)^{\flatfrac{1}{p}},\ p \ge 1$.} on the latent code to
-    encourage most of $\vb{z}$'s entries to be exactly zero, so that any given
-    activation is reconstructed from a small number of active features. The loss
-    used to train this model is the following:
+    \abs{x_{i}}^{p}\right)^{\flatfrac{1}{p}},\ p \ge 1$. Unless explicitly
+    stated otherwise, $\norm{\,\cdot\,} = \norm{\,\cdot\,}_{2}$.} on the latent
+    code to encourage most of $\vb{z}$'s entries to be exactly zero, so that any
+    given activation is reconstructed from a small number of active features.
+    The loss used to train this model is the following:
     \begin{equation} \label{eq:background:ae:sae:l1-loss}
         \mathcal{L} = \mathcal{L}_{\mathrm{recon}} + \lambda \norm{\vb{z}}_{1}.
     \end{equation}
