@@ -250,12 +250,12 @@ or, using the reparameterisation trick,
 The activation probability is not predicted by a separate head but
 \textit{derived} from the predicted embedding location $\vb{\mu}_k(\vb{x})$: a
 concept should be judged active precisely when its predicted embedding lands
-near its prototype. Because the gate reads off the mean $\vb{\mu}_k$ rather
-than a sampled embedding, the mask depends on $\vb{x}$ alone, as the mean-field
-posterior requires. As shown in
-\cref{app:vaee:gating}, this gate is
-the optimal mean-field mask factor under the Gated Gaussian prior: a sigmoid of
-the similarity between the predicted embedding and the prototype,
+near its prototype. Because the activation probability is read off the mean
+$\vb{\mu}_k$ rather than a sampled embedding, the mask depends on $\vb{x}$ alone,
+as the mean-field posterior requires. As shown in
+\cref{app:vaee:gating}, this activation probability --- the parameter of
+the optimal mean-field mask factor under the Gated Gaussian prior --- is a
+sigmoid of the similarity between the predicted embedding and the prototype,
 \begin{equation} \label{eq:methods:proba:alpha}
     \alpha_k(\vb{x}) = \on{sigmoid}\left(
     \frac{\on{sim}\left(\vb{\mu}_k(\vb{x}), \vb{h}_k\right)}{\tau}
@@ -278,9 +278,10 @@ maddisonConcreteDistributionContinuous2017}: rather than relaxing a single
 mutually-exclusive choice over categories, it applies an independent relaxed
 Bernoulli to each concept, so any subset of concepts may be active at once. A
 Bernoulli draw can be written as
-$\mathds{1}\left[u < \alpha_{k}(\vb{x})\right] = \mathds{1}\left[\on{logit}\alpha_k(\vb{x}) > g\right]$
-with logistic noise $g = \on{logit}(u)$, $u \sim \on{Uniform}(0,
-1)$;\footnote{The logit transform is defined as $\on{logit}(s) = \log \frac{s}{1
+$\mathds{1}\left[u < \alpha_{k}(\vb{x})\right] = \mathds{1}\left[\on{logit}\alpha_k(\vb{x}) - g > 0\right]$
+with logistic noise $g = \on{logit}(u)$, $u \sim
+\on{Uniform}\ointerval{0}{1}$;\footnote{The logit transform is defined as
+    $\on{logit}(s) = \log \frac{s}{1
 - s}$.}\footnote{This logistic noise is the difference of two standard Gumbel
 variates, which is what ties the relaxation to the Gumbel-Softmax family.}
 replacing the indicator with a temperature-controlled sigmoid gives the
@@ -304,21 +305,26 @@ One subtlety remains. The embedding posterior of
 \cref{eq:methods:proba:posterior-z} does not depend on the
 mask, since the encoder produces $\vb{\mu}_k$ from $\vb{x}$ alone, so a sampled
 $\vb{z}_k$ would pass signal to the decoder regardless of whether the concept is
-active. To enforce that inactive concepts contribute exactly nothing, a
-multiplicative gate is applied before decoding,
+active. A multiplicative gate zeroes each inactive slot before decoding,
 \begin{equation} \label{eq:methods:proba:gate}
-    \hat{\vb{x}} = g_\theta\left(\vb{c} \odot \vb{z}\right), \qquad
-    \left(\vb{c} \odot \vb{z}\right)_k = c_k \vb{z}_k.
+    \hat{\vb{x}} = g_{\theta} \left(\vb{c} \odot \vb{z}\right), \qquad
+    \left(\vb{c} \odot \vb{z}\right)_{k} = c_{k} \vb{z}_{k}
 \end{equation}
-The gate is empirically load-bearing: without it, the soft penalty on inactive
-embeddings derived in \cref{sec:methods:model:loss}
-is too weak to drive them to zero, because the reconstruction gradient keeps
-inflating them. It also exposes the mask $\vb{c}$ as a clean handle for
-concept-level interventions
-(\cref{sec:methods:model:interventions}).
+This is an architectural choice rather than a term of the \ac{ELBO} of
+\cref{eq:methods:loss:elbo}, which decodes from the ungated
+$\vb{z}$; its primary purpose is to expose the mask $\vb{c}$ as a clean handle
+for concept-level interventions
+(\cref{sec:methods:model:interventions}),
+where forcing $c_k$ to $0$ or $1$ switches a concept off or on. It affects very
+little an ordinary forward pass: an active concept ($c_k = 1$) passes through
+untouched, while an inactive one ($c_k = 0$) zeroes an embedding that the
+conditional-embedding penalty of \cref{sec:methods:model:loss}
+keeps small in any case. The gate also helps with this: in training, zeroing the
+inactive slots removes the reconstruction gradient that would otherwise try to
+inflate their embeddings, leaving the penalty free to hold them near the origin.
 
 \subsubsection{Similarity} \label{sec:methods:model:proba:sim}
-The gate of \cref{eq:methods:proba:alpha} is written for a
+The activation probability of \cref{eq:methods:proba:alpha} is written for a
 generic similarity $\on{sim}(\cdot, \cdot)$, for which three choices are
 considered:
 \begin{equation} \label{eq:methods:proba:sim}
@@ -332,7 +338,7 @@ considered:
     \end{cases}.
 \end{equation}
 Because the embeddings are decoded unnormalised, the choice determines whether
-the gate is coupled to the embedding's magnitude. \textit{Cosine similarity}
+the activation probability is coupled to the embedding's magnitude. \textit{Cosine similarity}
 depends only on the angle between $\vb{\mu}_k$ and $\vb{h}_k$: the angle
 controls the discrete gate while the magnitude is left free to carry information
 to the decoder. The plain inner product is unbounded and entangles gating with
@@ -417,8 +423,9 @@ stability rather than mathematical necessity.
     training-time activation with the binary mask of the generative model. This
     is a practical add-on, not a rearranged \ac{ELBO} term.
 
-    \paragraph{Stop-gradient on the activation} The conditional-embedding
-    \ac{KL} couples the activation to the embeddings: in closed form
+    \paragraph{Stop-gradient on the activation} The
+    con\-di\-tion\-al-em\-bed\-ding \ac{KL} couples the activation to the
+    embeddings: in closed form
     (\cref{app:vaee:elbo}) it reads
     $\alpha_{i,k} \norm{\vb{\mu}_{i,k} - \vb{h}_k}^{2}_{2} + (1 - \alpha_{i,k})
     \norm{\vb{\mu}_{i,k}}^{2}_{2}$, which the network could shrink by driving
