@@ -1,0 +1,38 @@
+%************************************************
+\chapter{Closed-form Conditional KL} \label{app:vaee:cond-kl}
+%************************************************
+
+% This appendix gives the closed-form reduction of the conditional-embedding
+% \ac{KL} term of the \ac{VAEE} training objective. Throughout, $\norm{\,\cdot\,}$
+% is used instead of $\norm{\,\cdot\,}_{2}$ to avoid making the notation
+% excessively verbose.
+
+The conditional-embedding \ac{KL} of \cref{eq:methods:loss:elbo}
+reduces to the closed form substituted into the practical loss
+(\cref{eq:methods:loss:cond-kl}). The expectation over the
+Bernoulli mask $\mathbb{E}_{q_\phi(c_k \mid \vb{x})}$ is the convex combination
+of its two branches with weights $\alpha_k$ and $1 - \alpha_k$:
+\begin{multline*}
+    \sum_{k=1}^{K} \E[q_\phi(c_k \mid \vb{x})]{ \KL{q_\phi(\vb{z}_k \mid \vb{x})}{p(\vb{z}_k \mid c_k)}} =\\
+    = \sum_{k=1}^{K} \left[ \alpha_k\, D_{\mathrm{KL}}^{(k,1)} + (1 - \alpha_k)\, D_{\mathrm{KL}}^{(k,0)}
+    \right],
+\end{multline*}
+where $D_{\mathrm{KL}}^{(k,c)} = \KL{q_\phi(\vb{z}_k \mid \vb{x})}{p(\vb{z}_k
+\mid c_k {=} c)}$. Both branches are \ac{KL} divergences between Gaussians
+sharing the covariance $\sigma_0^2 \mathbb{I}$, for which the divergence reduces
+to the scaled squared distance between the means,
+\begin{equation*}
+    \KL{\mathcal{N}(\vb{\mu}, \,\sigma_0^2 \mathbb{I})}{\mathcal{N}(\vb{\nu}, \,\sigma_0^2 \mathbb{I})}
+    = \frac{1}{2 \sigma_0^2}{\norm{\vb{\mu} - \vb{\nu}}^2}.
+\end{equation*}
+With the prior means $c_k \vb{h}_k$ of \cref{eq:methods:proba:prior-z}
+--- the prototype $\vb{h}_k$ when active, the origin when
+inactive --- the conditional-embedding \ac{KL} takes its closed form,
+\begin{multline}
+    \sum_{k=1}^{K} \E[q_\phi(c_k \mid \vb{x})]{\KL{q_\phi(\vb{z}_k \mid \vb{x})}{p(\vb{z}_k \mid c_k)}} =\\
+    = \frac{1}{2\sigma_0^2} \sum_{k=1}^{K} \left[ \alpha_k \norm{\vb{\mu}_k - \vb{h}_k}^2 + (1 - \alpha_k) \norm{\vb{\mu}_k}^2 \right],
+    \tag{\ref{eq:methods:loss:cond-kl} revisited}
+\end{multline}
+which is the term substituted into the practical loss of
+\cref{eq:methods:loss:objective}, with the factor $\tfrac{1}{2
+\sigma^{2}_{0}}$ being absorbed into the $\gamma$ hyperparameter.

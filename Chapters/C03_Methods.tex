@@ -127,14 +127,6 @@ instead of living in the input space they live in latent space. % unrelated:
 
 \section{Model Development} \label{sec:methods:model}
 
-% TODO (paused 2026-06-23): supervisor wants the appendix derivations folded into
-% this section (Option 2, derive-in-place) — A.1 gating -> Inference subsubsection,
-% A.2 ELBO -> Training Objective opener. Full plan in
-% .claude/plans/fine-you-convinced-me-hidden-starfish.md. NB the appendix C0A
-% include is commented out in thesis.tex, so the four \cref{app:vaee:*} below
-% (Inference + Training Objective) currently dangle until the move is done (or C0A
-% is temporarily re-included).
-
 \subsection{Probabilistic Formulation} \label{sec:methods:model:proba}
 
 The \ac{VAEE} is defined as a probabilistic generative model of an
@@ -227,7 +219,7 @@ mask configurations for $\vb{c}$:
 The \ac{VAEE} instead uses amortised variational inference
 (\cref{sec:background:ae:vae}),
 approximating the true posterior with a \textit{mean-field} family that
-factorises over both latents and across concepts,
+factorises both over latents and across concepts,
 \begin{equation} \label{eq:methods:proba:posterior}
     q_\phi(\vb{c}, \vb{z} \mid \vb{x}) = \prod_{k=1}^{K}
     q_\phi(\vb{z}_k \mid \vb{x})\, q_\phi(c_k \mid \vb{x}),
@@ -250,20 +242,103 @@ or, using the reparameterisation trick,
 The activation probability is not predicted by a separate head but
 \textit{derived} from the predicted embedding location $\vb{\mu}_k(\vb{x})$: a
 concept should be judged active precisely when its predicted embedding lands
-near its prototype. Because the activation probability is read off the mean
-$\vb{\mu}_k$ rather than a sampled embedding, the mask depends on $\vb{x}$ alone,
-as the mean-field posterior requires. As shown in
-\cref{app:vaee:gating}, this activation probability --- the parameter of
-the optimal mean-field mask factor under the Gated Gaussian prior --- is a
-sigmoid of the similarity between the predicted embedding and the prototype,
+near its prototype. This is not an arbitrary heuristic but the \textit{optimal}
+form of the mask factor $q_\phi(c_k \mid \vb{x})$, dictated by the Gated
+Gaussian prior of \cref{eq:methods:proba:prior-z}.
+
+For a mean-field family, the factor that maximises the \ac{ELBO} while the
+remaining factors are held fixed has a closed form: its logarithm equals the
+expectation of the log-joint over those other factors, up to an additive
+constant \citep{bleiVariationalInferenceReview2017}. Applied to the mask factor,
+with the expectation taken over the embedding factor
+$q_\phi(\vb{z}_k \mid \vb{x})$,
+\begin{equation*}
+    \begin{split}
+        \log q_\phi^{\star}(c_k \mid \vb{x})
+        &= \E[q_\phi(\vb{z}_k \mid \vb{x})]{\log p(c_k, \vb{z}_k)} + \on{const} \\
+        &= \log p(c_k) + \E[q_\phi(\vb{z}_k \mid \vb{x})]{\log p(\vb{z}_k \mid c_k)} + \on{const}.
+    \end{split}
+\end{equation*}
+The likelihood $p_\theta(\vb{x} \mid \vb{z})$ of
+\cref{eq:methods:proba:likelihood} carries no $c_k$ --- the generative flow is
+$\vb{c} \to \vb{z} \to \vb{x}$, so $\vb{x}$ depends on the mask only through the
+embeddings --- and is therefore absorbed into the constant, leaving only the
+prior $p(c_k)$ and the Gated Gaussian term.
+
+Because the mask entry $c_k$ is binary, the factor
+$q_\phi^{\star}(c_k \mid \vb{x})$ is fully characterised by its log-odds: the
+sigmoid is the inverse of the logit transform, so
+\begin{equation*}
+    \begin{split}
+        \alpha_{k}(\vb{x}) \equiv q_\phi^{\star}(c_k = 1 \mid \vb{x})
+        &= \on{sigmoid} \left(\log \frac{q_\phi^{\star}(c_k = 1 \mid \vb{x})}{1 - q_\phi^{\star}(c_k = 1 \mid \vb{x})}\right) \\
+        &= \on{sigmoid} \left(\log \frac{q_\phi^{\star}(c_k = 1 \mid \vb{x})}{q_\phi^{\star}(c_k = 0 \mid \vb{x})}\right),
+    \end{split}
+\end{equation*}
+and the optimality condition above gives those log-odds as a prior term plus an
+expected likelihood ratio,
+\begin{equation*}
+    \log \frac{q_\phi^{\star}(c_k = 1 \mid \vb{x})}{q_\phi^{\star}(c_k = 0 \mid \vb{x})} =
+    \log \frac{p(c_k = 1)}{p(c_k = 0)} +
+    \E[q_\phi(\vb{z}_k \mid \vb{x})]{\log \frac{p(\vb{z}_k \mid c_k = 1)}{p(\vb{z}_k \mid c_k = 0)}}.
+\end{equation*}
+The prior term is the logit of the Bernoulli rate $\pi$ of
+\cref{eq:methods:proba:prior-c}, since
+$\on{logit}(\pi) = \log \frac{\pi}{1-\pi}$. For the likelihood ratio,
+substituting the two branches of the Gated Gaussian prior ---
+$\mathcal{N}(\vb{z}_k;\, \vb{h}_k,\, \sigma_0^2 \mathbb{I})$ when active and
+$\mathcal{N}(\vb{z}_k;\, \vb{0},\, \sigma_0^2 \mathbb{I})$ when inactive ---
+cancels the shared $(2\pi\sigma_0^2)^{-d/2}$ normalising constants inside the
+log-ratio, leaving only the exponentials,
+\begin{equation*}
+    \begin{split}
+        \log \frac{p(\vb{z}_k \mid c_k = 1)}{p(\vb{z}_k \mid c_k = 0)}
+        &= \log \frac{\exp\left(-\frac{1}{2\sigma_0^2}\norm{\vb{z}_k - \vb{h}_k}^2\right)}{\exp\left(-\frac{1}{2\sigma_0^2}\norm{\vb{z}_k}^2\right)} \\
+        &= \frac{1}{2\sigma_0^2}\left(\norm{\vb{z}_k}^2 - \norm{\vb{z}_k - \vb{h}_k}^2\right).
+    \end{split}
+\end{equation*}
+Expanding the squared distance
+$\norm{\vb{z}_k - \vb{h}_k}^2 = \norm{\vb{z}_k}^2 - 2\,\vb{z}_k \cdot \vb{h}_k + \norm{\vb{h}_k}^2$
+makes the $\norm{\vb{z}_k}^2$ terms cancel exactly, so the likelihood ratio
+collapses to an inner product against the prototype that is \textit{linear} in
+the embedding,
+\begin{equation*}
+    \log \frac{p(\vb{z}_k \mid c_k = 1)}{p(\vb{z}_k \mid c_k = 0)} =
+    \frac{1}{\sigma_0^2}\left(\vb{z}_k \cdot \vb{h}_k
+    - \tfrac{1}{2}\norm{\vb{h}_k}^2\right).
+\end{equation*}
+Linearity is what makes the expectation tractable, and exactly so: with no term
+beyond first order in $\vb{z}_k$, the expectation over
+$q_\phi({\vb{z}_k \mid \vb{x}})$ amounts to replacing $\vb{z}_k$ with its mean
+$\vb{\mu}_k(\vb{x})$. Adding the prior log-odds back and converting through the
+sigmoid yields the exact activation probability,
+\begin{equation} \label{eq:methods:proba:alpha-exact}
+    \alpha_k(\vb{x}) = \on{sigmoid}\left(
+    \frac{1}{\sigma_0^2}\left(\vb{\mu}_k(\vb{x}) \cdot \vb{h}_k
+    - \tfrac{1}{2}\norm{\vb{h}_k}^2\right) + \on{logit}(\pi)
+    \right).
+\end{equation}
+
+In practice the additive constants
+$-\frac{1}{2\sigma_0^2}\norm{\vb{h}_k}^2 + \on{logit}(\pi)$ are dropped, the
+scale $1/\sigma_0^2$ folded into a single learnable inverse temperature
+$1/\tau$, and the inner product generalised to a generic similarity
+$\on{sim}(\cdot, \cdot)$ (\cref{sec:methods:model:proba:sim}), giving the form
+used throughout,
 \begin{equation} \label{eq:methods:proba:alpha}
     \alpha_k(\vb{x}) = \on{sigmoid}\left(
     \frac{\on{sim}\left(\vb{\mu}_k(\vb{x}), \vb{h}_k\right)}{\tau}
     \right),
 \end{equation}
-scaled by an inverse temperature $1/\tau$ --- a single learnable scalar,
-initialised to $\tau = 0.1$. This activation probability parameterises the
-Bernoulli posterior over the mask,
+with $1/\tau$ a single learnable scalar initialised to $\tau = 0.1$. Reading the
+activation probability off the mean $\vb{\mu}_k$ rather than a sampled embedding
+makes the mask depend on $\vb{x}$ alone, as the mean-field posterior requires,
+and loses nothing in doing so: since $\vb{x}$ depends on the mask only through
+$\vb{z}_k$, the true posterior factor satisfies
+$p(c_k \mid \vb{z}_k, \vb{x}) = p(c_k \mid \vb{z}_k)$ --- itself a sigmoid of the
+same linear log-odds --- and \cref{eq:methods:proba:alpha-exact} is exactly that
+posterior evaluated at $\vb{z}_k = \vb{\mu}_k(\vb{x})$. This activation
+probability parameterises the Bernoulli posterior over the mask,
 \begin{equation} \label{eq:methods:proba:c_k}
     q_\phi\left(c_k \mid \vb{x}\right) = \on{Bern}\left(c_k; \,
     \alpha_k(\vb{x})\right).
@@ -299,7 +374,8 @@ gate is then nominally soft, but in practice effectively hard: the binarisation
 pressure of the training objective
 (\cref{sec:methods:model:loss}) drives
 the learned activations to a strongly bimodal distribution concentrated near $0$
-and $1$.
+and $1$
+(\cref{sec:exp:results:quant:gate}).
 
 One subtlety remains. The embedding posterior of
 \cref{eq:methods:proba:posterior-z} does not depend on the
@@ -310,18 +386,21 @@ active. A multiplicative gate zeroes each inactive slot before decoding,
     \hat{\vb{x}} = g_{\theta} \left(\vb{c} \odot \vb{z}\right), \qquad
     \left(\vb{c} \odot \vb{z}\right)_{k} = c_{k} \vb{z}_{k}
 \end{equation}
-This is an architectural choice rather than a term of the \ac{ELBO} of
-\cref{eq:methods:loss:elbo}, which decodes from the ungated
-$\vb{z}$; its primary purpose is to expose the mask $\vb{c}$ as a clean handle
-for concept-level interventions
+This is an architectural choice rather than a term of the variational bound
+(\cref{sec:methods:model:loss}), whose
+likelihood (\cref{eq:methods:proba:likelihood}) decodes from
+the ungated $\vb{z}$; its primary purpose is to expose the mask $\vb{c}$ as a
+clean handle for concept-level interventions
 (\cref{sec:methods:model:interventions}),
-where forcing $c_k$ to $0$ or $1$ switches a concept off or on. It affects very
-little an ordinary forward pass: an active concept ($c_k = 1$) passes through
+where forcing $c_k$ to $0$ or $1$ switches a concept off or on. Ideally, the gate
+affects very little an ordinary forward pass: an active concept ($c_k = 1$) passes through
 untouched, while an inactive one ($c_k = 0$) zeroes an embedding that the
 conditional-embedding penalty of \cref{sec:methods:model:loss}
-keeps small in any case. The gate also helps with this: in training, zeroing the
-inactive slots removes the reconstruction gradient that would otherwise try to
-inflate their embeddings, leaving the penalty free to hold them near the origin.
+already tries to keep small
+(\cref{sec:exp:results:quant:gate}).
+The gate also helps with this: in training, zeroing the inactive slots removes
+the reconstruction gradient that would otherwise try to inflate their
+embeddings, leaving the penalty free to hold them near the origin.
 
 \subsubsection{Similarity} \label{sec:methods:model:proba:sim}
 The activation probability of \cref{eq:methods:proba:alpha} is written for a
@@ -338,22 +417,93 @@ considered:
     \end{cases}.
 \end{equation}
 Because the embeddings are decoded unnormalised, the choice determines whether
-the activation probability is coupled to the embedding's magnitude. \textit{Cosine similarity}
-depends only on the angle between $\vb{\mu}_k$ and $\vb{h}_k$: the angle
-controls the discrete gate while the magnitude is left free to carry information
-to the decoder. The plain inner product is unbounded and entangles gating with
-magnitude (the network can inflate $\norm{\vb{\mu}_k}$ to force a concept on)
-while the negative Euclidean distance fits the Gaussian prior most directly but
-requires learning the radius offset $b$. Cosine similarity is used throughout
-unless stated otherwise.
+the activation probability is coupled to the embedding's magnitude. The exact
+gate of \cref{eq:methods:proba:alpha-exact} uses the plain inner product, whose
+decision boundary $\alpha_k = \tfrac{1}{2}$ sits where
+$\vb{\mu}_k \cdot \vb{h}_k = \tfrac{1}{2}\norm{\vb{h}_k}^2$; this is well
+calibrated only as long as $\norm{\vb{\mu}_k} \approx \norm{\vb{h}_k}$, since
+otherwise the network can inflate $\norm{\vb{\mu}_k}$ to push the inner product
+up and force a concept active, entangling the discrete gate with a magnitude the
+decoder also reads. \textit{Cosine similarity} removes this coupling by
+construction: normalising by $\norm{\vb{\mu}_k}\,\norm{\vb{h}_k}$ leaves the
+activation probability dependent only on the angle between $\vb{\mu}_k$ and
+$\vb{h}_k$, so the angle controls the gate while the magnitude is left free to
+carry information to the decoder.\footnote{Normalising the similarity does make
+    the temperature essential rather than optional: a cosine is bounded to
+    $\interval{-1}{1}$, so at $\flatfrac{1}{\tau} = 1$ the activation probability
+    could range only over $\on{sigmoid}(\interval{-1}{1}) \approx
+    \interval{0.27}{0.73}$ and never approach a hard decision. The learnable
+    $\flatfrac{1}{\tau}$ --- initialised at $10$
+    (\cref{eq:methods:proba:alpha}) --- stretches the bounded cosine onto a
+    range over which the sigmoid can saturate.} The negative Euclidean distance
+fits the Gaussian prior most directly but requires learning the radius offset
+$b$. Cosine similarity is used throughout unless stated otherwise.
 
 \subsection{Training Objective} \label{sec:methods:model:loss}
 
 The \ac{VAEE} is trained by maximising a lower bound on the marginal
 log-likelihood of the data, just as the \ac{VAE} of
-\cref{sec:background:ae:vae}.
-Under the mean-field approximation of \cref{eq:methods:proba:posterior}
-the \ac{ELBO} decomposes into three analytic components:
+\cref{sec:background:ae:vae}. The marginal likelihood requires marginalising
+over both latents, an integral over the continuous $\vb{z}$ and a sum over the
+$2^{K}$ configurations of $\vb{c}$ that is intractable. Introducing the
+approximate posterior of \cref{eq:methods:proba:posterior} and applying Jensen's
+inequality\footnote{Given $X$ an integrable real-valued random variable and
+$\varphi$ a concave function, $\varphi(\E{X}) \ge \E{\varphi(X)}$.} to the
+concave logarithm gives a lower bound,
+\begin{equation*}
+    \begin{split}
+        \log p_{\theta}(\vb{x})
+        &= \log \sum_{\vb{c}} \int p(\vb{x}, \vb{c}, \vb{z}) \dd{\vb{z}}\\
+        &= \log \sum_{\vb{c}} \int p(\vb{x}, \vb{c}, \vb{z}) \frac{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}{q_\phi(\vb{c}, \vb{z} \mid \vb{x})} \dd{\vb{z}}\\
+        &= \log \E[q_\phi(\vb{c}, \vb{z} \mid \vb{x})]{\frac{p(\vb{x}, \vb{c}, \vb{z})}{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}}\\
+        &\ge \E[q_\phi(\vb{c}, \vb{z} \mid \vb{x})]{\log \frac{p(\vb{x}, \vb{c}, \vb{z})}{q_\phi(\vb{c}, \vb{z} \mid \vb{x})}} \equiv \mathrm{ELBO}.
+    \end{split}
+\end{equation*}
+This mean-field factorisation is the model's central variational approximation:
+the true posterior couples the mask and its embedding through the generative
+$\vb{c} \to \vb{z}$ edge, so that even given $\vb{x}$ the two remain dependent.
+Treating them as conditionally independent given $\vb{x}$ is what lets all three
+terms below close in form; it is the only approximation made, every step that
+follows being exact.
+
+The generative model factorises over concepts as
+$p(\vb{x}, \vb{c}, \vb{z}) = p_\theta({\vb{x} \mid \vb{z}}) \prod_{k} p(c_k)\, p(\vb{z}_k \mid c_k)$
+(\cref{eq:methods:proba:joint}). Substituting this along with the mean-field
+posterior and splitting the logarithm of the resulting product gives
+\begin{multline*}
+    \mathrm{ELBO} = \E[q_\phi(\vb{c}, \vb{z} \mid \vb{x})]{
+        \vphantom{\frac{1}{1}}
+        \log p_\theta(\vb{x} \mid \vb{z})\right.
+        + \sum_{k=1}^{K} \log \frac{p(c_k)}{q_\phi(c_k \mid \vb{x})}\\
+        + \left.\sum_{k=1}^{K} \log \frac{p(\vb{z}_k \mid c_k)}{q_\phi(\vb{z}_k \mid \vb{x})}}.
+\end{multline*}
+Under the mean-field posterior the joint expectation factorises as
+$\mathbb{E}_{q_\phi(\vb{c}, \vb{z} \mid \vb{x})} = \mathbb{E}_{q_\phi(\vb{z} \mid \vb{x})}\mathbb{E}_{q_\phi(\vb{c} \mid \vb{x})}$,
+and the three summands separate. The first carries no mask, so the expectation
+over $\vb{c}$ is trivial and it reduces to the reconstruction term
+\begin{equation*}
+    \E[q_\phi(\vb{z} \mid \vb{x})]{\log p_\theta(\vb{x} \mid \vb{z})}.
+\end{equation*}
+The second carries no embedding, so the expectation over $\vb{z}$ is trivial and
+the expectation over $\vb{c}$ collects into the negative \ac{KL} between the
+Bernoulli posterior and prior,
+\begin{equation*}
+    \sum_{k=1}^{K} \E[q_\phi(c_k \mid \vb{x})]{\log \frac{p(c_k)}{q_\phi(c_k \mid \vb{x})}} =
+    - \sum_{k=1}^{K} \KL{q_\phi(c_k \mid \vb{x})}{p(c_k)},
+\end{equation*}
+the mask-prior \ac{KL}. In the third summand the inner expectation over
+$\vb{z}_{k}$ is itself a \ac{KL},
+\begin{equation*}
+    \E[q_\phi(\vb{z}_k \mid \vb{x})]{\log \frac{p(\vb{z}_k \mid c_k)}{q_\phi(\vb{z}_k \mid \vb{x})}}
+    = -\KL{q_\phi(\vb{z}_k \mid \vb{x})}{p(\vb{z}_k \mid c_k)},
+\end{equation*}
+a function of the still-free $c_k$, whose outer expectation gives the
+conditional-embedding \ac{KL} term
+\begin{equation*}
+    - \sum_{k=1}^{K} \E[q_\phi(c_k \mid \vb{x})]{\KL{q_\phi(\vb{z}_k \mid \vb{x})}{p(\vb{z}_k \mid c_k)}}.
+\end{equation*}
+Collecting the three terms gives the \ac{ELBO} as the sum of a reconstruction
+term and the two negative \aclp{KL},
 \begin{equation} \label{eq:methods:loss:elbo}
     \begin{split}
         \log p_{\theta}(\vb{x}) \ge
@@ -362,15 +512,22 @@ the \ac{ELBO} decomposes into three analytic components:
         &- \sum_{k=1}^{K} \underbrace{\E[q_{\phi}(c_{k} \mid \vb{x})]{\KL{q_{\phi}(\vb{z}_{k} \mid \vb{x})}{p(\vb{z}_{k} \mid c_{k})}}}_{\text{conditional-embedding KL}}.
     \end{split}
 \end{equation}
-The full \ac{ELBO} derivation is given in
-\cref{app:vaee:elbo}. The three terms
-read directly off the generative model. Under the Gaussian decoder of
-\cref{eq:methods:proba:likelihood} the reconstruction term
-reduces, up to an additive constant, to the \ac{MSE} of
-\cref{eq:background:ae:recon-loss}; the mask-prior \ac{KL}
-pulls each concept's activation toward the Bernoulli prior rate $\pi$; and the
-conditional-embedding \ac{KL} keeps each embedding near its prototype when the
-concept is active and near the origin when it is not.
+The three terms read directly off the generative model. Under the Gaussian
+decoder of \cref{eq:methods:proba:likelihood} the reconstruction term reduces,
+up to an additive constant, to the \ac{MSE} of
+\cref{eq:background:ae:recon-loss}; the mask-prior \ac{KL} pulls each concept's
+activation toward the Bernoulli prior rate $\pi$; and the conditional-embedding
+\ac{KL} keeps each embedding near its prototype when the concept is active and
+near the origin when it is not.
+
+The conditional-embedding \ac{KL} admits a closed form that the practical loss
+uses directly, derived in \cref{app:vaee:cond-kl}:
+\begin{multline} \label{eq:methods:loss:cond-kl}
+    \sum_{k=1}^{K} \E[q_\phi(c_k \mid \vb{x})]{\KL{q_\phi(\vb{z}_k \mid \vb{x})}{p(\vb{z}_k \mid c_k)}} =\\
+    = \frac{1}{2\sigma_0^2} \sum_{k=1}^{K} \left[ \alpha_k \norm{\vb{\mu}_k - \vb{h}_k}^2 + (1 - \alpha_k) \norm{\vb{\mu}_k}^2 \right].
+\end{multline}
+% Its factor $\tfrac{1}{2\sigma_0^2}$ is absorbed into the $\gamma$ hyperparameter of
+% the practical objective (\cref{eq:methods:loss:objective}).
 
 \subsubsection{From bound to objective}
 Turning the \ac{ELBO} into a practical loss takes a few deliberate departures
@@ -382,11 +539,11 @@ stability rather than mathematical necessity.
     --- act along the concept axis, bounding how many concepts a \textit{single
     sample} may activate. Applied per sample, the mask-prior \ac{KL} would do
     the same, pulling every input's $\alpha_k(\vb{x})$ toward $\pi$
-    independently and so holding every sample to one fixed activation budget. We
-    instead constrain sparsity along the \textit{batch} axis
+    independently and so holding every sample to one fixed activation budget.
+    Sparsity is instead constrained along the \textit{batch} axis
     \citep{desantisBetterGeneralizationInterpretability2025}: rather than how
-    many concepts a sample uses, we limit how often a \textit{given} concept
-    fires across a batch. The per-sample term is replaced by a single \ac{KL}
+    many concepts a sample uses, the penalty limits how often a \textit{given}
+    concept fires across a batch. The per-sample term is replaced by a single \ac{KL}
     between Bernoullis that matches each concept's batch-average activation
     $\bar{\alpha}_k = \frac{1}{B} \sum_{i} \alpha_k(\vb{x}_i)$ to the prior
     rate,
@@ -411,8 +568,8 @@ stability rather than mathematical necessity.
 
     \paragraph{Entropy binarisation} Batch-wise sparsity does not by itself
     force per-sample decisions to be sharp: activations clustered around $\pi$
-    would satisfy it while remaining soft. We add a per-sample binary-entropy
-    penalty,
+    would satisfy it while remaining soft. A per-sample binary-entropy penalty
+    is added,
     \begin{equation*}
         \lambda_{\mathrm{ent}}\, \mathcal{H}(\alpha_{i,k}) = -\lambda_{\mathrm{ent}}
         \left[\alpha_{i,k} \log \alpha_{i,k} + (1 - \alpha_{i,k}) \log(1 -
@@ -426,9 +583,9 @@ stability rather than mathematical necessity.
     \paragraph{Stop-gradient on the activation} The
     con\-di\-tion\-al-em\-bed\-ding \ac{KL} couples the activation to the
     embeddings: in closed form
-    (\cref{app:vaee:elbo}) it reads
-    $\alpha_{i,k} \norm{\vb{\mu}_{i,k} - \vb{h}_k}^{2}_{2} + (1 - \alpha_{i,k})
-    \norm{\vb{\mu}_{i,k}}^{2}_{2}$, which the network could shrink by driving
+    (\cref{eq:methods:loss:cond-kl}) it reads
+    $\alpha_{i,k} \norm{\vb{\mu}_{i,k} - \vb{h}_k}^{2} + (1 - \alpha_{i,k})
+    \norm{\vb{\mu}_{i,k}}^{2}$, which the network could shrink by driving
     $\alpha_{i,k} \to 0$ irrespective of reconstruction. A stop-gradient
     $\on{sg}(\cdot)$ operator on $\alpha$ inside this term removes that
     shortcut, so the activation is shaped only by the reconstruction and
@@ -471,16 +628,16 @@ stability rather than mathematical necessity.
 
 \subsubsection{Practical loss}
 Collecting these choices and substituting the closed-form conditional-embedding
-\ac{KL} of \cref{app:vaee:elbo} gives
+\ac{KL} of \cref{eq:methods:loss:cond-kl} gives
 the objective minimised in training,
 \begin{equation} \label{eq:methods:loss:objective}
     \begin{split}
         \mathcal{L} =
-        {}& \frac{1}{Bn} \sum_{i=1}^{B} \norm{\vb{x}_{i} - \hat{\vb{x}}_{i}}^{2}_{2}
+        {}& \frac{1}{Bn} \sum_{i=1}^{B} \norm{\vb{x}_{i} - \hat{\vb{x}}_{i}}^{2}
         + \frac{\beta}{K} \sum_{k=1}^{K} \KL{\bar{\alpha}_{k}}{\pi}
         + \frac{\lambda_{\mathrm{ent}}}{BK} \sum_{i=1}^{B} \sum_{k=1}^{K} \mathcal{H}(\alpha_{i,k})\\
-        &+ \frac{\gamma}{BKd} \sum_{i=1}^{B} \sum_{k=1}^{K} \left(\on{sg}(\alpha_{i,k}) \norm{\vb{\mu}_{i,k} - \vb{h}_{k}}^{2}_{2}
-            + \left(1 - \on{sg}(\alpha_{i,k})\right)\norm{\vb{\mu}_{i,k}}^{2}_{2}\right),
+        &+ \frac{\gamma}{BKd} \sum_{i=1}^{B} \sum_{k=1}^{K} \left(\on{sg}(\alpha_{i,k}) \norm{\vb{\mu}_{i,k} - \vb{h}_{k}}^{2}
+            + \left(1 - \on{sg}(\alpha_{i,k})\right)\norm{\vb{\mu}_{i,k}}^{2}\right),
     \end{split}
 \end{equation}
 where $\hat{\vb{x}}_i = g_\theta(\vb{c}_i \odot \vb{z}_i)$ is the gated
@@ -488,7 +645,8 @@ reconstruction of \cref{eq:methods:proba:gate} and
 $\vb{\mu}_{i,k} = \vb{\mu}_k(\vb{x}_i)$. The four terms are, in order, the
 reconstruction error, the batch-wise sparsity \ac{KL}, the entropy binarisation
 penalty, and the conditional-embedding \ac{KL} (active concepts pulled to their
-prototype, inactive ones to the origin).
+prototype, inactive ones to the origin), whose factor $\tfrac{1}{2\sigma_0^2}$
+has been absorbed into the $\gamma$ hyperparameter.
 
 % \subsection{Architectures} \label{sec:methods:model:arch}
 %
