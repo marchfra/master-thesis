@@ -238,6 +238,9 @@ $3\,000$ epochs and an early stopping patience of $500$ epochs.
 
 \subsection{Quantitative results} \label{sec:exp:results:quant}
 
+\subsubsection{Sparsity--reconstruction frontier}
+\label{sec:exp:results:quant:frontier}
+
 \Cref{fig:exp:kappa-frontier}
 plots validation \ac{MSE} against the number of active concepts $\kappa$,
 sweeping each model's sparsity dial. The models are matched on parameter count
@@ -299,10 +302,15 @@ its global interpretation as well.
     \label{fig:exp:l0-frontier}
 \end{figure}
 
-Both metrics presuppose that the active-concept count is well defined, \ie that
-the continuous inference gate behaves, in practice, as a hard one.
+\subsubsection{Behaviour of the inference gate}
+\label{sec:exp:results:quant:gate}
+
+At inference the gate is continuous
+(\cref{sec:methods:model:proba:inference}), yet it behaves
+in practice as a hard one --- which is what makes the active-concept count of
+\cref{sec:exp:metrics} well defined.
 \Cref{fig:exp:alpha-distribution}
-shows that the validation-set distribution of the gate values $\alpha_{k}$ is
+shows why: the validation-set distribution of the gate values $\alpha_{k}$ is
 sharply bimodal, almost all of its mass falling within $0.01$ of $0$ or $1$, the
 extremes one to two orders of magnitude more frequent than any intermediate
 value. The active-concept count is therefore insensitive to the exact cut-off,
@@ -322,9 +330,62 @@ and $\flatfrac{1}{2}$ is a natural threshold for an activation probability.
     \label{fig:exp:alpha-distribution}
 \end{figure}
 
+A complementary property concerns the embeddings the gate acts upon. The
+conditional-embedding \ac{KL} of \cref{eq:methods:loss:cond-kl}
+carries a $(1 - \alpha_k) \norm{\vb{\mu}_k}^2$ term that pulls an inactive
+concept's embedding mean toward the origin, while the multiplicative gate of
+\cref{eq:methods:proba:gate} zeroes that slot regardless. The
+two act on the same inactive concept, which raises the question of whether the
+penalty does any work on top of the gate. The model design
+(\cref{sec:methods:model:proba:inference})
+assumes it does --- that an inactive embedding is held near the origin in any
+case, the gate only removing the reconstruction gradient that would otherwise
+inflate it \textit{before} the slot is zeroed.
+
+\Cref{fig:exp:inactive-collapse}
+confirms this, though only in part. For every concept and validation token it
+records the norm of the ungated mean $\norm{\vb{\mu}_k(\vb{x})}$ --- the
+embedding the penalty regularises, read \textit{before} the gate is applied ---
+split by whether the concept is active ($\alpha_k \ge \flatfrac{1}{2}$). The two
+distributions separate clearly. Inactive embeddings are pulled down toward the
+noise floor: their median norm is $0.96$, against $3.62$ for active ones ---
+$3.78$ times smaller --- and $21\%$ fall below $\sigma_0 \sqrt{d} = 0.8$, the
+scale of the noise the posterior itself injects when sampling $\vb{z}_k =
+\vb{\mu}_k + \sigma_0 \vb{\epsilon}$. Active embeddings sit far out, reaching
+past the prototype-norm scale (median $\norm{\vb{h}_k} = 2.89$) as the same
+penalty pulls them toward their prototype.
+
+The conditional-embedding \ac{KL} is therefore doing real work --- inactive
+embeddings end up markedly smaller than active ones --- but it does not drive
+them to zero: a typical inactive embedding still carries a norm near $1$, and an
+average token leaves over a hundred of the $128$ concepts inactive, so left
+ungated their contributions would be far from negligible in aggregate. The soft
+penalty and the hard gate are thus complementary rather than redundant: the
+penalty shrinks the inactive embeddings, and the gate removes what remains ---
+which is also what makes the mask a clean handle for the interventions of
+\cref{sec:methods:model:interventions}.
+
+\begin{figure}[tb]
+    \myfloatalign
+    \includegraphics[width=0.95\linewidth]{gfx/inactive_collapse_hist.png}
+    \caption[Inactive concept embeddings shrink before gating]{
+        Validation-set distribution of the ungated embedding-mean norm
+        $\norm{\vb{\mu}_k}$ for the $128 \times 64$ \ac{VAEE}, over all
+        concept--token pairs, split into active ($\alpha_k \ge \flatfrac{1}{2}$)
+        and inactive. Inactive embeddings are pulled down near the sampling
+        noise floor $\sigma_0 \sqrt{d} = 0.8$ (dashed), their median norm
+        ($0.96$) some $3.78$ times smaller than that of active ones, which
+        spread out past the median prototype norm $\norm{\vb{h}_k} = 2.89$
+        (dotted). The conditional-embedding \ac{KL} shrinks the inactive
+        embeddings \textit{before} the gate acts but does not zero them, so
+        penalty and gate suppress inactive concepts together.
+    }
+    \label{fig:exp:inactive-collapse}
+\end{figure}
+
 \subsection{Qualitative results} \label{sec:exp:results:qual}
 
-The frontier of \cref{sec:exp:results:quant}
+The frontier of \cref{sec:exp:results:quant:frontier}
 measures how much reconstruction each active concept accounts for, but not what
 those concepts are. A unit is useful for interpretability only if it is
 human-comprehensible, so this section reads off each model's \textit{concept
@@ -335,11 +396,6 @@ billsLanguageModelsCan2023}. A concept is comprehensible when those tokens share
 a discernible property --- a meaning, a grammatical class, an orthographic
 pattern --- and opaque when they do not.
 
-% Each dictionary is read two ways. The \textit{unique} view lists, per concept,
-% the distinct tokens of highest activation, exposing the range a concept can
-% respond to; the \textit{non-unique} view lists its most frequent activations,
-% exposing its typical input. Which of the two reveals coherence differs by
-% model, so both are used.
 A single operating point is inspected per model --- the parameter-matched pair
 of the $128 \times 64$ \ac{VAEE} at $\tilde{\kappa} = 8$ and the $m = 8\,192$
 TopK \ac{SAE} at $k = 8$ --- as concept quality was not measured along the
@@ -502,7 +558,7 @@ trained on such a small corpus has ample room for it.
 \paragraph{Neither dictionary is clearly more interpretable} Read side by side,
 the two are about equally comprehensible. Each yields a handful of coherent
 units and a majority that don't have a clear label, and the per-concept
-reconstruction advantage of \cref{sec:exp:results:quant}
+reconstruction advantage of \cref{sec:exp:results:quant:frontier}
 does not show up as visibly cleaner concepts. Furthermore, the comparison is not
 perfectly even: the \ac{VAEE}'s meaningful concepts come from a dictionary of
 $128$, the \ac{SAE}'s from one of $8\,192$, so a comparable number of usable
@@ -638,8 +694,8 @@ the axis that matters for interpretability --- the number of active concepts
 $\kappa$ --- the result is clear: every \ac{VAEE} frontier lies below every
 \ac{SAE} frontier, matching the best \ac{SAE}'s reconstruction with roughly an
 order of magnitude fewer active concepts
-(\cref{sec:exp:results:quant}). The
-relaxation of the sparsity--reconstruction trade-off the architecture was
+(\cref{sec:exp:results:quant:frontier}).
+The relaxation of the sparsity--reconstruction trade-off the architecture was
 designed for does show up, but on this axis alone: measured in active
 \textit{neurons} $\ell_{0}$, the trade-off is not removed but relocated, the
 \ac{SAE} reaching a given error with fewer active scalars.
