@@ -14,9 +14,9 @@ $\norm{\,\cdot\,}_{2}$ to avoid making the notation excessively verbose.
 
 \section{Optimal Gating Mechanism} \label{app:vaee:gating}
 
-The gate of \cref{eq:methods:proba:alpha} ties a concept's
-activation probability to the similarity between its predicted embedding and its
-prototype. This section shows that this is not an arbitrary heuristic but the
+\Cref{eq:methods:proba:alpha} ties a concept's activation
+probability to the similarity between its predicted embedding and its prototype.
+This section shows that this is not an arbitrary heuristic but the
 \textit{optimal} mask factor of the mean-field posterior
 (\cref{eq:methods:proba:posterior}), dictated by the Gated
 Gaussian prior of \cref{eq:methods:proba:prior-z}.
@@ -88,7 +88,7 @@ Linearity is what makes the expectation tractable, and exactly so: with no term
 beyond first order in $\vb{z}_k$, the expectation over $\nbmath{q_\phi(\vb{z}_k
 \mid \vb{x})}$ amounts to replacing $\vb{z}_k$ with its mean
 $\vb{\mu}_k(\vb{x})$. Adding the prior log-odds back in and converting through
-the sigmoid therefore yields the inner-product gate,
+the sigmoid therefore yields the inner-product activation probability,
 \begin{equation} \label{eq:app:vaee:alpha-exact}
     \alpha_k(\vb{x}) = \on{sigmoid}\left(
     \frac{1}{\sigma_0^2}\left(\vb{\mu}_k(\vb{x}) \cdot \vb{h}_k
@@ -103,7 +103,7 @@ remaining scale $1/\sigma_0^2$ is folded into a single learnable inverse
 temperature $1/\tau$, so that the logit is parameterised as
 $(1/\tau)\,\vb{\mu}_k(\vb{x}) \cdot \vb{h}_k$; the per-prototype bias is left to
 be absorbed implicitly into $\tau$ and into the optimisation of $\vb{h}_k$
-itself. Under the exact gate of \cref{eq:app:vaee:alpha-exact}
+itself. Under the exact activation probability of \cref{eq:app:vaee:alpha-exact}
 the decision boundary $\alpha_k = \tfrac{1}{2}$ sits where
 $\vb{\mu}_k \cdot \vb{h}_k = \tfrac{1}{2}\norm{\vb{h}_k}^2$, which is well
 calibrated only as long as $\norm{\vb{\mu}_k} \approx \norm{\vb{h}_k}$;
@@ -111,12 +111,12 @@ otherwise the model can inflate $\norm{\vb{\mu}_k}$ to push the inner product up
 and force a concept active. The cosine-similarity variant of
 \cref{eq:methods:proba:sim} removes this coupling by
 construction, normalising by $\norm{\vb{\mu}_k}\,\norm{\vb{h}_k}$ so that the
-gate depends only on the angle between embedding and prototype, leaving the
-magnitude free to carry information to the decoder. This decoupling of the gate
+activation probability depends only on the angle between embedding and prototype, leaving the
+magnitude free to carry information to the decoder. This decoupling
 from the embedding magnitude is why cosine similarity is the choice of
 similarity used in this thesis.\footnote{Normalising the similarity does make
     the temperature essential rather than optional: a cosine is bounded to
-    $\interval{-1}{1}$, so at $\flatfrac{1}{\tau} = 1$ the gate could only range
+    $\interval{-1}{1}$, so at $\flatfrac{1}{\tau} = 1$ the activation probability could only range
     over $\on{sigmoid}(\interval{-1}{1}) \approx \interval{0.27}{0.73}$ and
     never approach a hard decision. The learnable $\flatfrac{1}{\tau}$ ---
     initialised at $10$ (\cref{eq:methods:proba:alpha}) ---
@@ -128,7 +128,7 @@ depends on the mask only through the embeddings in the generative flow $\vb{c}
 \to \vb{z} \to \vb{x}$, $c_k$ and $\vb{x}$ are conditionally independent given
 $\vb{z}_k$, so the true posterior factor satisfies $\nbmath{p(c_k \mid \vb{z}_k,
 \vb{x})} = p(c_k \mid \vb{z}_k)$ --- itself a sigmoid of the same linear
-log-odds in $\vb{z}_k$. The optimal mean-field gate $\alpha_k(\vb{x})$ is thus
+log-odds in $\vb{z}_k$. The optimal mean-field activation probability $\alpha_k(\vb{x})$ is thus
 exactly that posterior factor evaluated at the embedding mean $\vb{z}_k =
 \vb{\mu}_k(\vb{x})$: conditioning the mask on $\vb{x}$ through $\vb{\mu}_k$
 loses nothing relative to conditioning it on a sampled $\vb{z}_k$, which is why

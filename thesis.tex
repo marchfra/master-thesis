@@ -65,6 +65,7 @@
 % Only activates on lines that would otherwise overflow; normal lines are
 % unaffected.
 \setlength{\emergencystretch}{3em}
+\setlength{\cftbeforechapskip}{.7em}%
 
 % linewidth = 11.8cm
 
@@ -120,7 +121,7 @@
     % \cleardoublepage\include{FrontBackmatter/Foreword}
     \cleardoublepage\include{FrontBackmatter/Abstract}
     % \cleardoublepage\include{FrontBackmatter/Publications}
-    \cleardoublepage\include{FrontBackmatter/Acknowledgments}
+    % \cleardoublepage\include{FrontBackmatter/Acknowledgments}
     \cleardoublepage\include{FrontBackmatter/Contents}
 
     \acresetall
@@ -162,7 +163,8 @@
 
     % \cleardoublepage
     % \part{Appendix}
-    \include{Chapters/C0A_VAEEDerivations}
+    % \include{Chapters/C0A_VAEEDerivations}
+    \include{Chapters/C0A_ConditionalKL}
     \include{Chapters/C0B_ConceptDictionaries}
 
     %****************************************************************

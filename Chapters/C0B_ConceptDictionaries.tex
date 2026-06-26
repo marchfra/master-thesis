@@ -3,13 +3,13 @@
 %************************************************
 
 The three concepts shown per model in \cref{sec:exp:results:qual}
-are curated to illustrate each dictionary's typical successes and failures. This
-appendix instead reproduces a \textit{random}, uncurated sample of 25 concepts
-from each of the same two models --- the $\tilde{\kappa} = 8$, $128 \times 64$
-\ac{VAEE} and the $k = 8$, $m = 8\,192$ TopK \ac{SAE} --- so that the population
-claims of \cref{sec:exp:results:qual}
-can be checked directly rather than taken on the strength of a hand-picked few.
-Each concept is shown with a few of its strongest activations and the activating
+are curated to illustrate particular kinds of concepts. This appendix instead
+reproduces a \textit{random}, uncurated sample of concepts from each of the same
+two models --- the $\tilde{\kappa} = 8$, $128 \times 64$ \ac{VAEE} and the $k =
+8$, $m = 8\,192$ TopK \ac{SAE} --- so that the population claims of
+\cref{sec:exp:results:qual} can be
+checked directly rather than taken on the strength of a hand-picked few. Each
+concept is shown with a few of its strongest activations and the activating
 token in bold; the firing rate is the fraction of validation tokens on which the
 concept is active.
 
@@ -38,13 +38,18 @@ concept is active.
 %   between --- and \hfill for coherent concepts, leave it blank for opaque ones
 %   (the blanks are the evidence).
 
-\section{VAEE concept dictionary}
+\section*{VAEE Concept Dictionary}
 
 \footnotesize
 % uv run experiments/concept_training/generate_cd_table.py experiments/concept_training/outputs/thesis/frontier/VAEE-128x64-20260620_045340/VAEE-128x64_val_cd_non_unique.html -n 5 -c "3,9,18,21,25,26,29,31,33,49,71,72,75,76,81,83,88,97,98,101,102,108,113,117,120" | pbcopy
+% \toprule
+% \tableheadline{VAEE concept dictionary} \\
+% \midrule
 
 \begin{longtable}{@{}>{\ttfamily}p{\linewidth}@{}}
     \toprule
+    % \tableheadline{VAEE concept dictionary} \\
+    % \midrule
     \endhead
     {\normalfont\textbf{C3} \hfill (firing rate 10.0\%)}\\
     \cmidrule(){1-1}
@@ -205,58 +210,63 @@ concept is active.
     \dots\ ata , who takes\textbf{ the} superstitious \dots\\
     \dots\ aced with humor and\textbf{ a} few fanciful \dots\\
     \dots\ astounding given\textbf{ the} production 's a \dots\\
-    \addlinespace
-    {\normalfont\textbf{C102} \hfill (firing rate 10.9\%)}\\
-    \cmidrule(){1-1}
-    \dots\ one long string of\textbf{ cl}iches .\\
-    \dots\ k-19\textbf{ explo}its our substantial collective \dots\\
-    \dots\ who takes the super\textbf{st}itious curse on \dots\\
-    \dots\ that are all under\textbf{st}ated and touching .\\
-    \dots\ tedious sex\textbf{ far}ce .\\
-    \addlinespace
-    {\normalfont\textbf{C108} \hfill (firing rate 9.2\%)}\\
-    \cmidrule(){1-1}
-    \textbf{\textless bos\textgreater} k-19 \dots\\
-    \textbf{\textless bos\textgreater} it 's played \dots\\
-    \textbf{there} are simply too many \dots\\
-    \textbf{\textless bos\textgreater} there are simply too \dots\\
-    \textbf{one} long string of cl \dots\\
-    \addlinespace
-    {\normalfont\textbf{C113} \hfill (firing rate 13.3\%)}\\
-    \cmidrule(){1-1}
-    \dots\ entertaining film chronicles\textbf{ sein}feld 's return \dots\\
-    \dots\ k-19\textbf{ explo}its our substantial collective \dots\\
-    \dots\ collective fear of nuclear\textbf{ hol}ocaust to generate \dots\\
-    \dots\ wannabe comic\textbf{ ad}ams ' attempts to \dots\\
-    \dots\ who takes the super\textbf{st}itious curse on \dots\\
-    \addlinespace
-    {\normalfont\textbf{C117} \hfill (firing rate 9.1\%)}\\
-    \cmidrule(){1-1}
-    \dots\ in the theater at\textbf{ all} ?\\
-    \dots\ 's three lead\textbf{ actress}es .\\
-    \dots\ augh 's three\textbf{ lead} actresses .\\
-    \dots\ could young women of\textbf{ any} size receive ?\\
-    \dots\ ' could young women\textbf{ of} any size receive ?\\
-    \addlinespace
-    {\normalfont\textbf{C120} \hfill (firing rate 9.2\%)}\\
-    \cmidrule(){1-1}
-    ch\textbf{ab}rol has taken promising \dots\\
-    \textbf{k}-19 explo \dots\\
-    k\textbf{-}19 exploits \dots\\
-    \dots\ wonder why enough was\textbf{ n}'t just a \dots\\
-    \dots\ rather than a full\textbf{-}length movie .\\
+    % \addlinespace
+    % {\normalfont\textbf{C102} \hfill (firing rate 10.9\%)}\\
+    % \cmidrule(){1-1}
+    % \dots\ one long string of\textbf{ cl}iches .\\
+    % \dots\ k-19\textbf{ explo}its our substantial collective \dots\\
+    % \dots\ who takes the super\textbf{st}itious curse on \dots\\
+    % \dots\ that are all under\textbf{st}ated and touching .\\
+    % \dots\ tedious sex\textbf{ far}ce .\\
+    % \addlinespace
+    % {\normalfont\textbf{C108} \hfill (firing rate 9.2\%)}\\
+    % \cmidrule(){1-1}
+    % \textbf{\textless bos\textgreater} k-19 \dots\\
+    % \textbf{\textless bos\textgreater} it 's played \dots\\
+    % \textbf{there} are simply too many \dots\\
+    % \textbf{\textless bos\textgreater} there are simply too \dots\\
+    % \textbf{one} long string of cl \dots\\
+    % \addlinespace
+    % {\normalfont\textbf{C113} \hfill (firing rate 13.3\%)}\\
+    % \cmidrule(){1-1}
+    % \dots\ entertaining film chronicles\textbf{ sein}feld 's return \dots\\
+    % \dots\ k-19\textbf{ explo}its our substantial collective \dots\\
+    % \dots\ collective fear of nuclear\textbf{ hol}ocaust to generate \dots\\
+    % \dots\ wannabe comic\textbf{ ad}ams ' attempts to \dots\\
+    % \dots\ who takes the super\textbf{st}itious curse on \dots\\
+    % \addlinespace
+    % {\normalfont\textbf{C117} \hfill (firing rate 9.1\%)}\\
+    % \cmidrule(){1-1}
+    % \dots\ in the theater at\textbf{ all} ?\\
+    % \dots\ 's three lead\textbf{ actress}es .\\
+    % \dots\ augh 's three\textbf{ lead} actresses .\\
+    % \dots\ could young women of\textbf{ any} size receive ?\\
+    % \dots\ ' could young women\textbf{ of} any size receive ?\\
+    % \addlinespace
+    % {\normalfont\textbf{C120} \hfill (firing rate 9.2\%)}\\
+    % \cmidrule(){1-1}
+    % ch\textbf{ab}rol has taken promising \dots\\
+    % \textbf{k}-19 explo \dots\\
+    % k\textbf{-}19 exploits \dots\\
+    % \dots\ wonder why enough was\textbf{ n}'t just a \dots\\
+    % \dots\ rather than a full\textbf{-}length movie .\\
     \bottomrule
 \end{longtable}
 
 \normalsize
 
-\section{SAE concept dictionary}
+\section*{SAE Concept Dictionary}
 
 \footnotesize
 % uv run experiments/concept_training/generate_cd_table.py experiments/concept_training/outputs/thesis/frontier/TopK-8-SAE-8192-20260512_081348/TopK-8-SAE-8192_val_cd_unique.html -n 5 -c "68,678,1006,1514,2082,2115,2840,3393,3716,3915,4164,4173,4526,4527,4551,4679,5613,5811,6249,6331,6369,6817,7079,7134,7728" | pbcopy
+% \toprule
+% \tableheadline{SAE concept dictionary} \\
+% \midrule
 
 \begin{longtable}{@{}>{\ttfamily}p{\linewidth}@{}}
     \toprule
+    % \tableheadline{SAE concept dictionary} \\
+    % \midrule
     \endhead
     {\normalfont\textbf{C68} \hfill (firing rate 3.8\%)}\\
     \cmidrule(){1-1}
@@ -282,6 +292,7 @@ concept is active.
     \dots\ teary-eyed\textbf{ original} .\\
     \dots\ worthy of pucc\textbf{ini} than they are of \dots\\
     \addlinespace
+    \newpage
     {\normalfont\textbf{C1514} \hfill (firing rate 3.8\%)}\\
     \cmidrule(){1-1}
     \textbf{\textless bos\textgreater} one long string of \dots\\
@@ -417,46 +428,46 @@ concept is active.
     \dots\ much more when you\textbf{ leave} .\\
     the second\textbf{ coming} of harry pot \dots\\
     \dots\ ford movie -\textbf{ six} days , seven nights \dots\\
-    \addlinespace
-    {\normalfont\textbf{C6369} \hfill (firing rate 0.2\%)}\\
-    \cmidrule(){1-1}
-    \dots\ big screen moments -\textbf{l}rb- including one \dots\\
-    \dots\ amura 's\textbf{ l}ively and enjoyable cultural \dots\\
-    \dots\ tv-to-\textbf{m}ovie franchise game , \dots\\
-    the\textbf{ heavy}-handed film is \dots\\
-    \dots\ in the first few\textbf{ minutes} .\\
-    \addlinespace
-    {\normalfont\textbf{C6817} \hfill (firing rate 0.4\%)}\\
-    \cmidrule(){1-1}
-    \textbf{it} 's played in \dots\\
-    `\textbf{ de} niro ... is \dots\\
-    \dots\ umes and sets are\textbf{ grand} .\\
-    \dots\ teary-eyed\textbf{ original} .\\
-    \dots\ worthy of pucc\textbf{ini} than they are of \dots\\
-    \addlinespace
-    {\normalfont\textbf{C7079} \hfill (firing rate 0.2\%)}\\
-    \cmidrule(){1-1}
-    it '\textbf{s} played in the most \dots\\
-    \dots\ mull over in\textbf{ terms} of love , loyalty \dots\\
-    \dots\ can relate to the\textbf{ search} for inner peace by \dots\\
-    \dots\ in the first few\textbf{ minutes} .\\
-    \dots\ umes and sets are\textbf{ grand} .\\
-    \addlinespace
-    {\normalfont\textbf{C7134} \hfill (firing rate 0.7\%)}\\
-    \cmidrule(){1-1}
-    \dots\ know the plot '\textbf{s} a little crazy , \dots\\
-    \dots\ rrb- r\textbf{aps} between the stars .\\
-    \dots\ first time he '\textbf{ll} probably appeal more to \dots\\
-    \dots\ and when you '\textbf{re} talking about a sl \dots\\
-    nothing 's\textbf{ at} stake , just a \dots\\
-    \addlinespace
-    {\normalfont\textbf{C7728} \hfill (firing rate 0.7\%)}\\
-    \cmidrule(){1-1}
-    \dots\ skate\textbackslash{}/sur\textbf{f} culture , the l \dots\\
-    \dots\ and funny\textbackslash{}/gr\textbf{itty} fable of the \dots\\
-    \dots\ mystery\textbackslash{}/thr\textbf{iller} , a romance or \dots\\
-    \dots\ one woman at the\textbf{ hands} of the unseen \dots\\
-    \dots\ riller , a\textbf{ romance} or a comedy .\\
+    % \addlinespace
+    % {\normalfont\textbf{C6369} \hfill (firing rate 0.2\%)}\\
+    % \cmidrule(){1-1}
+    % \dots\ big screen moments -\textbf{l}rb- including one \dots\\
+    % \dots\ amura 's\textbf{ l}ively and enjoyable cultural \dots\\
+    % \dots\ tv-to-\textbf{m}ovie franchise game , \dots\\
+    % the\textbf{ heavy}-handed film is \dots\\
+    % \dots\ in the first few\textbf{ minutes} .\\
+    % \addlinespace
+    % {\normalfont\textbf{C6817} \hfill (firing rate 0.4\%)}\\
+    % \cmidrule(){1-1}
+    % \textbf{it} 's played in \dots\\
+    % `\textbf{ de} niro ... is \dots\\
+    % \dots\ umes and sets are\textbf{ grand} .\\
+    % \dots\ teary-eyed\textbf{ original} .\\
+    % \dots\ worthy of pucc\textbf{ini} than they are of \dots\\
+    % \addlinespace
+    % {\normalfont\textbf{C7079} \hfill (firing rate 0.2\%)}\\
+    % \cmidrule(){1-1}
+    % it '\textbf{s} played in the most \dots\\
+    % \dots\ mull over in\textbf{ terms} of love , loyalty \dots\\
+    % \dots\ can relate to the\textbf{ search} for inner peace by \dots\\
+    % \dots\ in the first few\textbf{ minutes} .\\
+    % \dots\ umes and sets are\textbf{ grand} .\\
+    % \addlinespace
+    % {\normalfont\textbf{C7134} \hfill (firing rate 0.7\%)}\\
+    % \cmidrule(){1-1}
+    % \dots\ know the plot '\textbf{s} a little crazy , \dots\\
+    % \dots\ rrb- r\textbf{aps} between the stars .\\
+    % \dots\ first time he '\textbf{ll} probably appeal more to \dots\\
+    % \dots\ and when you '\textbf{re} talking about a sl \dots\\
+    % nothing 's\textbf{ at} stake , just a \dots\\
+    % \addlinespace
+    % {\normalfont\textbf{C7728} \hfill (firing rate 0.7\%)}\\
+    % \cmidrule(){1-1}
+    % \dots\ skate\textbackslash{}/sur\textbf{f} culture , the l \dots\\
+    % \dots\ and funny\textbackslash{}/gr\textbf{itty} fable of the \dots\\
+    % \dots\ mystery\textbackslash{}/thr\textbf{iller} , a romance or \dots\\
+    % \dots\ one woman at the\textbf{ hands} of the unseen \dots\\
+    % \dots\ riller , a\textbf{ romance} or a comedy .\\
     \bottomrule
 \end{longtable}
 
