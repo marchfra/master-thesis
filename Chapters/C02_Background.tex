@@ -12,15 +12,15 @@ tracing the field's shift from attributing a prediction to input features
 towards explaining it in terms of human-meaningful \textit{concepts}, the view
 this work adopts. \Cref{sec:background:ae} then
 develops the autoencoder family, from the standard autoencoder through the
-variational and sparse variants between which the thesis's contribution sits. A
-single tension runs through all three: reconstructing a model's activations
-faithfully while decomposing them into a small, interpretable set of concepts
---- the tension the method of \cref{sec:methods:model}
-sets out to relax.
+variational and sparse variants between which the thesis's contribution sits.
+% A single tension runs through all three: reconstructing a model's activations
+% faithfully while decomposing them into a small, interpretable set of concepts
+% --- the tension the method of \cref{sec:methods:model}
+% sets out to relax.
 
 \section{Natural Language Processing} \label{sec:background:nlp}
 
-\ac{NLP} is the branch of machine learning concerned with getting computers to
+\Ac{NLP} is the branch of machine learning concerned with getting computers to
 process and generate human language. For most of its history the field advanced
 through task-specific systems --- separate models for translation, sentiment
 analysis, or question answering --- but it has since converged on a single
@@ -142,23 +142,24 @@ distributions. Each block is made of two sublayers with complementary roles: an
     before it; the better a position matches, the more it contributes to a
     weighted average of the corresponding values, which becomes the head's
     output for the current position \citep{vaswaniAttentionAllYou2017}.
-    Concretely, the head projects each stream vector to a query, key, and value,
-    $\vb{q}_t = Q \vb{x}_t$, $\vb{k}_s = K \vb{x}_s$, and
-    $\vb{v}_s = V \vb{x}_s$, and returns
+    Concretely, the head projects each input to a query, key, and value,
+    $\vb{q}_t = Q \vb{x}_t$, $\vb{k}_s = K \vb{x}_s$, and $\vb{v}_s = V
+    \vb{x}_s$, and returns
     \begin{equation} \label{eq:background:nlp:attention}
         \on{head}(\vb{x}_{1:t}) = \sum_{s=1}^{t} a_{ts} \vb{v}_s, \qquad
         a_{ts} = \on{softmax}_{s}\left(
         \frac{\vb{q}_t^{\top} \vb{k}_s}{\sqrt{d_k}}\right),
     \end{equation}
-    where $d_k$ is the dimension of the queries and keys, and the softmax runs
-    over $s = 1, \dots, t$, so that a position attends only to itself and those
-    before it. A sublayer runs several such heads in parallel --- each free to
-    specialise, one linking a pronoun to its referent, another a verb to its
-    subject --- and combines their outputs by concatenation and a learned output
-    projection. Because attention is the only component that moves information
-    between positions, it is where the model assembles context: it turns a
-    position's representation from a fact about a single token into one that
-    reflects the surrounding text.
+    where $\vb{x}_{1:t} = (\vb{x}_{1}, \dots, \vb{x}_{t})$ is the prefix of
+    input states up to position $t$, $d_k$ is the dimension of the queries and
+    keys, and the softmax runs over $s = 1, \dots, t$, so that a position
+    attends only to itself and those before it. A sublayer runs several such
+    heads in parallel --- each free to specialise, one linking a pronoun to its
+    referent, another a verb to its subject --- and combines their outputs by
+    concatenation and a learned output projection. Because attention is the only
+    component that moves information between positions, it is where the model
+    assembles context: it turns a position's representation from a fact about a
+    single token into one that reflects the surrounding text.
 
     \paragraph{MLP sublayers} Where attention mixes information across
     positions, \iac{MLP} sublayer processes each position on its own, applying
@@ -185,24 +186,23 @@ distributions. Each block is made of two sublayers with complementary roles: an
     \begin{equation} \label{eq:background:nlp:residual}
         \vb{x}^{(\ell+1)}_{t} = \vb{x}^{(\ell)}_{t} +
         \on{Attn}^{(\ell)}\left(\vb{x}^{(\ell)}_{1:t}\right) +
-        \on{MLP}^{(\ell)}\left(\vb{x}^{(\ell)}_{t}\right),
+        \on{MLP}^{(\ell)}\left(\vb{x}^{(\ell)}_{t}\right).
     \end{equation}
-    where $\vb{x}^{(\ell)}_{1:t} = (\vb{x}^{(\ell)}_{1}, \dots,
-    \vb{x}^{(\ell)}_{t})$ is the prefix of stream states up to position $t$ ---
-    so the attention term, unlike the \ac{MLP} term, depends on the whole prefix
-    rather than on $\vb{x}^{(\ell)}_{t}$ alone. The stream starts as the token's
+    % where $\vb{x}^{(\ell)}_{1:t} = (\vb{x}^{(\ell)}_{1}, \dots,
+    % \vb{x}^{(\ell)}_{t})$ is the prefix of stream states up to position $t$
+    % --- so the attention term, unlike the \ac{MLP} term, depends on the whole
+    %  prefix rather than on $\vb{x}^{(\ell)}_{t}$ alone.
+    The stream starts as the token's
     embedding and accumulates the output of every sublayer in turn; because
     attention writes into it, a position's stream is never a fact about that
     token alone but a running summary of the context around it. This additive
     structure is what makes the residual stream a single, well-defined space in
-    which to study the model's computation --- the view developed in the
-    mechanistic-interpretability literature
-    \citep{elhageMathematicalFrameworkTransformer2021} and adopted throughout
-    this thesis. It is also the object the later chapters take apart: the
-    activation vector $\vb{x} \in \R^{n}$ that the autoencoders of
-    \cref{sec:background:ae} receive as input is
-    exactly such a residual stream state $\vb{x}^{(\ell)}$, read off at a chosen
-    layer $\ell$.
+    which to study the model's computation
+    \citep{elhageMathematicalFrameworkTransformer2021}. It is also the object
+    the later chapters take apart: the activation vector $\vb{x} \in \R^{n}$
+    that the autoencoders of \cref{sec:background:ae}
+    receive as input is exactly such a residual stream state $\vb{x}^{(\ell)}$,
+    read off at a chosen layer $\ell$.
 
 % --------------------------------------------- %
 
@@ -211,7 +211,7 @@ distributions. Each block is made of two sublayers with complementary roles: an
 The incredible performance of modern machine-learning systems comes at the cost
 of transparency: a deep network's output is the product of millions of
 interacting parameters, with no accompanying account of why it was produced.
-\acf{XAI} is the field that sets out to supply such accounts, making a model's
+\Acf{XAI} is the field that sets out to supply such accounts, making a model's
 behaviour intelligible enough to be trusted, debugged, or learned from. The
 methods relevant to this thesis are most naturally organised around a shift in
 what counts as an explanation: from \textit{attribution}, which asks
@@ -289,11 +289,11 @@ example drawn from the data space.
 
 \subsection{Concept-based XAI} \label{sec:background:xai:c-xai}
 
-\ac{CXAI} answers the \textit{what} question that attribution leaves open:
+\Ac{CXAI} answers the \textit{what} question that attribution leaves open:
 instead of pointing to the inputs responsible for a prediction, it explains the
 prediction in terms of high-level, human-meaningful \textit{concepts}
 (``striped'', ``has wheels'', ``expresses uncertainty'') of the kind a person
-would use to describe the same decision. Methods in this family differ chiefly
+would use to describe the same decision. Methods in this family differ mainly
 in whether the concepts are built into the model from the outset or recovered
 from a model that was trained without them.
 
@@ -304,18 +304,19 @@ to make them an explicit, intermediate stage of the computation, so that the
 prediction is forced to pass through a concept representation before reaching
 the output.
 
-    \paragraph{Concept Bottleneck Models} \acp{CBM}
-    \citep{kohConceptBottleneckModels2020} insert exactly such a stage: the
-    network first maps the input to a set of human-specified concepts and then
-    predicts the label from those concepts alone. Because the output depends on
-    the input only through the concept layer, the model's reasoning can be read
-    off the activated concepts, and a user can intervene on them, correcting a
-    mistaken concept and observing the effect on the prediction. The downside is
-    supervision: training \iac{CBM} requires data annotated by human experts
-    with concept labels, which is costly and ties the model to a fixed,
-    predefined vocabulary.
+    \paragraph{Concept Bottleneck Models} A proposal to insert such a stage
+    comes from \acp{CBM} \citep{kohConceptBottleneckModels2020}: the network
+    first maps the input to a set of human-specified concepts and then predicts
+    the label from those concepts alone using a linear, intrinsically
+    interpretable layer. Because the output depends on the input only through
+    the concept layer, the model's reasoning can be read off the activated
+    concepts, and a user can intervene on them, correcting a mistaken concept
+    and observing the effect on the prediction. The downside is supervision:
+    training \iac{CBM} requires data annotated by human experts with concept
+    labels, which is costly and ties the model to a fixed, predefined
+    vocabulary.
 
-    \paragraph{Concept Embedding Models} A known weakness of \acp{CBM} is an
+    \paragraph{Concept Embedding Models} A known weakness of \acp{CBM} is the
     accuracy--interpretability trade-off: when the predefined concepts do not
     carry all the information the task requires, forcing the prediction through
     a narrow concept bottleneck degrades performance. \Acp{CEM}
@@ -327,13 +328,13 @@ the output.
     intervention. Like \acp{CBM}, these models require a concept-annotated
     dataset.
 
-    \paragraph{Label-free Concept Bottleneck Models} \Acp{LFCBM}
-    \citep{oikarinenLabelfreeConceptBottleneck2022} address the annotation cost
-    directly. Rather than relying on a hand-labelled concept set, they extract
-    candidate concepts from \iac{LLM} and align the network's activations with
-    them through a vision--language model such as \acs{CLIP}, converting a
-    standard backbone into \iac{CBM} without any concept supervision. This makes
-    the approach scalable to settings where dense concept annotation would be
+    \paragraph{Label-free CBMs} Addressing annotation cost directly is the
+    objective of \acp{LFCBM} \citep{oikarinenLabelfreeConceptBottleneck2022}.
+    Rather than relying on a hand-labelled concept set, they extract candidate
+    concepts using \iac{LLM} and align the network's activations with them
+    through a vision--language model such as \acs{CLIP}, converting a standard
+    backbone into \iac{CBM} without any concept supervision. This makes the
+    approach scalable to settings where dense concept annotation would be
     impractical.
 
     \paragraph{Concept Bottleneck LLMs} The concept-bottleneck idea has recently
@@ -352,12 +353,12 @@ the output.
 
     Even so, that interpretability is only partial. In the generative variant
     the next-token prediction is shaped not by the concept bottleneck alone but
-    by the bottleneck together with a parallel layer of unsupervised,
-    uninterpretable neurons added to preserve generation quality. When the
-    dataset labels are reused as concepts the bottleneck can be tiny --- 4
-    neurons for the 4 AG News classes --- yet in the authors' implementation
-    it runs alongside $768$ unsupervised ones,\footnote{The width of the
-    unsupervised layer is fixed at $768$ in the authors' released code
+    by it together with a parallel layer of unsupervised, uninterpretable
+    neurons added to preserve generation quality. When the dataset labels are
+    reused as concepts the bottleneck can be tiny --- 4 neurons for the 4 AG
+    News classes --- yet in the authors' implementation it runs alongside $768$
+    unsupervised ones,\footnote{The width of the unsupervised layer is fixed at
+    $768$ in the authors' released code
     (\url{https://github.com/Trustworthy-ML-Lab/CB-LLMs}); the paper itself
     leaves it unspecified.} so only 4 of the $772$ dimensions feeding each token
     prediction carry interpretable concepts. Those interpretable dimensions
@@ -393,7 +394,7 @@ model untouched and probe it for the concepts it has already come to represent.
 
 % --------------------------------------------- %
 
-\section{AutoEncoders} \label{sec:background:ae}
+\section{Autoencoders} \label{sec:background:ae}
 
 An autoencoder is a neural network trained to reconstruct its input through an
 intermediate latent representation \cite[Ch 14]{goodfellowDeepLearning2016}. It
@@ -401,7 +402,7 @@ consists of two components: an \textbf{encoder} $f_{\phi}: \R^{n} \rightarrow
 \R^{m}$ that maps an input $\vb{x}$ to a latent code $\vb{z} =
 f_{\phi}(\vb{x})$, and a \textbf{decoder} $g_{\theta}: \R^{m} \rightarrow
 \R^{n}$ that reconstructs the input as $\hat{\vb{x}} = g_{\theta}(\vb{z})$.
-Training minimises a reconstruction loss, typically the \ac{MSE}:
+Training minimises a reconstruction loss, typically the \ac{MSE},
 \begin{equation} \label{eq:background:ae:recon-loss}
     \mathcal{L}_{\mathrm{recon}}
     = \on{MSE}(\vb{x}, \,\hat{\vb{x}})
@@ -492,9 +493,9 @@ choice of architecture and regularisation.
 % with prior knowledge \cite{wengAutoencoderBetaVAE2018}.
 
 
-\subsection{Variational AutoEncoders} \label{sec:background:ae:vae}
+\subsection{Variational Autoencoders} \label{sec:background:ae:vae}
 
-\acp{VAE} \cite{kingmaAutoencodingVariationalBayes2014,
+\Acp{VAE} \cite{kingmaAutoencodingVariationalBayes2014,
 rezendeStochasticBackpropagationApproximate2014} reinterpret the autoencoder as
 a probabilistic generative model. Rather than mapping an input to a single
 latent point, the encoder maps it to a \textit{distribution} over latent codes,
@@ -510,13 +511,14 @@ gaps are regions that decode to unrealistic outputs, so the space cannot be
 sampled or interpolated reliably. The \ac{VAE} objective instead pushes
 encodings to fill the latent space more uniformly and to vary smoothly, so that
 nearby codes decode to similar inputs and paths between codes stay on the data
-manifold. \Cref{fig:ae-vae-latent}
+manifold. This allows the \ac{VAE} to be used as a generative model.
+\Cref{fig:ae-vae-latent}
 illustrates the difference on a two-dimensional latent space trained on MNIST.
 
 \begin{figure}[tb]
     \centering
     \includegraphics[width=0.95\linewidth]{gfx/ae-vae-latent.png}
-    \caption[Autoencoder and VAE latent spaces on MNIST]{
+    \caption[Autoencoder and \acs{VAE} latent spaces on MNIST]{
         Two-dimensional latent spaces learned on MNIST, coloured by digit class,
         reproduced from \citet{shafkatIntuitivelyUnderstandingVariational2018}.
         Optimising for reconstruction alone (left) lets a standard autoencoder
@@ -532,8 +534,8 @@ illustrates the difference on a two-dimensional latent space trained on MNIST.
 Formally, \iac{VAE} models the data through a generative process in which a
 latent code is first drawn from a prior $\vb{z} \sim p(\vb{z})$ --- typically a
 standard Gaussian $p(\vb{z}) = \mathcal{N}(\vb{0}, \mathbb{I})$ --- and an
-observation is then drawn from a decoder distribution $\nbmath{p_{\theta}(\vb{x}
-\mid \vb{z})}$ parameterised by a neural network. Training would ideally
+observation is then drawn from a decoder distribution $p_{\theta}(\vb{x}
+\mid \vb{z})$ parameterised by a neural network. Training would ideally
 maximise the marginal likelihood
 \begin{equation*}
     p_{\theta}(\vb{x}) = \int p_{\theta}(\vb{x} \mid \vb{z}) \, p(\vb{z})
@@ -546,71 +548,66 @@ decoder.
 
 The key idea of \citet{kingmaAutoencodingVariationalBayes2014} is to sidestep
 this intractability with \textit{amortised variational inference}: an encoder
-network $\nbmath{q_{\phi}(\vb{z} \mid \vb{x})}$ is trained to approximate the
+network $q_{\phi}(\vb{z} \mid \vb{x})$ is trained to approximate the
 true posterior, with all data points sharing the same inference parameters
 $\phi$. The encoder outputs the parameters of a diagonal Gaussian,
 \begin{equation} \label{eq:background:ae:vae:posterior}
     q_{\phi}(\vb{z} \mid \vb{x}) = \mathcal{N}\!\left(\vb{z};\,
-    \boldsymbol{\mu}_{\phi}(\vb{x}),\,
-    \on{diag}(\boldsymbol{\sigma}^{2}_{\phi}(\vb{x}))\right),
+    \vb{\mu}_{\phi}(\vb{x}),\,
+    \on{diag}(\vb{\sigma}^{2}_{\phi}(\vb{x}))\right),
 \end{equation}
 so that each input is mapped to a mean and a (diagonal) covariance rather than
 to a single point.
 
 Instead of the intractable likelihood, the \ac{VAE} maximises a tractable lower
-bound on it, the \ac{ELBO}:
-\begin{equation} \label{eq:background:ae:elbo}
+bound on it, the \ac{ELBO},
+\begin{multline} \label{eq:background:ae:elbo}
     \log p_{\theta}(\vb{x}) \ge \underbrace{\mathbb{E}_{q_{\phi}(\vb{z} \mid
-    \vb{x})}\left[\log p_{\theta}(\vb{x} \mid
-    \vb{z})\right]}_{\text{reconstruction}} -
-    \underbrace{D_{\mathrm{KL}}\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
-    p(\vb{z})\right)}_{\text{regularisation}}.
-\end{equation}
+    \vb{x})}\left[\log p_{\theta}(\vb{x} \mid \vb{z})\right]}_{\text{reconstruction}}\\
+    - \underbrace{\KL{q_{\phi}(\vb{z} \mid \vb{x})}{p(\vb{z})}}_{\text{regularisation}} \equiv \mathrm{ELBO}.
+\end{multline}
 The bound follows from the identity
 \begin{equation*}
     \log p_{\theta}(\vb{x}) = \mathrm{ELBO} +
-    D_{\mathrm{KL}}\!\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
-    p_{\theta}(\vb{z} \mid \vb{x})\right),
+    \KL{q_{\phi}(\vb{z} \mid \vb{x})}{p_{\theta}(\vb{z} \mid \vb{x})},
 \end{equation*}
 together with the non-negativity of the \ac{KL} divergence; it is tight
 precisely when the approximate posterior matches the true posterior
-$\nbmath{p_{\theta}(\vb{z} \mid \vb{x})}$.
+$p_{\theta}(\vb{z} \mid \vb{x})$.
 Maximising the \ac{ELBO} simultaneously pushes the decoder to assign high
 likelihood to the data (the reconstruction term) and keeps the approximate
 posterior close to the prior (the \ac{KL} divergence term). Negating it yields
-the training loss:
+the training loss
 \begin{equation} \label{eq:background:ae:vae-loss}
     \mathcal{L}_{\mathrm{VAE}} = \mathcal{L}_{\mathrm{recon}} +
-    D_{\mathrm{KL}}\!\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
-    p(\vb{z})\right).
+    \KL{q_{\phi}(\vb{z} \mid \vb{x})}{p(\vb{z})}.
 \end{equation}
 When the decoder is Gaussian with fixed isotropic variance, the first term
 reduces, up to an additive constant, to the \ac{MSE} reconstruction loss of
-\cref{eq:background:ae:recon-loss}; the second term, being the
+\cref{eq:background:ae:recon-loss}. % ; the second term, being the
 divergence between two Gaussians, has a closed form. For the standard-normal
-prior it becomes:
+prior it becomes
 \begin{equation*}
-    D_{\mathrm{KL}}\!\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
-    p(\vb{z})\right) = \frac{1}{2} \sum_{j=1}^{m} \left(\mu_{j}^{2} +
-    \sigma_{j}^{2} - \log \sigma_{j}^{2} - 1\right),
+    \KL{q_{\phi}(\vb{z} \mid \vb{x})}{p(\vb{z})} =
+    \frac{1}{2} \sum_{j=1}^{m} \left(\mu_{j}^{2} + \sigma_{j}^{2} - \log \sigma_{j}^{2} - 1\right),
 \end{equation*}
 where $\mu_{j}$ and $\sigma_{j}$ are the components of the encoder's predicted
 mean and standard deviation.
 
 Evaluating the reconstruction term requires sampling $\vb{z}$ from
-$\nbmath{q_{\phi}(\vb{z} \mid \vb{x})}$, an operation that is not differentiable
+$q_{\phi}(\vb{z} \mid \vb{x})$, an operation that is not differentiable
 with respect to the encoder parameters and would therefore block gradient-based
 training. The \ac{VAE} resolves this with the \textit{reparameterisation trick}:
 the stochasticity is moved to an auxiliary noise variable, and the sample is
 expressed as a deterministic, differentiable function of the encoder outputs,
 \begin{equation*}
-    \vb{z} = \boldsymbol{\mu}_{\phi}(\vb{x}) +
-    \boldsymbol{\sigma}_{\phi}(\vb{x}) \odot \boldsymbol{\epsilon}, \quad
-    \boldsymbol{\epsilon} \sim \mathcal{N}(\vb{0}, \mathbb{I}),
+    \vb{z} = \vb{\mu}_{\phi}(\vb{x}) +
+    \vb{\sigma}_{\phi}(\vb{x}) \odot \vb{\epsilon}, \qquad
+    \vb{\epsilon} \sim \mathcal{N}(\vb{0}, \mathbb{I}),
 \end{equation*}
 where $\odot$ denotes the element-wise product. Gradients can now flow through
-$\boldsymbol{\mu}_{\phi}$ and $\boldsymbol{\sigma}_{\phi}$ while the
-randomness is confined to $\boldsymbol{\epsilon}$, making the whole objective
+$\vb{\mu}_{\phi}$ and $\vb{\sigma}_{\phi}$ while the
+randomness is confined to $\vb{\epsilon}$, making the whole objective
 trainable end-to-end by stochastic gradient descent.
 
 \subsubsection{Architectures} \label{sec:background:ae:vae:arch}
@@ -622,8 +619,7 @@ space or the form of the latent code; two are particularly relevant here.
     objective,
     \begin{equation} \label{eq:background:ae:vae:beta-loss}
         \mathcal{L}_{\beta\text{-VAE}} = \mathcal{L}_{\mathrm{recon}} + \beta \,
-        D_{\mathrm{KL}}\!\left(q_{\phi}(\vb{z} \mid \vb{x}) \,\big\|\,
-        p(\vb{z})\right).
+        \KL{q_{\phi}(\vb{z} \mid \vb{x})}{p(\vb{z})}.
     \end{equation}
     Setting $\beta > 1$ places additional pressure on the approximate posterior
     to match the factorised prior, which encourages individual latent dimensions
@@ -633,7 +629,8 @@ space or the form of the latent code; two are particularly relevant here.
     the structure and interpretability of the latent space at the cost of
     reconstruction fidelity.
 
-    \paragraph{VQ-VAE} \citet{vandenoordNeuralDiscreteRepresentation2017}
+    \paragraph{VQ-VAE}
+    \citet{vandenoordNeuralDiscreteRepresentation2017}
     replaced the continuous Gaussian latent with a \textit{discrete} one. The
     encoder output is quantised to the nearest entry of a learned codebook
     $\{\vb{e}_{1}, \dots, \vb{e}_{K}\}$, so that each latent is represented by a
@@ -643,9 +640,9 @@ space or the form of the latent code; two are particularly relevant here.
     the latent entirely. Because the nearest-neighbour lookup is
     non-differentiable, gradients are passed to the encoder with a
     straight-through estimator and the codebook is learned through dedicated
-    loss terms. \ac{VQVAE} underpins many modern generative systems, providing
-    the discrete latent vocabulary over which an autoregressive prior is
-    subsequently trained.
+    loss terms. The \ac{VQVAE} underpins many modern generative systems,
+    providing the discrete latent vocabulary over which an autoregressive prior
+    is subsequently trained.
 
 % \subsubsection{Applications} \label{sec:background:ae:vae:applications}
 %
@@ -693,7 +690,7 @@ space or the form of the latent code; two are particularly relevant here.
 %     \acp{VAE} for \textit{causal representation learning}, aligning latent
 %     factors with underlying causal variables
 %     \cite{goyalExplainingClassifiersCausal2020,
-%     komanduriSCMVAELearningIdentifiable2022}. \acp{VAE} have also been paired
+%     komanduriSCMVAELearningIdentifiable2022}. \Acp{VAE} have also been paired
 %     with concept-based models such as self-explaining networks
 %     \cite{alvarezmelisRobustInterpretabilitySelfExplaining2018}. Closest to this
 %     thesis, variational ideas have been brought to sparse dictionary learning
@@ -703,16 +700,16 @@ space or the form of the latent code; two are particularly relevant here.
 %     of a \ac{VAE}.
 
 
-\subsection{Sparse AutoEncoders} \label{sec:background:ae:sae}
+\subsection{Sparse Autoencoders} \label{sec:background:ae:sae}
 
-\acfp{SAE} are one of the main variants of autoencoders. Just like autoencoders,
-they learn a dictionary of feature directions from the input data, but they
-typically are overcomplete ($m \gg n$) and their latent representation is forced
-to be sparse using some kind of sparsity mechanism. Given input $\vb{x} \in
-\R^{n}$, the \ac{SAE} encodes it as:
+\Acfp{SAE} are one of the main variants of autoencoders. Just like standard
+autoencoders, they learn a dictionary of feature directions from the input data,
+but they typically are overcomplete ($m \gg n$) and their latent representation
+is forced to be sparse using some kind of sparsity mechanism. Given input
+$\vb{x} \in \R^{n}$, the \ac{SAE} encodes it as
 \begin{equation} \label{eq:background:ae:sae:encode}
-    \vb{z} = \operatorname{ReLU}(W_{e}(\vb{x} - \vb{b}_{\mathrm{pre}}) +
-    \vb{b}_{e}),
+    \vb{z} = \operatorname{ReLU}(W_{e}\left(\vb{x} -
+    \vb{b}_{\mathrm{pre}}\right) + \vb{b}_{e}),
 \end{equation}
 where $W_{e} \in \R^{m \times n}$ is the encoder weight matrix,
 $\vb{b}_{e} \in \R^{m}$ is the encoder bias, and $\vb{b}_{\mathrm{pre}} \in
@@ -720,7 +717,7 @@ $\vb{b}_{e} \in \R^{m}$ is the encoder bias, and $\vb{b}_{\mathrm{pre}} \in
 learned offset allows the encoder to operate on roughly mean-centred
 activations, improving training stability
 \cite{brickenMonosemanticityDecomposingLanguage2023}. The decoder then
-reconstructs the input as:
+reconstructs the input as
 \begin{equation} \label{eq:background:ae:sae:decode}
     \hat{\vb{x}} = W_{d} \vb{z} + \vb{b}_{\mathrm{pre}},
 \end{equation}
@@ -760,8 +757,8 @@ represent more features than it has dimensions by exploiting the fact that
 natural inputs are sparse: at any given time, only a small fraction of all
 possible features are relevant. Under this condition, a network can pack many
 near-orthogonal feature directions into a lower-dimensional space with limited
-interference; polysemanticity ceases to be a failure of the model, and instead
-becomes a rational compression strategy under capacity constraints.
+interference; polysemanticity is therefore a rational compression strategy under
+capacity constraints.
 
 This has a direct implication for interpretability: the natural basis of a
 model's activations is not the neuron basis, but a larger, overcomplete set of
@@ -781,11 +778,11 @@ architectures that try to improve on it.
     \citet{hubenSparseAutoencodersFind2023}. It uses an $\ell_{1}$
     penalty\footnote{The $\ell_{p}$ norm is defined as $\ell_{p}(\vb{x}) =
     \norm{\vb{x}}_{p} = \left(\sum_{i}
-    \abs{x_{i}}^{p}\right)^{\flatfrac{1}{p}},\ p \ge 1$. Unless explicitly
-    stated otherwise, $\norm{\,\cdot\,} = \norm{\,\cdot\,}_{2}$.} on the latent
+    \abs{x_{i}}^{p}\right)^{\flatfrac{1}{p}},\ p \ge 1$. Throughout,
+    $\norm{\,\cdot\,} = \norm{\,\cdot\,}_{2}$.} on the latent
     code to encourage most of $\vb{z}$'s entries to be exactly zero, so that any
     given activation is reconstructed from a small number of active features.
-    The loss used to train this model is the following:
+    The loss used to train this model is
     \begin{equation} \label{eq:background:ae:sae:l1-loss}
         \mathcal{L} = \mathcal{L}_{\mathrm{recon}} + \lambda \norm{\vb{z}}_{1}.
     \end{equation}
@@ -813,7 +810,7 @@ architectures that try to improve on it.
     implemented via a TopK activation function that retains only the $k$ largest
     pre-activations and zeros the rest. This directly controls the number of
     active features per forward pass, eliminating the need to tune $\lambda$ and
-    removing the shrinkage bias entirely. The full training objective is:
+    removing the shrinkage bias entirely. The full training objective is
     \begin{equation} \label{eq:background:ae:sae:topk-loss}
         \mathcal{L} = \mathcal{L}_{\mathrm{recon}} + \alpha
         \mathcal{L}_{\mathrm{aux}},
@@ -843,7 +840,7 @@ architectures that try to improve on it.
     \paragraph{JumpReLU SAEs} \citet{rajamanoharanJumpingAheadImproving2024}
     proposed replacing the standard ReLU with a JumpReLU activation, which is
     zero below a learned per-feature threshold $\theta_{i}$ and equal to the
-    pre-activation above it:
+    pre-activation above it,
     \begin{equation} \label{eq:background:ae:sae:jumprelu}
         \operatorname{JumpReLU}_{\theta_{i}}(z_{i}) = z_{i} \cdot
         \mathds{1}[z_{i} > \theta_{i}].
@@ -866,16 +863,12 @@ architectures that try to improve on it.
     JumpReLU \acp{SAE} achieve comparable performance to TopK \acp{SAE}.
 
 
-% TODO: if including sections about AE and VAE applications, remove "to MechInt"
-% and reword initial sentence
 \subsubsection{Applications to MechInt} \label{sec:background:ae:sae:applications}
 
-% Unlike general-purpose autoencoders and \acp{VAE}, which are applied across a
-% range of domains, \acp{SAE}
-\Acp{SAE} find their primary application in interpreting the
-internal activations of neural networks, and \ac{MI} remains their most
-prominent application, making it the focus of this section. \acp{SAE} can be
-trained on activations from any layer or component of a transformer
+\Acp{SAE} find their primary application in interpreting the internal
+activations of neural networks, making \ac{MI} the focus of this section.
+\Acp{SAE} can be trained on activations from any layer or component of a
+transformer
 (\cref{sec:background:nlp:transformer});
 common targets include the residual stream at various depths, \ac{MLP} layer
 outputs, and attention head outputs \cite{hubenSparseAutoencodersFind2023,
@@ -960,7 +953,7 @@ is a unit in the bottleneck of \iac{CBM} or an atom in the dictionary of
 \iac{SAE}, it is encoded as a single scalar and can vary only in magnitude. This
 is what forces the sparsity--reconstruction trade-off at the heart of the
 \ac{SAE} literature --- a faithful reconstruction needs many active concepts, an
-interpretable decomposition only few --- and the architectures of
+interpretable decomposition only a few --- and the architectures of
 \cref{sec:background:ae:sae:arch} all
 work within it. \Acp{CEM} are the exception already met: by giving each concept
 a vector embedding rather than a scalar, they recover the capacity a scalar

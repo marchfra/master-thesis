@@ -29,8 +29,8 @@ than assemble these ingredients by analogy, \cref{ch:methods}
 derives the model from first principles: a generative model with a
 gated-Gaussian prior, an \ac{ELBO} that separates reconstruction from a mask
 prior and a conditional-embedding term, and a gating rule that follows as the
-optimal mask posterior. The derivation, not only the architecture, is part of
-what the thesis offers.
+optimal mask posterior. % The derivation, not only the architecture, is part of
+% what the thesis offers.
 
 The model's capabilities were demonstrated on one application, the decomposition
 of \iac{LLM}'s residual-stream activations. Against a parameter-matched TopK
@@ -44,7 +44,8 @@ of ablations over embedding width and encoder--decoder depth
 (\cref{sec:exp:results:ablation}) round out
 the picture of how the architecture behaves.
 
-The thesis is equally deliberate about the limits of this evidence.
+The evidence shown is, admittedly, limited.
+% The thesis is equally deliberate about the limits of this evidence.
 Reconstruction was assessed only by \acl{MSE}; each \ac{VAEE} concept now spans
 several active neurons rather than one, so fewer active \textit{concepts} need
 not mean fewer active \textit{neurons}; and the recovered concepts were not
