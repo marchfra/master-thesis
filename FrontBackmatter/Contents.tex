@@ -66,6 +66,9 @@
     \pdfbookmark[1]{Acronyms}{acronyms}
     \markboth{\spacedlowsmallcaps{Acronyms}}{\spacedlowsmallcaps{Acronyms}}
     % \chapter*{Acronyms}
-    \printacronyms[pages={display=all}]
+    % Keep the short form black in the printed list (the body recolours
+    % it via format/short; that override is undone locally here).
+    {\acsetup{format/short = \color{black}}%
+    \printacronyms[pages={display=all}]}
 
 \endgroup
