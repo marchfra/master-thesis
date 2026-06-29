@@ -107,13 +107,12 @@ throughout the chapter are:
     \item $\vb{x} \in \R^{n}$: the input vector, to be reconstructed;
     \item $K$: the number of concepts in the dictionary;
     \item $d$: the dimension of each concept embedding;
+    \item $\vb{\mu}_k(\vb{x}) \in \R^{d}$: the encoder's output for concept $k$;
     \item $\alpha_k(\vb{x}) \in [0,1]$: the probability that concept $k$ is
         active for input $\vb{x}$;
     \item $\vb{c} = (c_1, \dots, c_K) \in \{0,1\}^{K}$: the binary
         \textit{concept-activation mask}, where $c_k = 1$ marks concept $k$
         active for the given input;
-    \item $\vb{\mu}_k(\vb{x}) \in \R^{d}$: the encoder's output for
-        concept $k$, the mean of the embedding $\vb{z}_k$;
     \item $\vb{z}_k \in \R^{d}$: the \textit{embedding} of concept $k$ for the
         given input, collected into
         $\vb{z} = [\vb{z}_1, \dots, \vb{z}_K] \in \R^{Kd}$;

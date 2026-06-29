@@ -29,7 +29,7 @@
 % (see ClassicThesis.pdf for more information):
 % ****************************************************************************************************
 \PassOptionsToPackage{
-  drafting=true,    % print version information on the bottom of the pages
+  drafting=false,    % print version information on the bottom of the pages
   tocaligned=false, % the left column of the toc will be aligned (no indentation)
   dottedtoc=true,   % page numbers in ToC flushed right
   eulerchapternumbers=false, % use AMS Euler for chapter font (otherwise Palatino)
@@ -112,6 +112,33 @@
 \usepackage{tabularray}
 \usepackage{acro}
 \acsetup{make-links=true, list/template=description, single=true}
+% The default dotted leader between a definition and its page list
+% collapses to zero width when the page list is long enough to fill the
+% line, gluing the first reference onto the long form. Replace it with a
+% leader whose glue has a fixed natural width (a guaranteed minimum run
+% of dots, ~2em) plus infinite stretch (so it still right-aligns the
+% pages for short entries). The glue has no shrink, so the minimum dots
+% always show. The dot unit is acro's own (\@dotsep spacing) so the dots
+% match the default leader's spacing; \makeatletter is needed for \@dotsep.
+\makeatletter
+\acsetup{pages/fill = {\leaders\hbox{$\m@th\mkern\@dotsep mu\hbox{.}\mkern\@dotsep mu$}\hskip 2em plus 1fill\relax}}
+\makeatother
+% Give acronym links a subtler colour than the RoyalBlue used for
+% equation/figure/table/section references (CTlink). Only the short
+% form is recoloured (the long form is not a link); the link stays
+% clickable, just its text colour is overridden.
+\definecolor{CTacronym}{HTML}{F57C00} % acronym short-form colour
+\acsetup{format/short = \color{CTlink}}
+% By default acro tints the whole link region (indefinite article +
+% acronym + plural ending) with hyperref's link colour; format/short
+% then overrides only the acronym, leaving the article/plural in
+% RoyalBlue. Neutralise acro's own link tint so that ONLY format/short
+% colours anything: the article ("a"/"an") and the plural ending keep
+% the normal text colour, while the acronym keeps CTacronym. The link
+% itself stays clickable.
+\ExplSyntaxOn
+\cs_set:Npn \__acro_color_link:n #1 {#1}
+\ExplSyntaxOff
 \usepackage{acro-commands}
 \input{FrontBackmatter/Acronyms.tex}
 % \PassOptionsToPackage{printonlyused,smaller}{acronym}

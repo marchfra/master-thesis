@@ -188,10 +188,6 @@ distributions. Each block is made of two sublayers with complementary roles: an
         \on{Attn}^{(\ell)}\left(\vb{x}^{(\ell)}_{1:t}\right) +
         \on{MLP}^{(\ell)}\left(\vb{x}^{(\ell)}_{t}\right).
     \end{equation}
-    % where $\vb{x}^{(\ell)}_{1:t} = (\vb{x}^{(\ell)}_{1}, \dots,
-    % \vb{x}^{(\ell)}_{t})$ is the prefix of stream states up to position $t$
-    % --- so the attention term, unlike the \ac{MLP} term, depends on the whole
-    %  prefix rather than on $\vb{x}^{(\ell)}_{t}$ alone.
     The stream starts as the token's
     embedding and accumulates the output of every sublayer in turn; because
     attention writes into it, a position's stream is never a fact about that
@@ -289,13 +285,13 @@ example drawn from the data space.
 
 \subsection{Concept-based XAI} \label{sec:background:xai:c-xai}
 
-\Ac{CXAI} answers the \textit{what} question that attribution leaves open:
-instead of pointing to the inputs responsible for a prediction, it explains the
-prediction in terms of high-level, human-meaningful \textit{concepts}
-(``striped'', ``has wheels'', ``expresses uncertainty'') of the kind a person
-would use to describe the same decision. Methods in this family differ mainly
-in whether the concepts are built into the model from the outset or recovered
-from a model that was trained without them.
+\Ac{CXAI} answers the \textit{what} question that attribution leaves open: where
+traditional \ac{XAI} points to the inputs responsible for a prediction, it
+explains the prediction in terms of high-level, human-meaningful
+\textit{concepts} (``striped'', ``has wheels'', ``expresses uncertainty'') of
+the kind a person would use to describe the same decision. Methods in this
+family differ mainly in whether the concepts are built into the model from the
+outset or recovered from a model that was trained without them.
 
 \subsubsection{Explainable-by-design Models}
 
